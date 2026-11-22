@@ -64,8 +64,8 @@ interface CairoClock {
 }
 
 /**
- * Returns the current date string (YYYY-MM-DD) in Africa/Cairo timezone.
- * Used to partition clinic queues & tickets cleanly by Cairo working day.
+- Returns the current date string (YYYY-MM-DD) in Africa/Cairo timezone.
+- Used to partition clinic queues & tickets cleanly by Cairo working day.
  */
 export function getCairoDateString(now: Date = new Date()): string {
   try {
@@ -154,7 +154,7 @@ function format24hToArabic(hhmm: string): string {
 }
 
 /**
- * Generates a concise human-readable Arabic summary string from a structured WeeklySchedule.
+- Generates a concise human-readable Arabic summary string from a structured WeeklySchedule.
  */
 export function formatWeeklyScheduleSummary(schedule?: WeeklySchedule, is24Hours?: boolean): string {
   if (is24Hours) return 'مفتوح 24 ساعة طوال أيام الأسبوع';
@@ -326,8 +326,8 @@ function expandDayRange(startKey: WeekdayKey, endKey: WeekdayKey): WeekdayKey[] 
 }
 
 /**
- * Attempts to parse a legacy Arabic/English hours string into a structured WeeklySchedule.
- * Returns null if the string cannot be reliably parsed.
+- Attempts to parse a legacy Arabic/English hours string into a structured WeeklySchedule.
+- Returns null if the string cannot be reliably parsed.
  */
 export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySchedule; is24Hours?: boolean } | null {
   if (!hours || !hours.trim()) return null;
@@ -439,11 +439,11 @@ export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySche
 }
 
 /**
- * Evaluates live Open / Closed / Unknown status in Africa/Cairo timezone.
- * Priority:
- *   1. Structured `is24Hours` / `workingSchedule` (per-day shifts + overnight carryover)
- *   2. Parsed legacy `hours` string (including multi-segment Arabic schedules & holidays)
- *   3. Unknown state (`غير مؤكد`) when missing or unparseable — never guesses "open"!
+- Evaluates live Open / Closed / Unknown status in Africa/Cairo timezone.
+- Priority:
+-   1. Structured `is24Hours` / `workingSchedule` (per-day shifts + overnight carryover)
+-   2. Parsed legacy `hours` string (including multi-segment Arabic schedules & holidays)
+-   3. Unknown state (`غير مؤكد`) when missing or unparseable — never guesses "open"!
  */
 export function evaluateOpenStatus(
   hours?: string,
