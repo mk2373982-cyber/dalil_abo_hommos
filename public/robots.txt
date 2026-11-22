@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
-Sitemap: https://your-domain.pages.dev/sitemap.xml
+Sitemap: https://dalil-abo-hommos.mk2373982.workers.dev/sitemap.xml
