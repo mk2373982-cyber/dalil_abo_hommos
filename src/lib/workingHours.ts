@@ -63,10 +63,6 @@ interface CairoClock {
   dateString: string;
 }
 
-/**
-- Returns the current date string (YYYY-MM-DD) in Africa/Cairo timezone.
-- Used to partition clinic queues & tickets cleanly by Cairo working day.
- */
 export function getCairoDateString(now: Date = new Date()): string {
   try {
     const parts = new Intl.DateTimeFormat('en-CA', {
@@ -153,9 +149,6 @@ function format24hToArabic(hhmm: string): string {
   return `${h24}${minPart} ص`;
 }
 
-/**
-- Generates a concise human-readable Arabic summary string from a structured WeeklySchedule.
- */
 export function formatWeeklyScheduleSummary(schedule?: WeeklySchedule, is24Hours?: boolean): string {
   if (is24Hours) return 'مفتوح 24 ساعة طوال أيام الأسبوع';
   if (!schedule) return '';
@@ -194,7 +187,6 @@ function evaluateSlotsOnClock(
   prevDaySlots: TimeSlot[] | undefined,
   minutesOfDay: number
 ): boolean {
-  // 1. Check today's slots (same-day range or start of overnight shift)
   if (todaySlots && todaySlots.length > 0) {
     for (const slot of todaySlots) {
       const start = parse24hTime(slot.open);
@@ -205,13 +197,11 @@ function evaluateSlotsOnClock(
       } else if (end > start) {
         if (minutesOfDay >= start && minutesOfDay < end) return true;
       } else if (end < start) {
-        // Overnight shift starting today (e.g., 18:00 -> 02:00 next day)
         if (minutesOfDay >= start) return true;
       }
     }
   }
 
-  // 2. Check yesterday's overnight shifts carrying over into today's early morning
   if (prevDaySlots && prevDaySlots.length > 0) {
     for (const slot of prevDaySlots) {
       const start = parse24hTime(slot.open);
@@ -325,10 +315,6 @@ function expandDayRange(startKey: WeekdayKey, endKey: WeekdayKey): WeekdayKey[] 
   return result;
 }
 
-/**
-- Attempts to parse a legacy Arabic/English hours string into a structured WeeklySchedule.
-- Returns null if the string cannot be reliably parsed.
- */
 export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySchedule; is24Hours?: boolean } | null {
   if (!hours || !hours.trim()) return null;
   const normalized = normalizeArabic(normalizeArabicDigits(hours));
@@ -342,8 +328,6 @@ export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySche
     return { schedule: {}, is24Hours: true };
   }
 
-  // Split by pipe or semicolon or newline for multi-day schedules like:
-  // "السبت إلى الأربعاء: 4 م - 9 م | الخميس: 3 م - 8 م"
   const rawSegments = normalized.split(/[|؛;\n]+/).map((s) => s.trim()).filter(Boolean);
 
   const schedule: WeeklySchedule = {};
@@ -351,7 +335,6 @@ export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySche
   let hasExplicitDayScopedSegment = false;
   const explicitlyClosedDays = new Set<WeekdayKey>();
 
-  // Detect global holiday exclusions like "عدا الجمعة" or "الجمعة إجازة"
   const globalExcludeRegex = /(?:ما\s*)?عدا\s+([^\s،|]+)/g;
   let exMatch: RegExpExecArray | null;
   while ((exMatch = globalExcludeRegex.exec(normalized)) !== null) {
@@ -360,7 +343,6 @@ export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySche
   }
 
   for (const segment of rawSegments) {
-    // Check if segment explicitly declares a holiday/closed day (e.g. "الجمعة إجازة" or "الجمعة مغلق")
     if (/(?:اجازه|مغلق|عطله)/.test(segment) && extractSlotsFromText(segment).length === 0) {
       const closedMentions = findMentionedDaysInOrder(segment);
       closedMentions.forEach((d) => {
@@ -375,7 +357,6 @@ export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySche
     if (slots.length === 0) continue;
     parsedAnySlot = true;
 
-    // Strip any "ما عدا <day>" suffix before determining active days for this segment
     const segmentWithoutExcept = segment.replace(/(?:ما\s*)?عدا\s+[^\s،|:]+/g, ' ');
     const isDaily =
       segmentWithoutExcept.includes('يوميا') ||
@@ -410,7 +391,6 @@ export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySche
         }
       });
     } else if (isDaily || rawSegments.length === 1) {
-      // Unscoped time range (e.g. "يومياً 9 ص - 10 م" or "4 م - 9 م") applies to all non-excluded days
       ORDERED_WEEKDAYS.forEach((d) => {
         if (!explicitlyClosedDays.has(d)) {
           schedule[d] = [...(schedule[d] || []), ...slots];
@@ -421,8 +401,6 @@ export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySche
 
   if (!parsedAnySlot) return null;
 
-  // Ensure every weekday key is explicitly present when day-scoped segments were parsed
-  // (e.g., if only Sat-Wed & Thu were defined, Friday is explicitly [] = closed!)
   if (hasExplicitDayScopedSegment) {
     ORDERED_WEEKDAYS.forEach((d) => {
       if (!schedule[d]) {
@@ -438,13 +416,6 @@ export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySche
   return { schedule };
 }
 
-/**
-- Evaluates live Open / Closed / Unknown status in Africa/Cairo timezone.
-- Priority:
--   1. Structured `is24Hours` / `workingSchedule` (per-day shifts + overnight carryover)
--   2. Parsed legacy `hours` string (including multi-segment Arabic schedules & holidays)
--   3. Unknown state (`غير مؤكد`) when missing or unparseable — never guesses "open"!
- */
 export function evaluateOpenStatus(
   hours?: string,
   _fallbackOpenNow?: boolean,
@@ -458,7 +429,6 @@ export function evaluateOpenStatus(
 
   const clock = getCairoClock(now);
 
-  // 1. Evaluate structured weeklySchedule when at least one weekday is configured
   const hasStructuredSchedule =
     workingSchedule &&
     ORDERED_WEEKDAYS.some((d) => Array.isArray(workingSchedule[d]));
@@ -482,7 +452,6 @@ export function evaluateOpenStatus(
     return { isOpen: false, state: 'closed', label: 'مغلق حالياً', isAuto: true };
   }
 
-  // 2. Fallback to parsing legacy `hours` text
   const parsed = parseHoursTextToSchedule(hours);
   if (parsed?.is24Hours) {
     return { isOpen: true, state: 'open', label: 'مفتوح 24 ساعة', isAuto: true };
@@ -506,7 +475,6 @@ export function evaluateOpenStatus(
     return { isOpen: false, state: 'closed', label: 'مغلق حالياً', isAuto: true };
   }
 
-  // 3. Unparseable or missing schedule -> explicit unknown state (never guess open!)
   return {
     isOpen: false,
     state: 'unknown',
