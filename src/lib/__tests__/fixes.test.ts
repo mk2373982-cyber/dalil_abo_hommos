@@ -7,6 +7,7 @@ import {
   getPlaceDetailRoute,
   isOfferExpired,
   parseCsvLine,
+  validateEgyptPhone,
 } from '../formatters';
 import {
   getPlacePromoScore,
@@ -15,10 +16,20 @@ import {
 } from '../promoFilters';
 import { readOfflineCatalog, writeOfflineCatalog } from '../offlineCache';
 import { matchesArabicQuery, normalizeArabic, normalizeArabicDigits } from '../arabicSearch';
-import { evaluateOpenStatus } from '../workingHours';
+import {
+  evaluateOpenStatus,
+  formatWeeklyScheduleSummary,
+  getCairoDateString,
+  parseHoursTextToSchedule,
+} from '../workingHours';
+import {
+  buildPlaceMenuPriceMap,
+  calculateDeliveryFee,
+  computeAuthoritativeOrder,
+} from '../orderPricing';
 import { findZoneForText, formatDistanceKm, haversineKm } from '../abuhomsGeo';
 import { buildMerchantWhatsAppReport, computePlacePerformance } from '../merchantReport';
-import type { AnalyticsEvent, Place, PromoFilter } from '../../types';
+import type { AnalyticsEvent, Place, PromoFilter, WeeklySchedule } from '../../types';
 
 describe('generateSecureToken', () => {
   it('produces URL-safe unguessable tokens fitting Firestore ID constraints', () => {
@@ -52,6 +63,26 @@ describe('formatEgyptWhatsApp & buildWhatsAppUrl', () => {
   it('normalizes 10-digit mobile without leading zero and Egyptian landlines', () => {
     assert.equal(formatEgyptWhatsApp('1012345678'), '201012345678');
     assert.equal(formatEgyptWhatsApp('045-2561234'), '20452561234');
+  });
+
+  it('normalizes Arabic-Indic and Persian digits before stripping non-digits', () => {
+    assert.equal(formatEgyptWhatsApp('٠١٠١٢٣٤٥٦٧٨'), '201012345678');
+    assert.equal(formatEgyptWhatsApp('+٢٠ ١٠٠-٢٣٤-٥٦٧٨'), '201002345678');
+    assert.equal(formatEgyptWhatsApp('٠٠٢٠١١٢٣٤٥٦٧٨٩'), '201123456789');
+    assert.equal(formatEgyptWhatsApp('۰۱۲۳۴۵۶۷۸۹۰'), '201234567890');
+    assert.equal(formatEgyptWhatsApp('٠٤٥-٢٥٦٠١١٠'), '20452560110');
+    assert.equal(formatEgyptWhatsApp('+20 01012345678'), '201012345678');
+  });
+
+  it('rejects malformed or too-short numbers via formatEgyptWhatsApp and validateEgyptPhone', () => {
+    assert.equal(formatEgyptWhatsApp('12345'), '');
+    assert.equal(formatEgyptWhatsApp('abc'), '');
+    assert.equal(validateEgyptPhone('٠١٠١٢٣٤٥٦٧٨').valid, true);
+    assert.equal(validateEgyptPhone('٠١٠١٢٣٤٥٦٧٨').displayLocal, '01012345678');
+    assert.equal(validateEgyptPhone('٠٤٥٢٥٦٠١١٠', { allowLandline: false }).valid, false);
+    assert.equal(validateEgyptPhone('٠٤٥٢٥٦٠١١٠', { allowLandline: true }).valid, true);
+    assert.equal(validateEgyptPhone('١٢٣', { allowHotline: true }).valid, true);
+    assert.equal(validateEgyptPhone('01912345678').valid, false);
   });
 
   it('encodes Arabic message query safely in buildWhatsAppUrl', () => {
@@ -311,10 +342,162 @@ describe('evaluateOpenStatus (Africa/Cairo working hours)', () => {
     assert.match(res.label, /الجمعة/);
   });
 
-  it('falls back to fallbackOpenNow for unparseable text', () => {
-    const res = evaluateOpenStatus('بالحجز المسبق فقط', false, makeCairoDate('2026-06-15', 12, 0));
-    assert.equal(res.isOpen, false);
-    assert.equal(res.isAuto, false);
+  it('returns explicit unknown state for unparseable text and never guesses open', () => {
+    const resFalse = evaluateOpenStatus('بالحجز المسبق فقط', false, makeCairoDate('2026-06-15', 12, 0));
+    assert.equal(resFalse.isOpen, false);
+    assert.equal(resFalse.state, 'unknown');
+    assert.equal(resFalse.isAuto, false);
+
+    const resTrueFallback = evaluateOpenStatus('بالحجز المسبق فقط', true, makeCairoDate('2026-06-15', 12, 0));
+    assert.equal(resTrueFallback.isOpen, false);
+    assert.equal(resTrueFallback.state, 'unknown');
+    assert.equal(resTrueFallback.isAuto, false);
+  });
+
+  it('fixes Friday false-open bug on multi-segment schedules (Sat-Wed & Thu)', () => {
+    const scheduleText = 'السبت إلى الأربعاء: 4 م - 9 م | الخميس: 3 م - 8 م';
+    // 2026-06-19 is Friday
+    const fridayEvening = makeCairoDate('2026-06-19', 17, 0);
+    const friRes = evaluateOpenStatus(scheduleText, true, fridayEvening);
+    assert.equal(friRes.isOpen, false);
+    assert.equal(friRes.state, 'closed');
+    assert.match(friRes.label, /الجمعة/);
+
+    // 2026-06-18 is Thursday
+    assert.equal(evaluateOpenStatus(scheduleText, false, makeCairoDate('2026-06-18', 16, 0)).isOpen, true);
+    assert.equal(evaluateOpenStatus(scheduleText, false, makeCairoDate('2026-06-18', 20, 1)).isOpen, false);
+
+    // 2026-06-20 is Saturday
+    assert.equal(evaluateOpenStatus(scheduleText, false, makeCairoDate('2026-06-20', 17, 0)).isOpen, true);
+    assert.equal(evaluateOpenStatus(scheduleText, false, makeCairoDate('2026-06-20', 15, 30)).isOpen, false);
+
+    const parsed = parseHoursTextToSchedule(scheduleText);
+    assert.ok(parsed);
+    assert.deepEqual(parsed.schedule.fri, []);
+    assert.deepEqual(parsed.schedule.thu, [{ open: '15:00', close: '20:00' }]);
+  });
+
+  it('evaluates structured WeeklySchedule with multi-shifts and overnight carryover', () => {
+    const weekly: WeeklySchedule = {
+      sat: [{ open: '09:00', close: '13:00' }, { open: '18:00', close: '02:00' }],
+      sun: [], // closed Sunday, except Saturday overnight carryover until 02:00
+      mon: [{ open: '10:00', close: '22:00' }],
+      tue: [{ open: '10:00', close: '22:00' }],
+      wed: [{ open: '10:00', close: '22:00' }],
+      thu: [{ open: '10:00', close: '22:00' }],
+      fri: [],
+    };
+    // 2026-06-20 is Saturday, 2026-06-21 is Sunday
+    assert.equal(evaluateOpenStatus('', false, makeCairoDate('2026-06-20', 11, 0), weekly).isOpen, true);
+    assert.equal(evaluateOpenStatus('', false, makeCairoDate('2026-06-20', 15, 0), weekly).isOpen, false);
+    assert.equal(evaluateOpenStatus('', false, makeCairoDate('2026-06-20', 23, 0), weekly).isOpen, true);
+    // Sunday 01:30 AM -> still open due to Saturday 18:00 -> 02:00 overnight shift
+    assert.equal(evaluateOpenStatus('', false, makeCairoDate('2026-06-21', 1, 30), weekly).isOpen, true);
+    // Sunday 02:30 AM -> closed
+    assert.equal(evaluateOpenStatus('', false, makeCairoDate('2026-06-21', 2, 30), weekly).isOpen, false);
+
+    const summary = formatWeeklyScheduleSummary(weekly, false);
+    assert.ok(summary.includes('السبت'));
+    assert.ok(summary.includes('الاثنين إلى الخميس'));
+  });
+
+  it('partitions Cairo date string accurately across UTC midnight boundary', () => {
+    // 2026-06-15 21:30 UTC is 2026-06-16 00:30 in Africa/Cairo (UTC+3 summer)
+    const cairoNextDay = new Date('2026-06-15T21:30:00Z');
+    assert.equal(getCairoDateString(cairoNextDay), '2026-06-16');
+    const cairoSameDay = new Date('2026-06-15T18:00:00Z');
+    assert.equal(getCairoDateString(cairoSameDay), '2026-06-15');
+  });
+});
+
+describe('orderPricing (trusted server/catalog restaurant order pricing)', () => {
+  const restaurant: Place = {
+    id: 'rest-abuhoms-1',
+    name: 'مطعم الشيف',
+    categoryId: 'cat-rest',
+    categorySlug: 'restaurants',
+    area: 'أبوحمص',
+    address: 'شارع بورسعيد',
+    phone: '01012345678',
+    deliveryFeeInTown: 15,
+    deliveryFeeVillage: 30,
+    menuItems: [
+      { id: 'm-1', name: 'كريب شاورما', price: 85, category: 'كريب', description: 'شاورما فراخ مع موتزاريلا' },
+      { id: 'm-2', name: 'بطاطس مقرمشة', price: 25, category: 'مقبلات', description: 'بطاطس محمرة مقرمشة' },
+    ],
+  };
+  restaurant.menuPriceMap = buildPlaceMenuPriceMap(restaurant.menuItems);
+
+  it('builds authoritative menuPriceMap and computes exact totals + pricingSnapshot', () => {
+    assert.deepEqual(restaurant.menuPriceMap, { 'm-1': 85, 'm-2': 25 });
+    assert.equal(calculateDeliveryFee('شارع المحطة', restaurant), 15);
+    assert.equal(calculateDeliveryFee('قرية بركة غطاس', restaurant), 30);
+
+    const res = computeAuthoritativeOrder({
+      restaurant,
+      draftItems: [
+        { menuItemId: 'm-1', quantity: 2, clientPrice: 85 },
+        { menuItemId: 'm-2', quantity: 1, clientPrice: 25 },
+      ],
+      deliveryArea: 'قرية بسنتواي',
+      nowIso: '2026-06-15T12:00:00.000Z',
+    });
+
+    assert.equal(res.ok, true);
+    if (res.ok) {
+      assert.equal(res.subtotal, 195);
+      assert.equal(res.deliveryFee, 30);
+      assert.equal(res.total, 225);
+      assert.equal(res.pricingSnapshot.total, 225);
+      assert.equal(res.pricingSnapshot.currency, 'EGP');
+    }
+  });
+
+  it('rejects tampered client prices explicitly', () => {
+    const res = computeAuthoritativeOrder({
+      restaurant,
+      draftItems: [{ menuItemId: 'm-1', quantity: 2, clientPrice: 1 }],
+      deliveryArea: 'أبوحمص',
+    });
+    assert.equal(res.ok, false);
+    if (!res.ok) {
+      assert.equal(res.code, 'PRICE_MISMATCH');
+    }
+  });
+
+  it('rejects unknown/foreign items, invalid quantities, oversized carts, and non-restaurants', () => {
+    const foreignItem = computeAuthoritativeOrder({
+      restaurant,
+      draftItems: [{ menuItemId: 'foreign-item-999', quantity: 1 }],
+    });
+    assert.equal(foreignItem.ok, false);
+    if (!foreignItem.ok) assert.equal(foreignItem.code, 'ITEM_NOT_FOUND');
+
+    for (const badQty of [0, -1, 1.5, 21]) {
+      const qRes = computeAuthoritativeOrder({
+        restaurant,
+        draftItems: [{ menuItemId: 'm-1', quantity: badQty }],
+      });
+      assert.equal(qRes.ok, false);
+      if (!qRes.ok) assert.equal(qRes.code, 'INVALID_QUANTITY');
+    }
+
+    const emptyRes = computeAuthoritativeOrder({ restaurant, draftItems: [] });
+    assert.equal(emptyRes.ok, false);
+    if (!emptyRes.ok) assert.equal(emptyRes.code, 'EMPTY_ITEMS');
+
+    const tooMany = Array.from({ length: 16 }, () => ({ menuItemId: 'm-1', quantity: 1 }));
+    const maxRes = computeAuthoritativeOrder({ restaurant, draftItems: tooMany });
+    assert.equal(maxRes.ok, false);
+    if (!maxRes.ok) assert.equal(maxRes.code, 'TOO_MANY_ITEMS');
+
+    const clinicPlace: Place = { ...restaurant, categorySlug: 'medical' };
+    const wrongPlace = computeAuthoritativeOrder({
+      restaurant: clinicPlace,
+      draftItems: [{ menuItemId: 'm-1', quantity: 1 }],
+    });
+    assert.equal(wrongPlace.ok, false);
+    if (!wrongPlace.ok) assert.equal(wrongPlace.code, 'INVALID_RESTAURANT');
   });
 });
 

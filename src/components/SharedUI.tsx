@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { downloadShareablePlaceCard } from '../lib/shareCard';
+import type { PartnerScope } from '../types';
 import { FadeInUp, FloatingScrollTopButton, PageTransition } from './MotionEffects';
 
 /** Zero-Broken-Image resilient media frame with smooth fade-in reveal */
@@ -346,7 +347,18 @@ export const AdminShell: React.FC<{
   headerAction?: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, subtitle, headerAction, children }) => {
-  const { user, adminRole, isAdmin, isSuperAdmin, authReady, signOutAdmin, isCloudSeeded, seedCloudDatabase } = useApp();
+  const {
+    user,
+    adminRole,
+    isAdmin,
+    isSuperAdmin,
+    isAuditor,
+    authReady,
+    signOutAdmin,
+    isCloudSeeded,
+    isDemoPreviewMode,
+    initializeEssentialConfig,
+  } = useApp();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -558,13 +570,23 @@ export const AdminShell: React.FC<{
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {isAuditor && (
+              <span className="px-3 py-1.5 rounded-xl bg-[#e0f2fe] text-[#0369a1] text-xs font-bold whitespace-nowrap">
+                وضع التدقيق (قراءة فقط)
+              </span>
+            )}
+            {isDemoPreviewMode && (
+              <span className="px-3 py-1.5 rounded-xl bg-[#fef3c7] text-[#92400e] text-xs font-bold whitespace-nowrap">
+                معاينة تجريبية
+              </span>
+            )}
             {isSuperAdmin && !isCloudSeeded && (
               <button
                 type="button"
-                onClick={() => void seedCloudDatabase(true)}
+                onClick={() => void initializeEssentialConfig()}
                 className="min-h-[42px] px-3.5 py-2 rounded-xl bg-[#fef3c7] text-[#735c00] text-xs font-bold whitespace-nowrap active:scale-95 transition-transform"
               >
-                مزامنة السحابة
+                تهيئة الإعدادات الأساسية
               </button>
             )}
             {headerAction}
@@ -580,13 +602,26 @@ export const AdminShell: React.FC<{
   );
 };
 
-/** Secure Operator Sign-in Gate for Live Partner Consoles (Clinic / Kitchen / Captain) */
+/** Secure, Scope-Isolated Operator Sign-in Gate for Live Partner Consoles (Clinic / Kitchen / Captain) */
 export const PartnerConsoleGate: React.FC<{
   title: string;
   description: string;
+  requiredScope?: PartnerScope;
   children: React.ReactNode;
-}> = ({ title, description, children }) => {
-  const { authReady, isPartner, signInAdmin } = useApp();
+}> = ({ title, description, requiredScope, children }) => {
+  const {
+    authReady,
+    user,
+    isPartner,
+    isAdmin,
+    isAuditor,
+    canAccessPartnerScope,
+    managedPlaceIds,
+    signInError,
+    signInAdmin,
+    signOutAdmin,
+    showToast,
+  } = useApp();
   const [signingIn, setSigningIn] = useState(false);
 
   if (!authReady) {
@@ -599,9 +634,24 @@ export const PartnerConsoleGate: React.FC<{
     );
   }
 
-  if (!isPartner) {
+  const hasScopeAccess = requiredScope ? canAccessPartnerScope(requiredScope) : isPartner;
+  const needsPlaceAssignment =
+    !isAdmin &&
+    (requiredScope === 'clinic' || requiredScope === 'restaurant') &&
+    managedPlaceIds.length === 0;
+
+  if (!isPartner || !hasScopeAccess || needsPlaceAssignment) {
+    const scopeLabel =
+      requiredScope === 'clinic'
+        ? 'سكرتارية العيادات'
+        : requiredScope === 'restaurant'
+          ? 'مطبخ المطاعم'
+          : requiredScope === 'captain'
+            ? 'كباتن الدليفري'
+            : 'لوحة التشغيل';
+
     return (
-      <StackLayout title={title} subtitle="واجهة تشغيل حية محمية" backTo="/home">
+      <StackLayout title={title} subtitle="واجهة تشغيل حية محمية ومعزولة" backTo="/home">
         <FadeInUp delay={0.03} className="max-w-md mx-auto mt-6">
           <div className="bg-white border border-[#e4ece7] rounded-3xl p-6 text-center shadow-civic-1 space-y-4">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-[#e6f4ec] text-[#0f5132] flex items-center justify-center">
@@ -609,6 +659,40 @@ export const PartnerConsoleGate: React.FC<{
             </div>
             <h2 className="text-lg font-bold text-[#181c1c]">{title}</h2>
             <p className="text-sm text-[#404942] leading-relaxed">{description}</p>
+
+            {signInError && (
+              <div className="p-3.5 rounded-2xl bg-[#ffdad6] text-[#93000a] text-xs font-semibold leading-relaxed text-right">
+                {signInError}
+              </div>
+            )}
+
+            {user && (!isPartner || !hasScopeAccess || needsPlaceAssignment) && (
+              <div className="p-3.5 rounded-2xl bg-[#fef3c7] border border-[#f5d061] text-[#735c00] text-xs leading-relaxed text-right space-y-2">
+                <p className="font-bold">
+                  {!isPartner
+                    ? `الحساب (${user.email}) غير مسجل كشريك تشغيل معتمد.`
+                    : !hasScopeAccess
+                      ? `حسابك الحالي لا يملك صلاحية الوصول إلى نطاق «${scopeLabel}».`
+                      : 'لم يتم ربط أي عيادة أو مطعم بحسابك بعد. تواصل مع المشرف العام لتعيين نشاطك.'}
+                </p>
+                <div className="flex items-center justify-between gap-2 bg-white/80 rounded-xl px-2.5 py-1.5 border border-[#e4ece7]">
+                  <span className="font-mono text-[11px] text-[#181c1c] truncate" dir="ltr">
+                    UID: {user.uid}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard?.writeText(user.uid);
+                      showToast('تم نسخ معرّف الحساب (UID) بنجاح', 'success');
+                    }}
+                    className="text-[11px] font-bold text-[#0f5132] shrink-0"
+                  >
+                    نسخ
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button
               type="button"
               disabled={signingIn}
@@ -622,13 +706,35 @@ export const PartnerConsoleGate: React.FC<{
               <LogIn size={18} />
               {signingIn ? 'جارٍ فتح نافذة Google...' : 'تسجيل دخول المشغّل عبر Google'}
             </button>
+
+            {user && (
+              <button
+                type="button"
+                onClick={() => void signOutAdmin()}
+                className="w-full min-h-[44px] bg-[#f1f4f2] hover:bg-[#e4ece7] text-[#181c1c] font-bold text-xs rounded-2xl flex items-center justify-center gap-2"
+              >
+                <LogOut size={15} />
+                تسجيل الخروج لتبديل الحساب
+              </button>
+            )}
           </div>
         </FadeInUp>
       </StackLayout>
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {isAuditor && (
+        <div className="max-w-4xl mx-auto px-4 pt-3">
+          <div className="p-3 rounded-2xl bg-[#e0f2fe] border border-[#bae6fd] text-[#0369a1] text-xs font-bold text-center">
+            أنت تتصفح لوحة التشغيل بصلاحية «مدقق (قراءة فقط)» — لا يمكن إجراء تعديلات تشغيلية.
+          </div>
+        </div>
+      )}
+      {children}
+    </>
+  );
 };
 
 /** Global Animated Toast Feedback Overlay (Replaces browser alert()) */

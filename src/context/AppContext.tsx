@@ -1,16 +1,19 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import {
   collection,
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
   limit,
   onSnapshot,
+  orderBy,
   query,
   runTransaction,
   setDoc,
   updateDoc,
+  where,
   writeBatch,
 } from 'firebase/firestore';
 import {
@@ -23,7 +26,9 @@ import {
   logoutUser,
   OperationType,
 } from '../firebase';
-import { generateSecureToken } from '../lib/formatters';
+import { generateSecureToken, validateEgyptPhone } from '../lib/formatters';
+import { buildPlaceMenuPriceMap, computeAuthoritativeOrder } from '../lib/orderPricing';
+import { getCairoDateString } from '../lib/workingHours';
 import { readOfflineCatalog, writeOfflineCatalog } from '../lib/offlineCache';
 import { appendActivityHistory, saveCitizenProfile } from '../lib/citizenProfile';
 import {
@@ -33,7 +38,6 @@ import {
   SEED_CLINIC_QUEUES,
   SEED_EMERGENCY,
   SEED_FINANCE_CONFIG,
-  SEED_FINANCE_SETTLEMENTS,
   SEED_OFFERS,
   SEED_PLACES,
   SEED_PROMO_FILTERS,
@@ -43,6 +47,7 @@ import {
 import type {
   ActiveTracker,
   AdminRole,
+  AdminUser,
   Agency,
   AnalyticsEvent,
   Campaign,
@@ -50,11 +55,13 @@ import type {
   Category,
   ClinicQueue,
   ClinicTicket,
+  DeliveryCoords,
   DeliveryRide,
   EmergencyContact,
   FinanceConfig,
   FinanceSettlement,
   Offer,
+  PartnerScope,
   Place,
   PromoFilter,
   Property,
@@ -70,6 +77,17 @@ export interface ToastMessage {
   tone: 'success' | 'error' | 'info';
 }
 
+const CORRECTION_ALLOWLIST = new Set([
+  'name',
+  'phone',
+  'whatsapp',
+  'hours',
+  'address',
+  'area',
+  'specialty',
+  'description',
+]);
+
 function generateSafeId(prefix: string): string {
   return generateSecureToken(prefix, 20);
 }
@@ -82,16 +100,53 @@ function stripUndefined<T extends Record<string, unknown>>(obj: T): Record<strin
   return out;
 }
 
+function mapFirebaseAuthErrorToArabic(err: unknown): string {
+  const code = typeof err === 'object' && err !== null && 'code' in err ? String((err as { code?: unknown }).code) : '';
+  if (code === 'auth/popup-blocked') {
+    return 'المتصفح منع نافذة تسجيل الدخول المنبثقة. يرجى السماح بالنوافذ المنبثقة (Popups) لهذا الموقع والمحاولة مرة أخرى.';
+  }
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+    return 'تم إغلاق نافذة تسجيل الدخول قبل إتمام العملية. يمكنك المحاولة مرة أخرى.';
+  }
+  if (code === 'auth/unauthorized-domain') {
+    return 'نطاق الموقع الحالي غير مضاف في قائمة النطاقات المصرح بها في Firebase Authentication (Authorized Domains).';
+  }
+  if (code === 'auth/network-request-failed') {
+    return 'تعذر الاتصال بخدمة المصادقة بسبب مشكلة في الإنترنت. تحقق من الشبكة وحاول مجدداً.';
+  }
+  if (code === 'auth/operation-not-allowed') {
+    return 'تسجيل الدخول عبر Google غير مفعّل في إعدادات Firebase Authentication لهذا المشروع.';
+  }
+  const msg = err instanceof Error ? err.message : '';
+  return msg
+    ? `تعذر إتمام تسجيل الدخول عبر Google (${code || msg}).`
+    : 'تعذر إتمام تسجيل الدخول عبر Google. حاول مرة أخرى.';
+}
+
 interface AppContextValue {
-  // Auth
+  // Auth & RBAC
   user: User | null;
   authReady: boolean;
   adminRole: AdminRole | null;
+  adminProfile: AdminUser | null;
   isAdmin: boolean;
+  isAdminWriter: boolean;
+  isAuditor: boolean;
   isSuperAdmin: boolean;
   isPartner: boolean;
+  partnerScopes: PartnerScope[];
+  managedPlaceIds: string[];
+  canAccessPartnerScope: (scope: PartnerScope) => boolean;
+  canManagePlace: (placeId: string, scope: 'clinic' | 'restaurant') => boolean;
+  signInError: string | null;
+  clearSignInError: () => void;
   signInAdmin: () => Promise<boolean>;
   signOutAdmin: () => Promise<void>;
+
+  // Admin Team Management (Super Admin only)
+  adminsList: AdminUser[];
+  saveAdminUser: (record: AdminUser) => Promise<void>;
+  deleteAdminUser: (uid: string) => Promise<void>;
 
   // Live Firestore Catalog
   categories: Category[];
@@ -107,8 +162,9 @@ interface AppContextValue {
   clinicQueues: ClinicQueue[];
   settings: PublicSettings;
   isCloudSeeded: boolean;
+  isDemoPreviewMode: boolean;
 
-  // Live Operational & Admin Streams (synced when admin/operator signed in)
+  // Live Operational & Admin Streams (role/tenant scoped + server-ordered)
   clinicTickets: ClinicTicket[];
   restaurantOrders: RestaurantOrder[];
   deliveryRides: DeliveryRide[];
@@ -117,6 +173,19 @@ interface AppContextValue {
   financeConfig: FinanceConfig;
   financeSettlements: FinanceSettlement[];
   analyticsEvents: AnalyticsEvent[];
+
+  // Pagination controls
+  hasMoreClinicTickets: boolean;
+  loadMoreClinicTickets: () => void;
+  hasMoreOrders: boolean;
+  loadMoreOrders: () => void;
+  hasMoreRides: boolean;
+  loadMoreRides: () => void;
+  hasMoreSubmissions: boolean;
+  loadMoreSubmissions: () => void;
+  hasMoreAnalytics: boolean;
+  analyticsSampleLimit: number;
+  loadMoreAnalytics: () => void;
 
   // Local Citizen State
   favorites: string[];
@@ -151,6 +220,7 @@ interface AppContextValue {
     deliveryArea: string;
     deliveryAddress: string;
     locationShared: boolean;
+    deliveryCoords?: DeliveryCoords;
     items: CartItem[];
     subtotal: number;
     deliveryFee: number;
@@ -178,20 +248,27 @@ interface AppContextValue {
   }) => Promise<Submission>;
   logAnalyticsEvent: (event: Omit<AnalyticsEvent, 'createdAt'>) => Promise<void>;
 
-  // Partner Operational Console Mutations (Live Firestore)
+  // Partner Operational Console Mutations (Atomic + Isolated)
   updateClinicQueueState: (doctorId: string, patch: Partial<ClinicQueue>) => Promise<void>;
+  callNextClinicTicket: (doctorId: string) => Promise<ClinicTicket | null>;
+  resetClinicDaySession: (doctorId: string) => Promise<void>;
   updateClinicTicketStatus: (ticketId: string, status: ClinicTicket['status']) => Promise<void>;
+  claimRestaurantOrder: (orderId: string, captainName: string, captainPhone: string) => Promise<boolean>;
   updateRestaurantOrderStatus: (
     orderId: string,
     patch: Partial<Pick<RestaurantOrder, 'status' | 'captainName' | 'captainPhone'>>
   ) => Promise<void>;
+  claimDeliveryRide: (rideId: string, captainName: string, captainPhone: string) => Promise<boolean>;
   updateDeliveryRideStatus: (
     rideId: string,
     patch: Partial<Pick<DeliveryRide, 'status' | 'captainName' | 'captainPhone'>>
   ) => Promise<void>;
 
   // Admin Mutations (Live Firestore — 100% Dynamic)
-  seedCloudDatabase: (force?: boolean) => Promise<void>;
+  seedCloudDatabase: (includeDemoCatalog?: boolean) => Promise<void>;
+  initializeEssentialConfig: () => Promise<void>;
+  seedDemoCatalog: () => Promise<void>;
+  migrateRestaurantMenuPriceMaps: () => Promise<number>;
   saveCategory: (category: Category) => Promise<void>;
   deleteCategory: (categoryId: string) => Promise<void>;
   reorderCategories: (orderedIds: string[]) => Promise<void>;
@@ -211,6 +288,9 @@ interface AppContextValue {
     status: Submission['status'],
     adminNote?: string
   ) => Promise<void>;
+  applyCorrectionSubmission: (submissionId: string, adminNote?: string) => Promise<boolean>;
+  publishSubmissionAsPlace: (submissionId: string, place: Place, adminNote?: string) => Promise<boolean>;
+  publishSubmissionAsProperty: (submissionId: string, property: Property, adminNote?: string) => Promise<boolean>;
   saveWhatsappQueueItem: (item: WhatsappQueueItem) => Promise<void>;
   updateWhatsappStatus: (itemId: string, status: WhatsappQueueItem['status']) => Promise<void>;
   saveFinanceConfig: (config: FinanceConfig) => Promise<void>;
@@ -223,16 +303,53 @@ const AppContext = createContext<AppContextValue | null>(null);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
+  const [adminProfile, setAdminProfile] = useState<AdminUser | null>(null);
+  const [signInError, setSignInError] = useState<string | null>(null);
+  const [adminsList, setAdminsList] = useState<AdminUser[]>([]);
 
+  const adminRole: AdminRole | null = adminProfile && adminProfile.active !== false ? adminProfile.role : null;
   const isSuperAdmin = adminRole === 'super_admin';
+  const isAuditor = adminRole === 'auditor';
+  const isAdminWriter = adminRole === 'super_admin' || adminRole === 'moderator';
   const isAdmin = adminRole === 'super_admin' || adminRole === 'moderator' || adminRole === 'auditor';
   const isPartner = isAdmin || adminRole === 'partner';
+
+  const partnerScopes: PartnerScope[] = useMemo(() => {
+    if (isAdmin) return ['clinic', 'restaurant', 'captain'];
+    if (adminRole === 'partner' && Array.isArray(adminProfile?.partnerTypes)) {
+      return adminProfile.partnerTypes;
+    }
+    return [];
+  }, [isAdmin, adminRole, adminProfile]);
+
+  const managedPlaceIds: string[] = useMemo(() => {
+    if (adminRole === 'partner' && Array.isArray(adminProfile?.managedPlaceIds)) {
+      return adminProfile.managedPlaceIds;
+    }
+    return [];
+  }, [adminRole, adminProfile]);
+
+  const canAccessPartnerScope = useCallback(
+    (scope: PartnerScope) => {
+      if (isAdmin) return true;
+      return adminRole === 'partner' && partnerScopes.includes(scope);
+    },
+    [isAdmin, adminRole, partnerScopes]
+  );
+
+  const canManagePlace = useCallback(
+    (placeId: string, scope: 'clinic' | 'restaurant') => {
+      if (isAdminWriter) return true;
+      if (isAuditor) return false;
+      return adminRole === 'partner' && partnerScopes.includes(scope) && managedPlaceIds.includes(placeId);
+    },
+    [isAdminWriter, isAuditor, adminRole, partnerScopes, managedPlaceIds]
+  );
 
   // Hydrate previously loaded public directory from device cache for instant offline browsing
   const cachedCatalog = useMemo(() => readOfflineCatalog(), []);
 
-  // Cloud state (pre-hydrated from last synced offline snapshot if available, otherwise null until cloud loads)
+  // Cloud state
   const [cloudCategories, setCloudCategories] = useState<Category[] | null>(
     () => (cachedCatalog?.categories?.length ? cachedCatalog.categories : null)
   );
@@ -264,15 +381,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     () => (cachedCatalog?.settings ? cachedCatalog.settings : null)
   );
 
-  // Operational & Admin collections (never pre-seeded with fake local data)
+  // Operational & Admin collections with server-ordered pagination limits
   const [clinicTickets, setClinicTickets] = useState<ClinicTicket[]>([]);
+  const [clinicTicketsLimit, setClinicTicketsLimit] = useState(50);
+  const [hasMoreClinicTickets, setHasMoreClinicTickets] = useState(false);
+
   const [restaurantOrders, setRestaurantOrders] = useState<RestaurantOrder[]>([]);
+  const [ordersLimit, setOrdersLimit] = useState(50);
+  const [hasMoreOrders, setHasMoreOrders] = useState(false);
+
   const [deliveryRides, setDeliveryRides] = useState<DeliveryRide[]>([]);
+  const [ridesLimit, setRidesLimit] = useState(50);
+  const [hasMoreRides, setHasMoreRides] = useState(false);
+
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [submissionsLimit, setSubmissionsLimit] = useState(50);
+  const [hasMoreSubmissions, setHasMoreSubmissions] = useState(false);
+
   const [whatsappQueue, setWhatsappQueue] = useState<WhatsappQueueItem[]>([]);
   const [financeConfig, setFinanceConfig] = useState<FinanceConfig>(SEED_FINANCE_CONFIG);
   const [financeSettlements, setFinanceSettlements] = useState<FinanceSettlement[]>([]);
+
   const [analyticsEvents, setAnalyticsEvents] = useState<AnalyticsEvent[]>([]);
+  const [analyticsSampleLimit, setAnalyticsSampleLimit] = useState(200);
+  const [hasMoreAnalytics, setHasMoreAnalytics] = useState(false);
 
   // Local citizen persistence
   const [favorites, setFavorites] = useState<string[]>(() => {
@@ -297,19 +429,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const seededOnceRef = useRef(false);
 
   const showToast = useCallback((text: string, tone: 'success' | 'error' | 'info' = 'success') => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     setToasts((prev) => [...prev.slice(-3), { id, text, tone }]);
     window.setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3800);
+    }, 4200);
   }, []);
 
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
+
+  const clearSignInError = useCallback(() => setSignInError(null), []);
 
   const setActiveTracker = useCallback((tracker: ActiveTracker | null) => {
     setActiveTrackerState(tracker);
@@ -321,12 +454,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // Auth listener with RBAC role lookup
+  // Auth listener with full RBAC & partner scope lookup
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (!firebaseUser) {
-        setAdminRole(null);
+        setAdminProfile(null);
         setAuthReady(true);
         return;
       }
@@ -334,30 +467,68 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         firebaseUser.emailVerified &&
         firebaseUser.email?.toLowerCase() === BOOTSTRAPPED_ADMIN_EMAIL.toLowerCase();
       if (isOwner) {
-        setAdminRole('super_admin');
+        setAdminProfile({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || BOOTSTRAPPED_ADMIN_EMAIL,
+          name: firebaseUser.displayName || 'المشرف العام',
+          role: 'super_admin',
+          active: true,
+        });
         setAuthReady(true);
         return;
       }
       try {
         const adminSnap = await getDoc(doc(db, 'admins', firebaseUser.uid));
         if (adminSnap.exists()) {
-          const role = (adminSnap.data() as { role?: AdminRole }).role;
-          if (role === 'super_admin' || role === 'partner' || role === 'moderator' || role === 'auditor') {
-            setAdminRole(role);
+          const raw = adminSnap.data() as Partial<AdminUser>;
+          const role = raw.role;
+          if (
+            raw.active !== false &&
+            (role === 'super_admin' || role === 'partner' || role === 'moderator' || role === 'auditor')
+          ) {
+            setAdminProfile({
+              uid: firebaseUser.uid,
+              email: raw.email || firebaseUser.email || '',
+              name: raw.name || firebaseUser.displayName || '',
+              role,
+              partnerTypes: Array.isArray(raw.partnerTypes) ? raw.partnerTypes : [],
+              managedPlaceIds: Array.isArray(raw.managedPlaceIds) ? raw.managedPlaceIds : [],
+              active: raw.active ?? true,
+              createdAt: raw.createdAt,
+              updatedAt: raw.updatedAt,
+            });
           } else {
-            setAdminRole(null);
+            setAdminProfile(null);
           }
         } else {
-          setAdminRole(null);
+          setAdminProfile(null);
         }
       } catch {
-        setAdminRole(null);
+        setAdminProfile(null);
       } finally {
         setAuthReady(true);
       }
     });
     return () => unsub();
   }, []);
+
+  // Super Admin team/partners registry subscription
+  useEffect(() => {
+    if (!authReady || !isSuperAdmin) {
+      setAdminsList([]);
+      return;
+    }
+    const unsub = onSnapshot(
+      collection(db, 'admins'),
+      (snap) => {
+        const list = snap.docs.map((d) => ({ ...(d.data() as AdminUser), uid: d.id }));
+        list.sort((a, b) => (a.role || '').localeCompare(b.role || ''));
+        setAdminsList(list);
+      },
+      (error) => logFirestoreListenerError(error, OperationType.LIST, 'admins')
+    );
+    return () => unsub();
+  }, [authReady, isSuperAdmin]);
 
   // Public real-time Firestore subscriptions (zero-login civic catalog)
   useEffect(() => {
@@ -467,7 +638,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       onSnapshot(
         collection(db, 'clinic_queues'),
         (snap) => {
-          const list = snap.docs.map((d) => ({ ...(d.data() as ClinicQueue), doctorId: d.id }));
+          const list = snap.docs.map((d) => ({
+            ...(d.data() as ClinicQueue),
+            doctorId: d.id,
+            sessionDate: (d.data() as Partial<ClinicQueue>).sessionDate || getCairoDateString(),
+          }));
           setCloudQueues(list);
           writeOfflineCatalog({ clinicQueues: list });
         },
@@ -507,76 +682,255 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     void updateDoc(doc(db, 'public_settings', 'main'), {
       visitsCount: nextCount,
     }).catch(() => {
-      // Non-blocking: ignore offline or race conflicts
+      // Non-blocking
     });
   }, [cloudSettings]);
 
-  // Partner Operational real-time streams (attached for partners + admins, bounded with limit())
+  // Tenant-Isolated & Server-Ordered Clinic Tickets Stream
   useEffect(() => {
-    if (!authReady || !isPartner) {
+    if (!authReady || (!isAdmin && !canAccessPartnerScope('clinic'))) {
       setClinicTickets([]);
-      setRestaurantOrders([]);
-      setDeliveryRides([]);
+      setHasMoreClinicTickets(false);
       return;
     }
+
+    if (!isAdmin && managedPlaceIds.length === 0) {
+      setClinicTickets([]);
+      setHasMoreClinicTickets(false);
+      return;
+    }
+
+    const q = isAdmin
+      ? query(collection(db, 'clinic_tickets'), orderBy('createdAt', 'desc'), limit(clinicTicketsLimit))
+      : query(
+          collection(db, 'clinic_tickets'),
+          where('doctorId', 'in', managedPlaceIds.slice(0, 10)),
+          orderBy('createdAt', 'desc'),
+          limit(clinicTicketsLimit)
+        );
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const list = snap.docs.map((d) => ({
+          ...(d.data() as ClinicTicket),
+          id: d.id,
+          sessionDate: (d.data() as Partial<ClinicTicket>).sessionDate || (d.data().createdAt || '').slice(0, 10) || getCairoDateString(),
+        }));
+        setClinicTickets(list);
+        setHasMoreClinicTickets(snap.docs.length >= clinicTicketsLimit);
+      },
+      (error) => logFirestoreListenerError(error, OperationType.LIST, 'clinic_tickets')
+    );
+
+    return () => unsub();
+  }, [authReady, isAdmin, canAccessPartnerScope, managedPlaceIds, clinicTicketsLimit]);
+
+  // Tenant-Isolated & Server-Ordered Restaurant Orders Stream (Admin / Restaurant Partner / Captain Partner)
+  useEffect(() => {
+    const canSeeRestaurant = isAdmin || (canAccessPartnerScope('restaurant') && managedPlaceIds.length > 0);
+    const canSeeCaptain = !isAdmin && canAccessPartnerScope('captain') && Boolean(user?.uid);
+
+    if (!authReady || (!canSeeRestaurant && !canSeeCaptain)) {
+      setRestaurantOrders([]);
+      setHasMoreOrders(false);
+      return;
+    }
+
     const unsubs: Array<() => void> = [];
+    const buckets = new Map<string, RestaurantOrder[]>();
 
-    unsubs.push(
-      onSnapshot(
-        query(collection(db, 'clinic_tickets'), limit(150)),
-        (snap) => {
-          const list = snap.docs.map((d) => ({ ...(d.data() as ClinicTicket), id: d.id }));
-          list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-          setClinicTickets(list);
-        },
-        (error) => logFirestoreListenerError(error, OperationType.LIST, 'clinic_tickets')
-      )
-    );
+    const syncMerged = () => {
+      const merged = new Map<string, RestaurantOrder>();
+      buckets.forEach((arr) => {
+        arr.forEach((item) => merged.set(item.id, item));
+      });
+      const sorted = Array.from(merged.values()).sort((a, b) =>
+        (b.createdAt || '').localeCompare(a.createdAt || '')
+      );
+      setRestaurantOrders(sorted);
+    };
 
-    unsubs.push(
-      onSnapshot(
-        query(collection(db, 'restaurant_orders'), limit(150)),
-        (snap) => {
-          const list = snap.docs.map((d) => ({ ...(d.data() as RestaurantOrder), id: d.id }));
-          list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-          setRestaurantOrders(list);
-        },
-        (error) => logFirestoreListenerError(error, OperationType.LIST, 'restaurant_orders')
-      )
-    );
+    if (isAdmin) {
+      unsubs.push(
+        onSnapshot(
+          query(collection(db, 'restaurant_orders'), orderBy('createdAt', 'desc'), limit(ordersLimit)),
+          (snap) => {
+            buckets.set(
+              'admin',
+              snap.docs.map((d) => ({ ...(d.data() as RestaurantOrder), id: d.id }))
+            );
+            setHasMoreOrders(snap.docs.length >= ordersLimit);
+            syncMerged();
+          },
+          (error) => logFirestoreListenerError(error, OperationType.LIST, 'restaurant_orders')
+        )
+      );
+    } else {
+      if (canAccessPartnerScope('restaurant') && managedPlaceIds.length > 0) {
+        unsubs.push(
+          onSnapshot(
+            query(
+              collection(db, 'restaurant_orders'),
+              where('restaurantId', 'in', managedPlaceIds.slice(0, 10)),
+              orderBy('createdAt', 'desc'),
+              limit(ordersLimit)
+            ),
+            (snap) => {
+              buckets.set(
+                'restaurant',
+                snap.docs.map((d) => ({ ...(d.data() as RestaurantOrder), id: d.id }))
+              );
+              setHasMoreOrders((prev) => prev || snap.docs.length >= ordersLimit);
+              syncMerged();
+            },
+            (error) => logFirestoreListenerError(error, OperationType.LIST, 'restaurant_orders:restaurant')
+          )
+        );
+      }
 
-    unsubs.push(
-      onSnapshot(
-        query(collection(db, 'delivery_rides'), limit(150)),
-        (snap) => {
-          const list = snap.docs.map((d) => ({ ...(d.data() as DeliveryRide), id: d.id }));
-          list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-          setDeliveryRides(list);
-        },
-        (error) => logFirestoreListenerError(error, OperationType.LIST, 'delivery_rides')
-      )
-    );
+      if (canSeeCaptain && user?.uid) {
+        unsubs.push(
+          onSnapshot(
+            query(
+              collection(db, 'restaurant_orders'),
+              where('status', '==', 'ready'),
+              orderBy('createdAt', 'desc'),
+              limit(ordersLimit)
+            ),
+            (snap) => {
+              buckets.set(
+                'captain_ready',
+                snap.docs.map((d) => ({ ...(d.data() as RestaurantOrder), id: d.id }))
+              );
+              syncMerged();
+            },
+            (error) => logFirestoreListenerError(error, OperationType.LIST, 'restaurant_orders:ready')
+          )
+        );
+        unsubs.push(
+          onSnapshot(
+            query(
+              collection(db, 'restaurant_orders'),
+              where('captainUid', '==', user.uid),
+              orderBy('createdAt', 'desc'),
+              limit(ordersLimit)
+            ),
+            (snap) => {
+              buckets.set(
+                'captain_mine',
+                snap.docs.map((d) => ({ ...(d.data() as RestaurantOrder), id: d.id }))
+              );
+              setHasMoreOrders((prev) => prev || snap.docs.length >= ordersLimit);
+              syncMerged();
+            },
+            (error) => logFirestoreListenerError(error, OperationType.LIST, 'restaurant_orders:captain')
+          )
+        );
+      }
+    }
 
     return () => unsubs.forEach((u) => u());
-  }, [authReady, isPartner]);
+  }, [authReady, isAdmin, canAccessPartnerScope, managedPlaceIds, user?.uid, ordersLimit]);
 
-  // Admin Panel real-time streams (attached only for super_admin / moderator / auditor)
+  // Tenant-Isolated & Server-Ordered Delivery Rides Stream (Admin / Captain Partner)
+  useEffect(() => {
+    const canSeeCaptain = !isAdmin && canAccessPartnerScope('captain') && Boolean(user?.uid);
+    if (!authReady || (!isAdmin && !canSeeCaptain)) {
+      setDeliveryRides([]);
+      setHasMoreRides(false);
+      return;
+    }
+
+    const unsubs: Array<() => void> = [];
+    const buckets = new Map<string, DeliveryRide[]>();
+
+    const syncMerged = () => {
+      const merged = new Map<string, DeliveryRide>();
+      buckets.forEach((arr) => arr.forEach((r) => merged.set(r.id, r)));
+      const sorted = Array.from(merged.values()).sort((a, b) =>
+        (b.createdAt || '').localeCompare(a.createdAt || '')
+      );
+      setDeliveryRides(sorted);
+    };
+
+    if (isAdmin) {
+      unsubs.push(
+        onSnapshot(
+          query(collection(db, 'delivery_rides'), orderBy('createdAt', 'desc'), limit(ridesLimit)),
+          (snap) => {
+            buckets.set(
+              'admin',
+              snap.docs.map((d) => ({ ...(d.data() as DeliveryRide), id: d.id }))
+            );
+            setHasMoreRides(snap.docs.length >= ridesLimit);
+            syncMerged();
+          },
+          (error) => logFirestoreListenerError(error, OperationType.LIST, 'delivery_rides')
+        )
+      );
+    } else if (user?.uid) {
+      unsubs.push(
+        onSnapshot(
+          query(
+            collection(db, 'delivery_rides'),
+            where('status', '==', 'pending'),
+            orderBy('createdAt', 'desc'),
+            limit(ridesLimit)
+          ),
+          (snap) => {
+            buckets.set(
+              'pending',
+              snap.docs.map((d) => ({ ...(d.data() as DeliveryRide), id: d.id }))
+            );
+            syncMerged();
+          },
+          (error) => logFirestoreListenerError(error, OperationType.LIST, 'delivery_rides:pending')
+        )
+      );
+      unsubs.push(
+        onSnapshot(
+          query(
+            collection(db, 'delivery_rides'),
+            where('captainUid', '==', user.uid),
+            orderBy('createdAt', 'desc'),
+            limit(ridesLimit)
+          ),
+          (snap) => {
+            buckets.set(
+              'mine',
+              snap.docs.map((d) => ({ ...(d.data() as DeliveryRide), id: d.id }))
+            );
+            setHasMoreRides(snap.docs.length >= ridesLimit);
+            syncMerged();
+          },
+          (error) => logFirestoreListenerError(error, OperationType.LIST, 'delivery_rides:mine')
+        )
+      );
+    }
+
+    return () => unsubs.forEach((u) => u());
+  }, [authReady, isAdmin, canAccessPartnerScope, user?.uid, ridesLimit]);
+
+  // Admin Panel real-time streams (server-ordered before limit!)
   useEffect(() => {
     if (!authReady || !isAdmin) {
       setSubmissions([]);
+      setHasMoreSubmissions(false);
       setWhatsappQueue([]);
       setAnalyticsEvents([]);
+      setHasMoreAnalytics(false);
       return;
     }
     const unsubs: Array<() => void> = [];
 
     unsubs.push(
       onSnapshot(
-        query(collection(db, 'submissions'), limit(200)),
+        query(collection(db, 'submissions'), orderBy('createdAt', 'desc'), limit(submissionsLimit)),
         (snap) => {
           const list = snap.docs.map((d) => ({ ...(d.data() as Submission), id: d.id }));
-          list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
           setSubmissions(list);
+          setHasMoreSubmissions(snap.docs.length >= submissionsLimit);
         },
         (error) => logFirestoreListenerError(error, OperationType.LIST, 'submissions')
       )
@@ -584,10 +938,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     unsubs.push(
       onSnapshot(
-        query(collection(db, 'whatsapp_queue'), limit(150)),
+        query(collection(db, 'whatsapp_queue'), orderBy('createdAt', 'desc'), limit(100)),
         (snap) => {
           const list = snap.docs.map((d) => ({ ...(d.data() as WhatsappQueueItem), id: d.id }));
-          list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
           setWhatsappQueue(list);
         },
         (error) => logFirestoreListenerError(error, OperationType.LIST, 'whatsapp_queue')
@@ -596,21 +949,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     unsubs.push(
       onSnapshot(
-        query(collection(db, 'analytics_events'), limit(300)),
+        query(collection(db, 'analytics_events'), orderBy('createdAt', 'desc'), limit(analyticsSampleLimit)),
         (snap) => {
           const list = snap.docs.map((d) => ({ ...(d.data() as AnalyticsEvent), id: d.id }));
-          list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
           setAnalyticsEvents(list);
+          setHasMoreAnalytics(snap.docs.length >= analyticsSampleLimit);
         },
         (error) => logFirestoreListenerError(error, OperationType.LIST, 'analytics_events')
       )
     );
 
     return () => unsubs.forEach((u) => u());
-  }, [authReady, isAdmin]);
+  }, [authReady, isAdmin, submissionsLimit, analyticsSampleLimit]);
 
   // Finance real-time streams (strictly super_admin or auditor)
-  const canReadFinance = isSuperAdmin || adminRole === 'auditor';
+  const canReadFinance = isSuperAdmin || isAuditor;
   useEffect(() => {
     if (!authReady || !canReadFinance) {
       setFinanceConfig(SEED_FINANCE_CONFIG);
@@ -647,109 +1000,254 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => unsubs.forEach((u) => u());
   }, [authReady, canReadFinance]);
 
-  // Seed Firestore automatically once when a Super Admin signs in and cloud catalog is still empty
-  const seedCloudDatabase = useCallback(
-    async (force = false) => {
-      if (!isSuperAdmin) {
-        showToast('مزامنة بيانات التأسيس متاحة لصلاحية المشرف العام فقط', 'error');
+  // Pagination callbacks
+  const loadMoreClinicTickets = useCallback(() => setClinicTicketsLimit((n) => Math.min(n + 50, 500)), []);
+  const loadMoreOrders = useCallback(() => setOrdersLimit((n) => Math.min(n + 50, 500)), []);
+  const loadMoreRides = useCallback(() => setRidesLimit((n) => Math.min(n + 50, 500)), []);
+  const loadMoreSubmissions = useCallback(() => setSubmissionsLimit((n) => Math.min(n + 50, 500)), []);
+  const loadMoreAnalytics = useCallback(() => setAnalyticsSampleLimit((n) => Math.min(n + 200, 1000)), []);
+
+  // Safe, Non-Destructive Essential Config Initialization (NEVER overwrites existing docs, NEVER seeds demo data or settlements!)
+  const initializeEssentialConfig = useCallback(async () => {
+    if (!isSuperAdmin) {
+      showToast('تهيئة الإعدادات الأساسية متاحة لصلاحية المشرف العام فقط', 'error');
+      return;
+    }
+    try {
+      const batch = writeBatch(db);
+      const now = new Date().toISOString();
+      let createdCount = 0;
+
+      for (const c of SEED_CATEGORIES) {
+        const ref = doc(db, 'categories', c.id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          batch.set(ref, stripUndefined({ ...c, updatedAt: now }));
+          createdCount += 1;
+        }
+      }
+      for (const pf of SEED_PROMO_FILTERS) {
+        const ref = doc(db, 'promo_filters', pf.id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          batch.set(ref, stripUndefined({ ...pf, updatedAt: now }));
+          createdCount += 1;
+        }
+      }
+      for (const em of SEED_EMERGENCY) {
+        const ref = doc(db, 'emergency_contacts', em.id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          batch.set(ref, stripUndefined({ ...em }));
+          createdCount += 1;
+        }
+      }
+
+      const settingsRef = doc(db, 'public_settings', 'main');
+      const settingsSnap = await getDoc(settingsRef);
+      if (!settingsSnap.exists()) {
+        batch.set(
+          settingsRef,
+          stripUndefined({ ...SEED_SETTINGS, visitsCount: 0, demoMode: false, updatedAt: now })
+        );
+        createdCount += 1;
+      }
+
+      const finRef = doc(db, 'finance_config', 'partners');
+      const finSnap = await getDoc(finRef);
+      if (!finSnap.exists()) {
+        batch.set(finRef, stripUndefined({ ...SEED_FINANCE_CONFIG, updatedAt: now }));
+        createdCount += 1;
+      }
+
+      if (createdCount === 0) {
+        showToast('جميع الإعدادات الأساسية والأقسام مهيأة بالفعل ولم يتم تعديل أي سجل قائم', 'info');
         return;
       }
-      try {
-        const batch = writeBatch(db);
-        const now = new Date().toISOString();
 
-        if (force || !cloudCategories || cloudCategories.length === 0) {
-          SEED_CATEGORIES.forEach((c) => {
-            batch.set(doc(db, 'categories', c.id), stripUndefined({ ...c, updatedAt: now }));
-          });
-        }
-        if (force || !cloudPromoFilters || cloudPromoFilters.length === 0) {
-          SEED_PROMO_FILTERS.forEach((pf) => {
-            batch.set(doc(db, 'promo_filters', pf.id), stripUndefined({ ...pf, updatedAt: now }));
-          });
-        }
-        if (force || !cloudPlaces || cloudPlaces.length === 0) {
-          SEED_PLACES.forEach((p) => {
-            batch.set(doc(db, 'places', p.id), stripUndefined({ ...p, createdAt: now, updatedAt: now }));
-          });
-        }
-        if (force || !cloudAgencies || cloudAgencies.length === 0) {
-          SEED_AGENCIES.forEach((a) => {
-            batch.set(doc(db, 'agencies', a.id), stripUndefined({ ...a }));
-          });
-        }
-        if (force || !cloudProperties || cloudProperties.length === 0) {
-          SEED_PROPERTIES.forEach((prop) => {
-            batch.set(doc(db, 'properties', prop.id), stripUndefined({ ...prop, createdAt: now }));
-          });
-        }
-        if (force || !cloudOffers || cloudOffers.length === 0) {
-          SEED_OFFERS.forEach((o) => {
-            batch.set(doc(db, 'offers', o.id), stripUndefined({ ...o }));
-          });
-        }
-        if (force || !cloudCampaigns || cloudCampaigns.length === 0) {
-          SEED_CAMPAIGNS.forEach((camp) => {
-            batch.set(doc(db, 'campaigns', camp.id), stripUndefined({ ...camp }));
-          });
-        }
-        if (force || !cloudEmergency || cloudEmergency.length === 0) {
-          SEED_EMERGENCY.forEach((em) => {
-            batch.set(doc(db, 'emergency_contacts', em.id), stripUndefined({ ...em }));
-          });
-        }
-        if (force || !cloudQueues || cloudQueues.length === 0) {
-          SEED_CLINIC_QUEUES.forEach((q) => {
-            batch.set(doc(db, 'clinic_queues', q.doctorId), stripUndefined({ ...q, updatedAt: now }));
-          });
-        }
-        if (!cloudSettings) {
-          batch.set(doc(db, 'public_settings', 'main'), stripUndefined({ ...SEED_SETTINGS, updatedAt: now }));
-        }
-        // NEVER overwrite existing partner finance configuration or immutable closed settlements
-        const finSnap = await getDoc(doc(db, 'finance_config', 'partners'));
-        if (!finSnap.exists()) {
-          batch.set(doc(db, 'finance_config', 'partners'), stripUndefined({ ...SEED_FINANCE_CONFIG, updatedAt: now }));
-        }
-        for (const s of SEED_FINANCE_SETTLEMENTS) {
-          const sSnap = await getDoc(doc(db, 'finance_settlements', s.id));
-          if (!sSnap.exists()) {
-            batch.set(doc(db, 'finance_settlements', s.id), stripUndefined({ ...s }));
-          }
-        }
+      await batch.commit();
+      showToast(`تم إنشاء ${createdCount} عنصر تأسيس ناقص بأمان دون استبدال أي تعديلات قائمة`, 'success');
+    } catch (error) {
+      showToast('تعذرت تهيئة الإعدادات الأساسية، تحقق من الصلاحيات', 'error');
+      handleFirestoreError(error, OperationType.WRITE, 'initializeEssentialConfig');
+    }
+  }, [isSuperAdmin, showToast]);
 
-        await batch.commit();
-        showToast('تمت مزامنة بيانات دليل أبوحمص مع Firebase بنجاح', 'success');
-      } catch (error) {
-        showToast('تعذرت مزامنة بعض البيانات مع السحابة، يرجى التحقق من الصلاحيات', 'error');
-        handleFirestoreError(error, OperationType.WRITE, 'seedCloudDatabase');
+  // Explicit Opt-In Demo Catalog Seeding (create-only, NEVER overwrites admin edits, NEVER touches finance_settlements!)
+  const seedDemoCatalog = useCallback(async () => {
+    if (!isSuperAdmin) {
+      showToast('إدراج البيانات التجريبية متاح للمشرف العام فقط', 'error');
+      return;
+    }
+    try {
+      await initializeEssentialConfig();
+      const batch = writeBatch(db);
+      const now = new Date().toISOString();
+      const todayCairo = getCairoDateString();
+      let createdCount = 0;
+
+      for (const p of SEED_PLACES) {
+        const ref = doc(db, 'places', p.id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          batch.set(ref, stripUndefined({ ...p, isDemoData: true, createdAt: now, updatedAt: now }));
+          createdCount += 1;
+        }
+      }
+      for (const a of SEED_AGENCIES) {
+        const ref = doc(db, 'agencies', a.id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          batch.set(ref, stripUndefined({ ...a, isDemoData: true }));
+          createdCount += 1;
+        }
+      }
+      for (const prop of SEED_PROPERTIES) {
+        const ref = doc(db, 'properties', prop.id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          batch.set(ref, stripUndefined({ ...prop, isDemoData: true, createdAt: now }));
+          createdCount += 1;
+        }
+      }
+      for (const o of SEED_OFFERS) {
+        const ref = doc(db, 'offers', o.id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          batch.set(ref, stripUndefined({ ...o, isDemoData: true }));
+          createdCount += 1;
+        }
+      }
+      for (const camp of SEED_CAMPAIGNS) {
+        const ref = doc(db, 'campaigns', camp.id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          batch.set(ref, stripUndefined({ ...camp, isDemoData: true }));
+          createdCount += 1;
+        }
+      }
+      for (const q of SEED_CLINIC_QUEUES) {
+        const ref = doc(db, 'clinic_queues', q.doctorId);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          batch.set(
+            ref,
+            stripUndefined({
+              ...q,
+              sessionDate: todayCairo,
+              currentNumber: 0,
+              lastTicketNumber: 0,
+              updatedAt: now,
+            })
+          );
+          createdCount += 1;
+        }
+      }
+
+      if (createdCount === 0) {
+        showToast('لا توجد سجلات تجريبية ناقصة لإضافتها؛ السجلات الحالية محفوظة كما هي', 'info');
+        return;
+      }
+
+      await batch.commit();
+      showToast(
+        `تمت إضافة ${createdCount} سجل عرض تجريبي ناقص فقط (بدون تعديل السجلات القائمة وبدون تسويات مالية وهمية)`,
+        'success'
+      );
+    } catch (error) {
+      showToast('تعذرت إضافة بيانات العرض التجريبي', 'error');
+      handleFirestoreError(error, OperationType.WRITE, 'seedDemoCatalog');
+    }
+  }, [isSuperAdmin, initializeEssentialConfig, showToast]);
+
+  // Backward-compatible alias: NEVER overwrites existing docs and NEVER auto-seeds demo settlements
+  const seedCloudDatabase = useCallback(
+    async (includeDemoCatalog = false) => {
+      if (includeDemoCatalog) {
+        await seedDemoCatalog();
+      } else {
+        await initializeEssentialConfig();
       }
     },
-    [
-      isSuperAdmin,
-      cloudCategories,
-      cloudPromoFilters,
-      cloudPlaces,
-      cloudAgencies,
-      cloudProperties,
-      cloudOffers,
-      cloudCampaigns,
-      cloudEmergency,
-      cloudQueues,
-      cloudSettings,
-      showToast,
-    ]
+    [initializeEssentialConfig, seedDemoCatalog]
   );
 
-  useEffect(() => {
-    if (isSuperAdmin && cloudCategories !== null && cloudCategories.length === 0 && !seededOnceRef.current) {
-      seededOnceRef.current = true;
-      void seedCloudDatabase(false);
+  // Safe migration helper: backfills authoritative `menuPriceMap` on existing restaurant docs & initializes missing clinic queues
+  const migrateRestaurantMenuPriceMaps = useCallback(async (): Promise<number> => {
+    if (!isAdminWriter) {
+      showToast('هذه الأداة متاحة للمشرفين المصرح لهم بالتعديل فقط', 'error');
+      return 0;
     }
-  }, [isSuperAdmin, cloudCategories, seedCloudDatabase]);
+    try {
+      const snap = await getDocs(collection(db, 'places'));
+      const batch = writeBatch(db);
+      const now = new Date().toISOString();
+      const todayCairo = getCairoDateString();
+      let updatedCount = 0;
 
-  // Cloud-seeded detection: once cloud has been initialized, empty collections stay empty instead of resurrecting seed items
+      for (const d of snap.docs) {
+        const place = { ...(d.data() as Place), id: d.id };
+        if (place.categorySlug === 'restaurants' && Array.isArray(place.menuItems) && place.menuItems.length > 0) {
+          const nextMap = buildPlaceMenuPriceMap(place.menuItems);
+          const currentMap = place.menuPriceMap || {};
+          const needsUpdate =
+            Object.keys(nextMap).length !== Object.keys(currentMap).length ||
+            Object.entries(nextMap).some(([k, v]) => currentMap[k] !== v);
+          if (needsUpdate) {
+            batch.update(doc(db, 'places', place.id), {
+              menuPriceMap: nextMap,
+              updatedAt: now,
+            });
+            updatedCount += 1;
+          }
+        }
+        if (place.categorySlug === 'medical') {
+          const qRef = doc(db, 'clinic_queues', place.id);
+          const qSnap = await getDoc(qRef);
+          if (!qSnap.exists()) {
+            batch.set(
+              qRef,
+              stripUndefined({
+                doctorId: place.id,
+                doctorName: place.name,
+                specialty: place.specialty || '',
+                clinicAddress: place.address || '',
+                sessionDate: todayCairo,
+                currentNumber: 0,
+                lastTicketNumber: 0,
+                status: 'open',
+                avgMinutesPerPatient: 15,
+                updatedAt: now,
+              })
+            );
+            updatedCount += 1;
+          } else {
+            const qData = qSnap.data() as Partial<ClinicQueue>;
+            if (!qData.sessionDate) {
+              batch.update(qRef, { sessionDate: todayCairo, updatedAt: now });
+              updatedCount += 1;
+            }
+          }
+        }
+      }
+
+      if (updatedCount > 0) {
+        await batch.commit();
+        showToast(`تم تحديث وترحيل ${updatedCount} سجل (خرائط أسعار المطاعم + طوابير العيادات) بنجاح`, 'success');
+      } else {
+        showToast('جميع المطاعم والعيادات محدّثة بالفعل ولا تحتاج إلى ترحيل', 'info');
+      }
+      return updatedCount;
+    } catch (error) {
+      showToast('تعذر تنفيذ الترحيل التلقائي، تحقق من الصلاحيات', 'error');
+      handleFirestoreError(error, OperationType.WRITE, 'migrateRestaurantMenuPriceMaps');
+      return 0;
+    }
+  }, [isAdminWriter, showToast]);
+
+  // Cloud-seeded detection: once cloud has categories, never fall back to demo seed data!
   const isCloudSeeded = Boolean(cloudCategories && cloudCategories.length > 0);
+  const isDemoPreviewMode = !isCloudSeeded || Boolean(cloudSettings?.demoMode);
 
   const categories = useMemo(
     () => (cloudCategories !== null && (cloudCategories.length > 0 || isCloudSeeded) ? cloudCategories : SEED_CATEGORIES),
@@ -797,41 +1295,115 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
   const settings = useMemo(() => cloudSettings || SEED_SETTINGS, [cloudSettings]);
 
-  // Auth helpers
+  // Auth helpers with real error reporting
   const signInAdmin = useCallback(async () => {
+    setSignInError(null);
     try {
       const signedUser = await loginWithGoogle();
       const isOwner =
         signedUser.emailVerified &&
         signedUser.email?.toLowerCase() === BOOTSTRAPPED_ADMIN_EMAIL.toLowerCase();
       if (isOwner) {
-        setAdminRole('super_admin');
+        setAdminProfile({
+          uid: signedUser.uid,
+          email: signedUser.email || BOOTSTRAPPED_ADMIN_EMAIL,
+          name: signedUser.displayName || 'المشرف العام',
+          role: 'super_admin',
+          active: true,
+        });
         showToast(`أهلاً بك ${signedUser.displayName || 'في بوابة الإدارة'}`, 'success');
         return true;
       }
       const snap = await getDoc(doc(db, 'admins', signedUser.uid));
       if (snap.exists()) {
-        const role = (snap.data() as { role?: AdminRole }).role;
+        const raw = snap.data() as Partial<AdminUser>;
+        const role = raw.role;
+        if (raw.active === false) {
+          const msg = 'هذا الحساب موقوف حالياً من قبل الإدارة العامة.';
+          setSignInError(msg);
+          showToast(msg, 'error');
+          return false;
+        }
         if (role === 'super_admin' || role === 'partner' || role === 'moderator' || role === 'auditor') {
-          setAdminRole(role);
+          setAdminProfile({
+            uid: signedUser.uid,
+            email: raw.email || signedUser.email || '',
+            name: raw.name || signedUser.displayName || '',
+            role,
+            partnerTypes: Array.isArray(raw.partnerTypes) ? raw.partnerTypes : [],
+            managedPlaceIds: Array.isArray(raw.managedPlaceIds) ? raw.managedPlaceIds : [],
+            active: raw.active ?? true,
+          });
           showToast('تم التحقق من صلاحية الحساب بنجاح', 'success');
           return true;
         }
       }
-      showToast('هذا الحساب غير مسجل ضمن المشرفين أو المشغلين المعتمدين للدليل', 'error');
+      const notAuthorizedMsg = `الحساب (${signedUser.email || signedUser.uid}) غير مسجل ضمن المشرفين أو الشركاء المعتمدين. انسخ معرّف الحساب (UID) وأرسله للمشرف العام لإضافته.`;
+      setSignInError(notAuthorizedMsg);
+      showToast('هذا الحساب غير مسجل ضمن المشرفين أو المشغلين المعتمدين', 'error');
       return false;
     } catch (err) {
-      if (import.meta.env.DEV) console.error(err);
-      showToast('تعذر إتمام تسجيل الدخول عبر Google', 'error');
+      const arabicErr = mapFirebaseAuthErrorToArabic(err);
+      setSignInError(arabicErr);
+      if (import.meta.env.DEV) console.error('Admin signIn error:', err);
+      showToast(arabicErr, 'error');
       return false;
     }
   }, [showToast]);
 
   const signOutAdmin = useCallback(async () => {
     await logoutUser();
-    setAdminRole(null);
+    setAdminProfile(null);
+    setSignInError(null);
     showToast('تم تسجيل الخروج بأمان', 'info');
   }, [showToast]);
+
+  // Admin Team & Partner Assignment CRUD (Super Admin only)
+  const saveAdminUser = useCallback(
+    async (record: AdminUser) => {
+      if (!isSuperAdmin) {
+        showToast('إدارة المشرفين والشركاء متاحة للمشرف العام فقط', 'error');
+        return;
+      }
+      const uid = record.uid.trim();
+      if (!uid) {
+        showToast('يرجى إدخال معرّف حساب Firebase (UID) بشكل صحيح', 'error');
+        return;
+      }
+      const now = new Date().toISOString();
+      const payload: AdminUser = {
+        uid,
+        email: record.email.trim().toLowerCase(),
+        name: record.name?.trim() || '',
+        role: record.role,
+        partnerTypes: record.role === 'partner' ? (record.partnerTypes || []).slice(0, 3) : [],
+        managedPlaceIds: record.role === 'partner' ? (record.managedPlaceIds || []).slice(0, 20) : [],
+        active: record.active !== false,
+        createdAt: record.createdAt || now,
+        updatedAt: now,
+      };
+      try {
+        await setDoc(doc(db, 'admins', uid), stripUndefined(payload as unknown as Record<string, unknown>));
+        showToast(`تم حفظ صلاحيات «${payload.name || payload.email}» بنجاح`, 'success');
+      } catch (error) {
+        handleFirestoreError(error, OperationType.WRITE, `admins/${uid}`);
+      }
+    },
+    [isSuperAdmin, showToast]
+  );
+
+  const deleteAdminUser = useCallback(
+    async (uid: string) => {
+      if (!isSuperAdmin) return;
+      try {
+        await deleteDoc(doc(db, 'admins', uid));
+        showToast('تم حذف الحساب من قائمة المشرفين والشركاء', 'info');
+      } catch (error) {
+        handleFirestoreError(error, OperationType.DELETE, `admins/${uid}`);
+      }
+    },
+    [isSuperAdmin, showToast]
+  );
 
   // Local favorites & cart
   const toggleFavorite = useCallback(
@@ -853,8 +1425,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const baseItems = reset ? [] : prev.items;
         const existing = baseItems.find((i) => i.menuItemId === item.menuItemId);
         const nextItems = existing
-          ? baseItems.map((i) => (i.menuItemId === item.menuItemId ? { ...i, quantity: i.quantity + 1 } : i))
-          : [...baseItems, { ...item, quantity: 1 }];
+          ? baseItems.map((i) =>
+              i.menuItemId === item.menuItemId ? { ...i, quantity: Math.min(20, i.quantity + 1) } : i
+            )
+          : [...baseItems.slice(0, 14), { ...item, quantity: 1 }];
         const next = { restaurantId, items: nextItems };
         localStorage.setItem('abh_cart', JSON.stringify(next));
         return next;
@@ -867,7 +1441,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateCartQty = useCallback((menuItemId: string, delta: number) => {
     setCart((prev) => {
       const nextItems = prev.items
-        .map((i) => (i.menuItemId === menuItemId ? { ...i, quantity: i.quantity + delta } : i))
+        .map((i) => (i.menuItemId === menuItemId ? { ...i, quantity: Math.min(20, i.quantity + delta) } : i))
         .filter((i) => i.quantity > 0);
       const next = { restaurantId: nextItems.length ? prev.restaurantId : null, items: nextItems };
       localStorage.setItem('abh_cart', JSON.stringify(next));
@@ -898,6 +1472,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  // Atomic Clinic Booking: enforces open clinic policy, Cairo day session partitioning, & coupled queue/ticket write
   const bookClinicTicket = useCallback(
     async (input: {
       doctorId: string;
@@ -908,9 +1483,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       fee: number;
       notes?: string;
     }): Promise<ClinicTicket> => {
+      const phoneCheck = validateEgyptPhone(input.patientPhone, { allowLandline: false });
+      if (!phoneCheck.valid) {
+        throw new Error(phoneCheck.error || 'يرجى إدخال رقم موبايل مصري صحيح');
+      }
+
       const now = new Date().toISOString();
-      const fallbackQueue = clinicQueues.find((q) => q.doctorId === input.doctorId);
-      const fallbackLast = fallbackQueue?.lastTicketNumber ?? 8;
+      const todayCairo = getCairoDateString();
       const ticketId = generateSafeId('TKT');
       const queueRef = doc(db, 'clinic_queues', input.doctorId);
       const ticketRef = doc(db, 'clinic_tickets', ticketId);
@@ -919,18 +1498,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         createdTicket = await runTransaction(db, async (tx) => {
           const qSnap = await tx.get(queueRef);
-          const nextNumber = qSnap.exists()
-            ? ((qSnap.data() as ClinicQueue).lastTicketNumber ?? 0) + 1
-            : fallbackLast + 1;
+          if (!qSnap.exists()) {
+            throw new Error('طابور هذه العيادة غير مهيأ للحجز الإلكتروني حالياً. يرجى الاتصال بالعيادة مباشرة.');
+          }
+          const qData = qSnap.data() as Partial<ClinicQueue>;
+          if (qData.status === 'closed') {
+            throw new Error('العيادة مغلقة حالياً ولا تستقبل حجوزات جديدة.');
+          }
+          if (qData.status === 'paused' || qData.status === 'emergency') {
+            throw new Error(
+              qData.pausedReason?.trim()
+                ? `الحجز متوقف مؤقتاً: ${qData.pausedReason}`
+                : 'الحجز الإلكتروني متوقف مؤقتاً في هذه العيادة. يرجى المحاولة لاحقاً أو الاتصال بالعيادة.'
+            );
+          }
+
+          const isSameSession = qData.sessionDate === todayCairo;
+          const nextNumber = isSameSession ? (qData.lastTicketNumber ?? 0) + 1 : 1;
+          const nextCurrent = isSameSession ? qData.currentNumber ?? 0 : 0;
 
           const ticket: ClinicTicket = {
             id: ticketId,
             ticketCode: ticketId,
             ticketNumber: nextNumber,
+            sessionDate: todayCairo,
             doctorId: input.doctorId,
             doctorName: input.doctorName,
             patientName: input.patientName.trim(),
-            patientPhone: input.patientPhone.trim(),
+            patientPhone: phoneCheck.displayLocal,
             visitType: input.visitType,
             fee: input.fee,
             status: 'waiting',
@@ -940,15 +1535,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           };
 
           tx.set(ticketRef, stripUndefined(ticket as unknown as Record<string, unknown>));
-          if (qSnap.exists()) {
-            tx.update(queueRef, {
-              lastTicketNumber: nextNumber,
-              updatedAt: now,
-            });
-          }
+          tx.update(queueRef, {
+            sessionDate: todayCairo,
+            currentNumber: nextCurrent,
+            lastTicketNumber: nextNumber,
+            lastTicketId: ticketId,
+            updatedAt: now,
+          });
           return ticket;
         });
       } catch (error) {
+        if (error instanceof Error && !error.message.includes('Missing or insufficient permissions')) {
+          throw error;
+        }
         handleFirestoreError(error, OperationType.CREATE, `clinic_tickets/${ticketId}`);
       }
 
@@ -963,15 +1562,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         type: 'clinic',
         code: `#${createdTicket.ticketNumber}`,
         title: `حجز كشف — ${input.doctorName}`,
-        subtitle: `${input.visitType} · ${input.fee} ج.م`,
+        subtitle: `${input.visitType} · ${input.fee} ج.م · جلسة ${todayCairo}`,
         route: `/medical/live-queue/${createdTicket.id}`,
       });
-      saveCitizenProfile({ name: input.patientName, phone: input.patientPhone });
+      saveCitizenProfile({ name: input.patientName, phone: phoneCheck.displayLocal });
       return createdTicket;
     },
-    [clinicQueues, setActiveTracker]
+    [setActiveTracker]
   );
 
+  // Trusted Catalog-Verified Restaurant Order Placement (enforced both in client-fresh catalog check + Firestore Security Rules!)
   const placeRestaurantOrder = useCallback(
     async (input: {
       restaurantId: string;
@@ -981,62 +1581,101 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deliveryArea: string;
       deliveryAddress: string;
       locationShared: boolean;
+      deliveryCoords?: DeliveryCoords;
       items: CartItem[];
       subtotal: number;
       deliveryFee: number;
       total: number;
       notes?: string;
     }): Promise<RestaurantOrder> => {
+      const phoneCheck = validateEgyptPhone(input.customerPhone, { allowLandline: false });
+      if (!phoneCheck.valid) {
+        throw new Error(phoneCheck.error || 'يرجى إدخال رقم موبايل مصري صحيح');
+      }
+
+      // Fetch authoritative restaurant document from Firestore before creating order
+      const placeSnap = await getDoc(doc(db, 'places', input.restaurantId));
+      const authoritativeRestaurant = placeSnap.exists()
+        ? ({ ...(placeSnap.data() as Place), id: placeSnap.id } as Place)
+        : places.find((p) => p.id === input.restaurantId);
+
       const now = new Date().toISOString();
+      const pricingResult = computeAuthoritativeOrder({
+        restaurant: authoritativeRestaurant,
+        draftItems: input.items.map((item) => ({
+          menuItemId: item.menuItemId,
+          quantity: item.quantity,
+          clientPrice: item.price,
+        })),
+        deliveryArea: input.deliveryArea,
+        pricingSource: 'firestore_catalog',
+        nowIso: now,
+      });
+
+      if (!pricingResult.ok) {
+        throw new Error(pricingResult.message);
+      }
+
+      const hasValidCoords =
+        Boolean(input.deliveryCoords) &&
+        typeof input.deliveryCoords?.lat === 'number' &&
+        typeof input.deliveryCoords?.lng === 'number' &&
+        Number.isFinite(input.deliveryCoords.lat) &&
+        Number.isFinite(input.deliveryCoords.lng);
+
       const orderId = generateSafeId('ORD');
       const order: RestaurantOrder = {
         id: orderId,
         orderCode: orderId,
         restaurantId: input.restaurantId,
-        restaurantName: input.restaurantName,
+        restaurantName: authoritativeRestaurant?.name || input.restaurantName,
         customerName: input.customerName.trim(),
-        customerPhone: input.customerPhone.trim(),
+        customerPhone: phoneCheck.displayLocal,
         deliveryArea: input.deliveryArea,
         deliveryAddress: input.deliveryAddress.trim(),
-        locationShared: input.locationShared,
-        items: input.items,
-        subtotal: input.subtotal,
-        deliveryFee: input.deliveryFee,
-        total: input.total,
+        locationShared: Boolean(input.locationShared && hasValidCoords),
+        deliveryCoords: hasValidCoords ? input.deliveryCoords : undefined,
+        items: pricingResult.items,
+        subtotal: pricingResult.subtotal,
+        deliveryFee: pricingResult.deliveryFee,
+        total: pricingResult.total,
+        pricingSnapshot: pricingResult.pricingSnapshot,
         status: 'new',
         notes: input.notes?.trim() || '',
         createdAt: now,
         updatedAt: now,
       };
+
       try {
         await setDoc(doc(db, 'restaurant_orders', orderId), stripUndefined(order as unknown as Record<string, unknown>));
       } catch (error) {
         handleFirestoreError(error, OperationType.CREATE, `restaurant_orders/${orderId}`);
       }
+
       clearCart();
       setActiveTracker({
         type: 'order',
         id: orderId,
         code: orderId,
-        title: `طلب من ${input.restaurantName}`,
+        title: `طلب من ${order.restaurantName}`,
         route: `/orders/tracking/${orderId}`,
       });
       appendActivityHistory({
         type: 'order',
         code: orderId,
-        title: `طلب من ${input.restaurantName}`,
-        subtitle: `${input.items.length} أصناف · ${input.total} ج.م`,
+        title: `طلب من ${order.restaurantName}`,
+        subtitle: `${pricingResult.items.length} أصناف · ${pricingResult.total} ج.م`,
         route: `/orders/tracking/${orderId}`,
       });
       saveCitizenProfile({
         name: input.customerName,
-        phone: input.customerPhone,
+        phone: phoneCheck.displayLocal,
         area: input.deliveryArea,
         address: input.deliveryAddress,
       });
       return order;
     },
-    [clearCart, setActiveTracker]
+    [places, clearCart, setActiveTracker]
   );
 
   const createDeliveryRide = useCallback(
@@ -1050,6 +1689,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       customerPhone: string;
       estimatedFee: number;
     }): Promise<DeliveryRide> => {
+      const phoneCheck = validateEgyptPhone(input.customerPhone, { allowLandline: false });
+      if (!phoneCheck.valid) {
+        throw new Error(phoneCheck.error || 'يرجى إدخال رقم موبايل مصري صحيح');
+      }
+
       const now = new Date().toISOString();
       const rideId = generateSafeId('DLV');
       const ride: DeliveryRide = {
@@ -1061,7 +1705,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         dropoffDetails: input.dropoffDetails.trim(),
         itemDescription: input.itemDescription.trim(),
         customerName: input.customerName.trim(),
-        customerPhone: input.customerPhone.trim(),
+        customerPhone: phoneCheck.displayLocal,
         estimatedFee: input.estimatedFee,
         status: 'pending',
         createdAt: now,
@@ -1088,7 +1732,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       saveCitizenProfile({
         name: input.customerName,
-        phone: input.customerPhone,
+        phone: phoneCheck.displayLocal,
         area: input.pickupArea,
       });
       return ride;
@@ -1106,6 +1750,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payload?: Record<string, string | number | boolean>;
       previousData?: Record<string, string | number | boolean>;
     }): Promise<Submission> => {
+      const phoneCheck = validateEgyptPhone(input.submitterPhone, { allowLandline: true });
+      if (!phoneCheck.valid) {
+        throw new Error(phoneCheck.error || 'يرجى إدخال رقم هاتف مصري صحيح');
+      }
+
       const now = new Date().toISOString();
       const token = generateSafeId('TRK');
       const submission: Submission = {
@@ -1115,7 +1764,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         targetPlaceId: input.targetPlaceId,
         title: input.title.trim(),
         submitterName: input.submitterName.trim(),
-        submitterPhone: input.submitterPhone.trim(),
+        submitterPhone: phoneCheck.displayLocal,
         payload: input.payload || {},
         previousData: input.previousData,
         status: 'received',
@@ -1137,23 +1786,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       saveCitizenProfile({
         name: input.submitterName,
-        phone: input.submitterPhone,
+        phone: phoneCheck.displayLocal,
       });
       return submission;
     },
     []
   );
 
-  // --- Partner & Admin Live Mutations ---
+  // --- Partner & Admin Live Mutations (Atomic + Tenant-Isolated) ---
 
   const updateClinicQueueState = useCallback(
     async (doctorId: string, patch: Partial<ClinicQueue>) => {
       const existingQueue = clinicQueues.find((q) => q.doctorId === doctorId);
-      if (!existingQueue) return;
+      const place = places.find((p) => p.id === doctorId);
+      const now = new Date().toISOString();
       const updated: ClinicQueue = {
-        ...existingQueue,
+        doctorId,
+        doctorName: existingQueue?.doctorName || place?.name || doctorId,
+        specialty: existingQueue?.specialty || place?.specialty || '',
+        clinicAddress: existingQueue?.clinicAddress || place?.address || '',
+        sessionDate: existingQueue?.sessionDate || getCairoDateString(),
+        currentNumber: existingQueue?.currentNumber ?? 0,
+        lastTicketNumber: existingQueue?.lastTicketNumber ?? 0,
+        status: existingQueue?.status || 'open',
+        avgMinutesPerPatient: existingQueue?.avgMinutesPerPatient ?? 15,
+        pausedReason: existingQueue?.pausedReason || '',
         ...patch,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now,
       };
       try {
         await setDoc(doc(db, 'clinic_queues', doctorId), stripUndefined(updated as unknown as Record<string, unknown>));
@@ -1162,17 +1821,97 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleFirestoreError(error, OperationType.UPDATE, `clinic_queues/${doctorId}`);
       }
     },
-    [clinicQueues, showToast]
+    [clinicQueues, places, showToast]
+  );
+
+  const resetClinicDaySession = useCallback(
+    async (doctorId: string) => {
+      await updateClinicQueueState(doctorId, {
+        sessionDate: getCairoDateString(),
+        currentNumber: 0,
+        lastTicketNumber: 0,
+        status: 'open',
+        pausedReason: '',
+      });
+    },
+    [updateClinicQueueState]
+  );
+
+  // Atomic Call-Next: skips cancelled/completed tickets and synchronizes ticket status + queue.currentNumber
+  const callNextClinicTicket = useCallback(
+    async (doctorId: string): Promise<ClinicTicket | null> => {
+      const todayCairo = getCairoDateString();
+      const doctorTodayTickets = clinicTickets
+        .filter((t) => t.doctorId === doctorId && (t.sessionDate || todayCairo) === todayCairo)
+        .sort((a, b) => a.ticketNumber - b.ticketNumber);
+
+      const nextWaiting = doctorTodayTickets.find((t) => t.status === 'waiting' || t.status === 'emergency');
+      const currentlyActive = doctorTodayTickets.filter((t) => t.status === 'called' || t.status === 'in_room');
+
+      if (!nextWaiting) {
+        showToast('لا توجد أدوار منتظرة حالياً في جلسة اليوم', 'info');
+        return null;
+      }
+
+      const now = new Date().toISOString();
+      try {
+        await runTransaction(db, async (tx) => {
+          const qRef = doc(db, 'clinic_queues', doctorId);
+          const qSnap = await tx.get(qRef);
+          if (!qSnap.exists()) throw new Error('طابور العيادة غير موجود');
+
+          const nextTicketRef = doc(db, 'clinic_tickets', nextWaiting.id);
+          const nextTicketSnap = await tx.get(nextTicketRef);
+          if (!nextTicketSnap.exists()) throw new Error('التذكرة غير موجودة');
+          const liveNext = nextTicketSnap.data() as ClinicTicket;
+          if (liveNext.status === 'cancelled' || liveNext.status === 'completed') {
+            throw new Error('تم إلغاء أو إنهاء هذه التذكرة بالفعل، حاول مرة أخرى');
+          }
+
+          for (const activeT of currentlyActive) {
+            tx.update(doc(db, 'clinic_tickets', activeT.id), {
+              status: 'completed',
+              updatedAt: now,
+            });
+          }
+
+          tx.update(nextTicketRef, { status: 'called', updatedAt: now });
+          tx.update(qRef, {
+            currentNumber: liveNext.ticketNumber,
+            sessionDate: todayCairo,
+            updatedAt: now,
+          });
+        });
+
+        showToast(`تم نداء الدور رقم #${nextWaiting.ticketNumber} (${nextWaiting.patientName})`, 'success');
+        return nextWaiting;
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'تعذر نداء الدور التالي', 'error');
+        return null;
+      }
+    },
+    [clinicTickets, showToast]
   );
 
   const updateClinicTicketStatus = useCallback(
     async (ticketId: string, status: ClinicTicket['status']) => {
       const target = clinicTickets.find((t) => t.id === ticketId);
       if (!target) return;
-      const updated: ClinicTicket = { ...target, status, updatedAt: new Date().toISOString() };
+      const now = new Date().toISOString();
       try {
-        await setDoc(doc(db, 'clinic_tickets', ticketId), stripUndefined(updated as unknown as Record<string, unknown>));
-        showToast('تم تحديث حالة المريض فوراً', 'success');
+        await runTransaction(db, async (tx) => {
+          const tRef = doc(db, 'clinic_tickets', ticketId);
+          const qRef = doc(db, 'clinic_queues', target.doctorId);
+          const qSnap = await tx.get(qRef);
+          tx.update(tRef, { status, updatedAt: now });
+          if (qSnap.exists() && (status === 'called' || status === 'in_room')) {
+            tx.update(qRef, {
+              currentNumber: target.ticketNumber,
+              updatedAt: now,
+            });
+          }
+        });
+        showToast('تم تحديث حالة المريض ومزامنة الطابور فوراً', 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.UPDATE, `clinic_tickets/${ticketId}`);
       }
@@ -1180,22 +1919,113 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [clinicTickets, showToast]
   );
 
+  // Atomic Captain Claim for Ready Restaurant Order (anti-double-claim)
+  const claimRestaurantOrder = useCallback(
+    async (orderId: string, captainName: string, captainPhone: string): Promise<boolean> => {
+      if (!user?.uid) {
+        showToast('يجب تسجيل الدخول بحساب كابتن معتمد أولاً', 'error');
+        return false;
+      }
+      const phoneCheck = validateEgyptPhone(captainPhone, { allowLandline: false });
+      if (!phoneCheck.valid) {
+        showToast(phoneCheck.error || 'رقم هاتف الكابتن غير صحيح', 'error');
+        return false;
+      }
+
+      const now = new Date().toISOString();
+      try {
+        await runTransaction(db, async (tx) => {
+          const ref = doc(db, 'restaurant_orders', orderId);
+          const snap = await tx.get(ref);
+          if (!snap.exists()) throw new Error('الطلب غير موجود');
+          const data = snap.data() as RestaurantOrder;
+          if (data.status !== 'ready' || data.captainUid) {
+            throw new Error('عذراً، تم استلام هذا الطلب بالفعل بواسطة كابتن آخر أو تغيرت حالته');
+          }
+          tx.update(ref, {
+            status: 'on_the_way',
+            captainUid: user.uid,
+            captainName: captainName.trim(),
+            captainPhone: phoneCheck.displayLocal,
+            updatedAt: now,
+          });
+        });
+        showToast('تم إسناد طلب المطعم إليك بنجاح — بالتوفيق في التوصيل!', 'success');
+        return true;
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'تعذر قبول الطلب، ربما التقطه كابتن آخر', 'error');
+        return false;
+      }
+    },
+    [user?.uid, showToast]
+  );
+
   const updateRestaurantOrderStatus = useCallback(
     async (
       orderId: string,
       patch: Partial<Pick<RestaurantOrder, 'status' | 'captainName' | 'captainPhone'>>
     ) => {
-      const target = restaurantOrders.find((o) => o.id === orderId);
-      if (!target) return;
-      const updated: RestaurantOrder = { ...target, ...patch, updatedAt: new Date().toISOString() };
+      if (patch.status === 'on_the_way' && patch.captainName && patch.captainPhone && !isAdminWriter) {
+        await claimRestaurantOrder(orderId, patch.captainName, patch.captainPhone);
+        return;
+      }
+      const now = new Date().toISOString();
+      const updatePayload: Record<string, unknown> = { updatedAt: now };
+      if (patch.status) updatePayload.status = patch.status;
+      if (isAdminWriter) {
+        if (patch.captainName !== undefined) updatePayload.captainName = patch.captainName;
+        if (patch.captainPhone !== undefined) updatePayload.captainPhone = patch.captainPhone;
+      }
       try {
-        await setDoc(doc(db, 'restaurant_orders', orderId), stripUndefined(updated as unknown as Record<string, unknown>));
+        await updateDoc(doc(db, 'restaurant_orders', orderId), updatePayload);
         showToast('تم تحديث حالة الطلب وإبلاغ العميل لحظياً', 'success');
       } catch (error) {
+        showToast('تعذر تحديث حالة الطلب — تحقق من تسلسل الحالات أو صلاحيتك', 'error');
         handleFirestoreError(error, OperationType.UPDATE, `restaurant_orders/${orderId}`);
       }
     },
-    [restaurantOrders, showToast]
+    [isAdminWriter, claimRestaurantOrder, showToast]
+  );
+
+  // Atomic Captain Claim for Pending Delivery Ride (anti-double-claim)
+  const claimDeliveryRide = useCallback(
+    async (rideId: string, captainName: string, captainPhone: string): Promise<boolean> => {
+      if (!user?.uid) {
+        showToast('يجب تسجيل الدخول بحساب كابتن معتمد أولاً', 'error');
+        return false;
+      }
+      const phoneCheck = validateEgyptPhone(captainPhone, { allowLandline: false });
+      if (!phoneCheck.valid) {
+        showToast(phoneCheck.error || 'رقم هاتف الكابتن غير صحيح', 'error');
+        return false;
+      }
+
+      const now = new Date().toISOString();
+      try {
+        await runTransaction(db, async (tx) => {
+          const ref = doc(db, 'delivery_rides', rideId);
+          const snap = await tx.get(ref);
+          if (!snap.exists()) throw new Error('المشوار غير موجود');
+          const data = snap.data() as DeliveryRide;
+          if (data.status !== 'pending' || data.captainUid) {
+            throw new Error('عذراً، تم قبول هذا المشوار بالفعل بواسطة كابتن آخر');
+          }
+          tx.update(ref, {
+            status: 'accepted',
+            captainUid: user.uid,
+            captainName: captainName.trim(),
+            captainPhone: phoneCheck.displayLocal,
+            updatedAt: now,
+          });
+        });
+        showToast('تم قبول المشوار وإسناده إلى حسابك بنجاح', 'success');
+        return true;
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'تعذر قبول المشوار، ربما قبله كابتن آخر', 'error');
+        return false;
+      }
+    },
+    [user?.uid, showToast]
   );
 
   const updateDeliveryRideStatus = useCallback(
@@ -1203,20 +2033,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       rideId: string,
       patch: Partial<Pick<DeliveryRide, 'status' | 'captainName' | 'captainPhone'>>
     ) => {
-      const target = deliveryRides.find((r) => r.id === rideId);
-      if (!target) return;
-      const updated: DeliveryRide = { ...target, ...patch, updatedAt: new Date().toISOString() };
+      if (patch.status === 'accepted' && patch.captainName && patch.captainPhone && !isAdminWriter) {
+        await claimDeliveryRide(rideId, patch.captainName, patch.captainPhone);
+        return;
+      }
+      const now = new Date().toISOString();
+      const updatePayload: Record<string, unknown> = { updatedAt: now };
+      if (patch.status) updatePayload.status = patch.status;
+      if (isAdminWriter) {
+        if (patch.captainName !== undefined) updatePayload.captainName = patch.captainName;
+        if (patch.captainPhone !== undefined) updatePayload.captainPhone = patch.captainPhone;
+      }
       try {
-        await setDoc(doc(db, 'delivery_rides', rideId), stripUndefined(updated as unknown as Record<string, unknown>));
+        await updateDoc(doc(db, 'delivery_rides', rideId), updatePayload);
         showToast('تم تحديث حالة المشوار لدى العميل مباشرة', 'success');
       } catch (error) {
+        showToast('تعذر تحديث حالة المشوار — تحقق من تسلسل الحالات أو ملكية الإسناد', 'error');
         handleFirestoreError(error, OperationType.UPDATE, `delivery_rides/${rideId}`);
       }
     },
-    [deliveryRides, showToast]
+    [isAdminWriter, claimDeliveryRide, showToast]
   );
 
-  // Dynamic Categories CRUD + Reorder (User Requested Feature!)
+  // Dynamic Categories CRUD + Reorder
   const saveCategory = useCallback(
     async (category: Category) => {
       const payload: Category = {
@@ -1253,10 +2092,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         orderedIds.forEach((id, index) => {
           const cat = categories.find((c) => c.id === id);
           if (cat) {
-            batch.set(
-              doc(db, 'categories', id),
-              stripUndefined({ ...cat, order: index + 1, updatedAt: now })
-            );
+            batch.set(doc(db, 'categories', id), stripUndefined({ ...cat, order: index + 1, updatedAt: now }));
           }
         });
         await batch.commit();
@@ -1268,7 +2104,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [categories, showToast]
   );
 
-  // Dynamic Promotional Filters & Badges CRUD + Reorder + 1-Click Subscriber Toggle
+  // Dynamic Promotional Filters & Badges CRUD
   const savePromoFilter = useCallback(
     async (filter: PromoFilter) => {
       const payload: PromoFilter = {
@@ -1295,7 +2131,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const now = new Date().toISOString();
         batch.delete(doc(db, 'promo_filters', filterId));
 
-        // Clean orphaned references from subscribed places
         places.forEach((p) => {
           const hasTag = Array.isArray(p.filterTags) && p.filterTags.includes(filterId);
           const hasExp = Boolean(p.filterExpirations && filterId in p.filterExpirations);
@@ -1329,10 +2164,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         orderedIds.forEach((id, index) => {
           const pf = promoFilters.find((f) => f.id === id);
           if (pf) {
-            batch.set(
-              doc(db, 'promo_filters', id),
-              stripUndefined({ ...pf, order: index + 1, updatedAt: now })
-            );
+            batch.set(doc(db, 'promo_filters', id), stripUndefined({ ...pf, order: index + 1, updatedAt: now }));
           }
         });
         await batch.commit();
@@ -1352,7 +2184,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const exists = currentTags.includes(filterId);
       const nextTags = exists
         ? currentTags.filter((id) => id !== filterId)
-        : [...currentTags.slice(0, 14), filterId];
+        : [...currentTags.slice(0, 19), filterId];
       const nextExpirations: Record<string, string> = { ...(target.filterExpirations || {}) };
       if (exists) {
         delete nextExpirations[filterId];
@@ -1369,9 +2201,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         await setDoc(doc(db, 'places', placeId), stripUndefined(updated as unknown as Record<string, unknown>));
         showToast(
-          exists
-            ? `تمت إزالة «${target.name}» من الفلتر`
-            : `تم تسكين «${target.name}» داخل الفلتر بنجاح`,
+          exists ? `تمت إزالة «${target.name}» من الفلتر` : `تم تسكين «${target.name}» داخل الفلتر بنجاح`,
           exists ? 'info' : 'success'
         );
       } catch (error) {
@@ -1406,12 +2236,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [places, showToast]
   );
 
+  // Save Place: automatically updates menuPriceMap & initializes empty clinic_queues for new medical clinics
   const savePlace = useCallback(
     async (place: Place) => {
       const now = new Date().toISOString();
-      const payload: Place = { ...place, updatedAt: now, createdAt: place.createdAt || now };
+      const computedMenuPriceMap =
+        place.menuItems && place.menuItems.length > 0 ? buildPlaceMenuPriceMap(place.menuItems) : undefined;
+      const payload: Place = {
+        ...place,
+        menuPriceMap: computedMenuPriceMap,
+        updatedAt: now,
+        createdAt: place.createdAt || now,
+      };
       try {
         await setDoc(doc(db, 'places', place.id), stripUndefined(payload as unknown as Record<string, unknown>));
+
+        // Automatically initialize an empty valid ClinicQueue for medical places if none exists yet
+        if (place.categorySlug === 'medical') {
+          const qRef = doc(db, 'clinic_queues', place.id);
+          const qSnap = await getDoc(qRef);
+          if (!qSnap.exists()) {
+            const initialQueue: ClinicQueue = {
+              doctorId: place.id,
+              doctorName: place.name,
+              specialty: place.specialty || '',
+              clinicAddress: place.address || '',
+              sessionDate: getCairoDateString(),
+              currentNumber: 0,
+              lastTicketNumber: 0,
+              status: 'open',
+              avgMinutesPerPatient: 15,
+              updatedAt: now,
+            };
+            await setDoc(qRef, stripUndefined(initialQueue as unknown as Record<string, unknown>));
+          }
+        }
+
         showToast(`تم حفظ «${place.name}» ونشره في الدليل`, 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, `places/${place.id}`);
@@ -1485,26 +2345,220 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     async (submissionId: string, status: Submission['status'], adminNote?: string) => {
       const target = submissions.find((s) => s.id === submissionId);
       if (!target) return;
+      const now = new Date().toISOString();
       const updated: Submission = {
         ...target,
         status,
         adminNote: adminNote ?? target.adminNote,
-        updatedAt: new Date().toISOString(),
+        reviewedBy: adminProfile?.name || user?.email || 'إدارة الدليل',
+        reviewedByUid: user?.uid,
+        reviewedAt: now,
+        updatedAt: now,
       };
       try {
         await setDoc(doc(db, 'submissions', submissionId), stripUndefined(updated as unknown as Record<string, unknown>));
-        showToast('تم تحديث حالة الطلب وانعكس في رابط المتابعة الخاص بالعميل', 'success');
+        showToast('تم تحديث حالة الطلب وتوثيق المراجعة في السجل', 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.UPDATE, `submissions/${submissionId}`);
       }
     },
-    [submissions, showToast]
+    [submissions, adminProfile, user, showToast]
+  );
+
+  // Atomic Correction Report Application: applies allowlisted fields to target place + saves audit trail
+  const applyCorrectionSubmission = useCallback(
+    async (submissionId: string, adminNote?: string): Promise<boolean> => {
+      if (!isAdminWriter || !user?.uid) {
+        showToast('تطبيق التعديلات متاح للمشرفين المصرح لهم بالتعديل فقط', 'error');
+        return false;
+      }
+      const now = new Date().toISOString();
+      try {
+        await runTransaction(db, async (tx) => {
+          const subRef = doc(db, 'submissions', submissionId);
+          const subSnap = await tx.get(subRef);
+          if (!subSnap.exists()) throw new Error('البلاغ غير موجود');
+          const sub = subSnap.data() as Submission;
+
+          if (sub.type !== 'report_edit') throw new Error('هذا الطلب ليس بلاغ تصحيح بيانات');
+          if (sub.applied || sub.publishedTargetId) {
+            throw new Error('تم تطبيق هذا التصحيح مسبقاً بالفعل');
+          }
+          if (!sub.targetPlaceId) {
+            throw new Error('هذا البلاغ عام ولا يرتبط بمكان محدد؛ استخدم تحديث الحالة بعد المراجعة اليدوية.');
+          }
+
+          const placeRef = doc(db, 'places', sub.targetPlaceId);
+          const placeSnap = await tx.get(placeRef);
+          if (!placeSnap.exists()) {
+            throw new Error('المكان المستهدف غير موجود في قاعدة البيانات');
+          }
+          const currentPlace = placeSnap.data() as Place;
+          const payload = sub.payload || {};
+
+          const changes: Record<string, string | number | boolean> = {};
+          const prevSnapshot: Record<string, string | number | boolean> = { ...(sub.previousData || {}) };
+
+          for (const [key, value] of Object.entries(payload)) {
+            if (!CORRECTION_ALLOWLIST.has(key)) continue;
+            if (typeof value === 'string' && value.trim()) {
+              const cleanVal = value.trim();
+              const existingVal = (currentPlace as unknown as Record<string, unknown>)[key];
+              if (typeof existingVal === 'string' || typeof existingVal === 'number' || typeof existingVal === 'boolean') {
+                prevSnapshot[key] = existingVal;
+              }
+              changes[key] = cleanVal;
+            }
+          }
+
+          if (Object.keys(changes).length === 0) {
+            throw new Error('لا توجد حقول قابلة للتطبيق التلقائي داخل هذا البلاغ.');
+          }
+
+          tx.update(placeRef, { ...changes, updatedAt: now });
+          tx.update(subRef, {
+            status: 'approved',
+            applied: true,
+            appliedChanges: changes,
+            previousData: prevSnapshot,
+            publishedTargetId: sub.targetPlaceId,
+            reviewedBy: adminProfile?.name || user.email || 'إدارة الدليل',
+            reviewedByUid: user.uid,
+            reviewedAt: now,
+            adminNote: adminNote?.trim() || 'تم التحقق وتطبيق التعديلات فعلياً على صفحة المكان.',
+            updatedAt: now,
+          });
+        });
+
+        showToast('تم اعتماد وتطبيق التصحيحات فعلياً على بيانات المكان مع حفظ السجل السابق', 'success');
+        return true;
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'تعذر تطبيق تعديلات البلاغ', 'error');
+        return false;
+      }
+    },
+    [isAdminWriter, user, adminProfile, showToast]
+  );
+
+  // Atomic, Idempotent Publish Place from Submission (prevents duplicates on double-click/retry)
+  const publishSubmissionAsPlace = useCallback(
+    async (submissionId: string, place: Place, adminNote?: string): Promise<boolean> => {
+      if (!isAdminWriter || !user?.uid) {
+        showToast('النشر متاح للمشرفين المصرح لهم بالتعديل فقط', 'error');
+        return false;
+      }
+      const now = new Date().toISOString();
+      const computedMap =
+        place.menuItems && place.menuItems.length > 0 ? buildPlaceMenuPriceMap(place.menuItems) : undefined;
+      const placePayload: Place = {
+        ...place,
+        menuPriceMap: computedMap,
+        createdAt: now,
+        updatedAt: now,
+      };
+      try {
+        await runTransaction(db, async (tx) => {
+          const subRef = doc(db, 'submissions', submissionId);
+          const subSnap = await tx.get(subRef);
+          if (!subSnap.exists()) throw new Error('الطلب غير موجود');
+          const sub = subSnap.data() as Submission;
+          if (sub.publishedTargetId || sub.applied) {
+            throw new Error('تم نشر هذا الطلب بالفعل مسبقاً ولا يمكن تكراره');
+          }
+
+          const placeRef = doc(db, 'places', place.id);
+          tx.set(placeRef, stripUndefined(placePayload as unknown as Record<string, unknown>));
+
+          if (place.categorySlug === 'medical') {
+            const qRef = doc(db, 'clinic_queues', place.id);
+            tx.set(
+              qRef,
+              stripUndefined({
+                doctorId: place.id,
+                doctorName: place.name,
+                specialty: place.specialty || '',
+                clinicAddress: place.address || '',
+                sessionDate: getCairoDateString(),
+                currentNumber: 0,
+                lastTicketNumber: 0,
+                status: 'open',
+                avgMinutesPerPatient: 15,
+                updatedAt: now,
+              })
+            );
+          }
+
+          tx.update(subRef, {
+            status: 'approved',
+            applied: true,
+            publishedTargetId: place.id,
+            reviewedBy: adminProfile?.name || user.email || 'إدارة الدليل',
+            reviewedByUid: user.uid,
+            reviewedAt: now,
+            adminNote: adminNote?.trim() || 'تمت المراجعة ونشر النشاط رسمياً في دليل أبوحمص.',
+            updatedAt: now,
+          });
+        });
+
+        showToast(`تم اعتماد ونشر «${place.name}» بنجاح دون تكرار`, 'success');
+        return true;
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'تعذر نشر النشاط من الطلب', 'error');
+        return false;
+      }
+    },
+    [isAdminWriter, user, adminProfile, showToast]
+  );
+
+  // Atomic, Idempotent Publish Property from Submission
+  const publishSubmissionAsProperty = useCallback(
+    async (submissionId: string, property: Property, adminNote?: string): Promise<boolean> => {
+      if (!isAdminWriter || !user?.uid) {
+        showToast('النشر متاح للمشرفين المصرح لهم بالتعديل فقط', 'error');
+        return false;
+      }
+      const now = new Date().toISOString();
+      const propPayload: Property = { ...property, createdAt: now };
+      try {
+        await runTransaction(db, async (tx) => {
+          const subRef = doc(db, 'submissions', submissionId);
+          const subSnap = await tx.get(subRef);
+          if (!subSnap.exists()) throw new Error('الطلب غير موجود');
+          const sub = subSnap.data() as Submission;
+          if (sub.publishedTargetId || sub.applied) {
+            throw new Error('تم نشر هذا العقار بالفعل مسبقاً ولا يمكن تكراره');
+          }
+
+          tx.set(doc(db, 'properties', property.id), stripUndefined(propPayload as unknown as Record<string, unknown>));
+          tx.update(subRef, {
+            status: 'approved',
+            applied: true,
+            publishedTargetId: property.id,
+            reviewedBy: adminProfile?.name || user.email || 'إدارة الدليل',
+            reviewedByUid: user.uid,
+            reviewedAt: now,
+            adminNote: adminNote?.trim() || 'تم اعتماد ونشر إعلان العقار في سوق عقارات أبوحمص.',
+            updatedAt: now,
+          });
+        });
+
+        showToast('تم اعتماد ونشر العقار بنجاح دون تكرار', 'success');
+        return true;
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'تعذر نشر العقار من الطلب', 'error');
+        return false;
+      }
+    },
+    [isAdminWriter, user, adminProfile, showToast]
   );
 
   const saveWhatsappQueueItem = useCallback(
     async (item: WhatsappQueueItem) => {
       try {
-        await setDoc(doc(db, 'whatsapp_queue', item.id), stripUndefined({ ...item, createdAt: item.createdAt || new Date().toISOString() }));
+        await setDoc(
+          doc(db, 'whatsapp_queue', item.id),
+          stripUndefined({ ...item, createdAt: item.createdAt || new Date().toISOString() })
+        );
         showToast('تمت الإضافة لطابور واتساب', 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, `whatsapp_queue/${item.id}`);
@@ -1581,11 +2635,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     user,
     authReady,
     adminRole,
+    adminProfile,
     isAdmin,
+    isAdminWriter,
+    isAuditor,
     isSuperAdmin,
     isPartner,
+    partnerScopes,
+    managedPlaceIds,
+    canAccessPartnerScope,
+    canManagePlace,
+    signInError,
+    clearSignInError,
     signInAdmin,
     signOutAdmin,
+    adminsList,
+    saveAdminUser,
+    deleteAdminUser,
     categories,
     activeCategories,
     promoFilters,
@@ -1599,6 +2665,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     clinicQueues,
     settings,
     isCloudSeeded,
+    isDemoPreviewMode,
     clinicTickets,
     restaurantOrders,
     deliveryRides,
@@ -1607,6 +2674,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     financeConfig,
     financeSettlements,
     analyticsEvents,
+    hasMoreClinicTickets,
+    loadMoreClinicTickets,
+    hasMoreOrders,
+    loadMoreOrders,
+    hasMoreRides,
+    loadMoreRides,
+    hasMoreSubmissions,
+    loadMoreSubmissions,
+    hasMoreAnalytics,
+    analyticsSampleLimit,
+    loadMoreAnalytics,
     favorites,
     toggleFavorite,
     cart,
@@ -1624,10 +2702,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     createSubmission,
     logAnalyticsEvent,
     updateClinicQueueState,
+    callNextClinicTicket,
+    resetClinicDaySession,
     updateClinicTicketStatus,
+    claimRestaurantOrder,
     updateRestaurantOrderStatus,
+    claimDeliveryRide,
     updateDeliveryRideStatus,
     seedCloudDatabase,
+    initializeEssentialConfig,
+    seedDemoCatalog,
+    migrateRestaurantMenuPriceMaps,
     saveCategory,
     deleteCategory,
     reorderCategories,
@@ -1643,6 +2728,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     saveOffer,
     saveCampaign,
     updateSubmissionStatus,
+    applyCorrectionSubmission,
+    publishSubmissionAsPlace,
+    publishSubmissionAsProperty,
     saveWhatsappQueueItem,
     updateWhatsappStatus,
     saveFinanceConfig,

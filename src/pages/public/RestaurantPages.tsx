@@ -37,12 +37,13 @@ import {
   sortPlacesByPromoPriority,
 } from '../../lib/promoFilters';
 import { ABU_HOMS_AREAS } from '../../data/seedData';
-import { buildWhatsAppUrl } from '../../lib/formatters';
+import { buildWhatsAppUrl, validateEgyptPhone } from '../../lib/formatters';
 import { matchesArabicQuery } from '../../lib/arabicSearch';
+import { calculateDeliveryFee } from '../../lib/orderPricing';
 import { evaluateOpenStatus } from '../../lib/workingHours';
 import { readCitizenProfile } from '../../lib/citizenProfile';
 import { usePageSeo } from '../../lib/shareCard';
-import type { RestaurantOrder } from '../../types';
+import type { DeliveryCoords, RestaurantOrder } from '../../types';
 
 export const RestaurantsListPage: React.FC = () => {
   const { places, activePromoFilters } = useApp();
@@ -119,10 +120,12 @@ export const RestaurantsListPage: React.FC = () => {
                       </div>
                       <p className="text-xs text-white/80 truncate">{rest.specialty}</p>
                     </div>
-                    <span className="bg-white/90 text-[#003820] text-xs font-bold px-2.5 py-1 rounded-xl inline-flex items-center gap-1 shrink-0 tabular-nums">
-                      <Star size={12} className="fill-[#cca730] text-[#cca730]" />
-                      {rest.rating ?? 4.8}
-                    </span>
+                    {typeof rest.rating === 'number' && rest.rating > 0 && (
+                      <span className="bg-white/90 text-[#003820] text-xs font-bold px-2.5 py-1 rounded-xl inline-flex items-center gap-1 shrink-0 tabular-nums">
+                        <Star size={12} className="fill-[#cca730] text-[#cca730]" />
+                        {rest.rating}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -135,14 +138,24 @@ export const RestaurantsListPage: React.FC = () => {
                     <div className="flex items-center justify-between gap-2">
                       <p className="flex items-center gap-1.5 min-w-0">
                         <Clock size={14} className="text-[#0f5132] shrink-0" />
-                        <span className="truncate">{rest.hours}</span>
+                        <span className="truncate">{rest.hours || 'مواعيد غير محددة'}</span>
                       </p>
                       {(() => {
-                        const status = evaluateOpenStatus(rest.hours, rest.openNow ?? true);
+                        const status = evaluateOpenStatus(
+                          rest.hours,
+                          rest.openNow,
+                          undefined,
+                          rest.workingSchedule,
+                          rest.is24Hours
+                        );
                         return (
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
-                              status.isOpen ? 'bg-[#e6f4ec] text-[#0f5132]' : 'bg-[#f1f4f2] text-[#707971]'
+                              status.state === 'open'
+                                ? 'bg-[#e6f4ec] text-[#0f5132]'
+                                : status.state === 'unknown'
+                                  ? 'bg-[#fef3c7] text-[#735c00]'
+                                  : 'bg-[#f1f4f2] text-[#707971]'
                             }`}
                           >
                             {status.label}
@@ -195,7 +208,13 @@ export const RestaurantProfilePage: React.FC = () => {
     );
   }
 
-  const openStatus = evaluateOpenStatus(restaurant.hours, restaurant.openNow ?? true);
+  const openStatus = evaluateOpenStatus(
+    restaurant.hours,
+    restaurant.openNow,
+    undefined,
+    restaurant.workingSchedule,
+    restaurant.is24Hours
+  );
 
   return (
     <StackLayout title={restaurant.name} subtitle={restaurant.specialty} backTo="/restaurants">
@@ -207,7 +226,11 @@ export const RestaurantProfilePage: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
               <span
                 className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold ${
-                  openStatus.isOpen ? 'bg-[#e6f4ec] text-[#003820]' : 'bg-black/65 text-white'
+                  openStatus.state === 'open'
+                    ? 'bg-[#e6f4ec] text-[#003820]'
+                    : openStatus.state === 'unknown'
+                      ? 'bg-[#fef3c7] text-[#735c00]'
+                      : 'bg-black/65 text-white'
                 }`}
               >
                 {openStatus.label}
@@ -451,32 +474,58 @@ export const RestaurantCartPage: React.FC = () => {
   );
   const [deliveryAddress, setDeliveryAddress] = useState(savedProfile.address);
   const [locationShared, setLocationShared] = useState(false);
+  const [deliveryCoords, setDeliveryCoords] = useState<DeliveryCoords | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const subtotal = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const deliveryFee = deliveryArea.includes('قرية') ? 25 : 15;
+  const deliveryFee = calculateDeliveryFee(deliveryArea, restaurant);
   const total = subtotal + deliveryFee;
 
   const handleShareLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationShared(true);
-      showToast('تم تفعيل مشاركة الموقع التقريبي مع الكابتن', 'info');
+    if (locating) return;
+    setLocationError(null);
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setLocationShared(false);
+      setDeliveryCoords(null);
+      const msg = 'متصفحك لا يدعم تحديد الموقع الجغرافي (GPS) — يمكنك إتمام الطلب بالعنوان المكتوب بالتفصيل.';
+      setLocationError(msg);
+      showToast(msg, 'error');
       return;
     }
+    setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        const lat = Number(pos.coords.latitude.toFixed(6));
+        const lng = Number(pos.coords.longitude.toFixed(6));
+        const accuracy = Number.isFinite(pos.coords.accuracy) ? Math.round(pos.coords.accuracy) : undefined;
+        setDeliveryCoords(accuracy !== undefined ? { lat, lng, accuracy } : { lat, lng });
         setLocationShared(true);
-        setDeliveryAddress((prev) =>
-          prev
-            ? prev
-            : `إحداثيات GPS: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`
-        );
-        showToast('تم التقاط موقعك بنجاح لمساعدة كابتن الدليفري', 'success');
+        setLocationError(null);
+        setLocating(false);
+        showToast('تم التقاط إحداثيات موقعك بنجاح وإرفاقها للكابتن دون المساس بالعنوان المكتوب', 'success');
       },
-      () => {
-        setLocationShared(true);
-        showToast('تم تحديد المنطقة — اكتب أقرب علامة مميزة لسهولة الوصول', 'info');
+      (err) => {
+        setLocationShared(false);
+        setDeliveryCoords(null);
+        setLocating(false);
+        let msg = 'تعذر تحديد موقعك حالياً. يرجى المحاولة مرة أخرى أو التأكد من تفعيل خدمة الموقع (GPS).';
+        if (err.code === err.PERMISSION_DENIED) {
+          msg = 'تم رفض إذن الوصول للموقع الجغرافي. يمكنك السماح بالإذن والمحاولة مجدداً أو الاعتماد على العنوان المكتوب.';
+        } else if (err.code === err.TIMEOUT) {
+          msg = 'انتهت مهلة تحديد الموقع. تأكد من قوة إشارة GPS واضغط إعادة المحاولة.';
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          msg = 'خدمة الموقع غير متاحة حالياً على جهازك. اكتب أقرب علامة مميزة في العنوان.';
+        }
+        setLocationError(msg);
+        showToast(msg, 'error');
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 30000,
       }
     );
   };
@@ -484,8 +533,13 @@ export const RestaurantCartPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!restaurant || cart.items.length === 0) return;
-    if (customerName.trim().length < 2 || customerPhone.trim().length < 8 || deliveryAddress.trim().length < 3) {
-      showToast('يرجى استكمال الاسم ورقم الهاتف والعنوان بالتفصيل', 'error');
+    const phoneCheck = validateEgyptPhone(customerPhone);
+    if (!phoneCheck.valid) {
+      showToast(phoneCheck.error || 'رقم الهاتف غير صالح', 'error');
+      return;
+    }
+    if (customerName.trim().length < 2 || deliveryAddress.trim().length < 3) {
+      showToast('يرجى استكمال الاسم والعنوان بالتفصيل', 'error');
       return;
     }
     setSubmitting(true);
@@ -494,10 +548,11 @@ export const RestaurantCartPage: React.FC = () => {
         restaurantId: restaurant.id,
         restaurantName: restaurant.name,
         customerName,
-        customerPhone,
+        customerPhone: phoneCheck.normalized,
         deliveryArea,
         deliveryAddress,
-        locationShared,
+        locationShared: Boolean(locationShared && deliveryCoords),
+        deliveryCoords: deliveryCoords || undefined,
         items: cart.items,
         subtotal,
         deliveryFee,
@@ -505,8 +560,9 @@ export const RestaurantCartPage: React.FC = () => {
         notes,
       });
       navigate(`/orders/tracking/${order.id}`);
-    } catch {
-      showToast('تعذر إرسال الطلب حالياً، يرجى التأكد من البيانات والمحاولة مرة أخرى', 'error');
+    } catch (err) {
+      const msg = err instanceof Error && err.message ? err.message : 'تعذر إرسال الطلب حالياً، يرجى التأكد من البيانات والمحاولة مرة أخرى';
+      showToast(msg, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -587,21 +643,56 @@ export const RestaurantCartPage: React.FC = () => {
         {/* Delivery Info + Location Share */}
         <FadeInUp index={1}>
           <div className="bg-white border border-[#e4ece7] rounded-3xl p-5 shadow-civic-1 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-sm font-bold text-[#181c1c]">بيانات التوصيل</h2>
               <button
                 type="button"
+                disabled={locating}
                 onClick={handleShareLocation}
-                className={`min-h-[38px] px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 active:scale-95 transition-transform ${
-                  locationShared
+                className={`min-h-[38px] px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60 ${
+                  locationShared && deliveryCoords
                     ? 'bg-[#e6f4ec] text-[#0f5132]'
                     : 'bg-[#003820] text-white'
                 }`}
               >
-                <LocateFixed size={14} />
-                {locationShared ? 'تمت مشاركة اللوكيشن' : 'مشاركة اللوكيشن'}
+                <LocateFixed size={14} className={locating ? 'animate-spin' : ''} />
+                {locating
+                  ? 'جارٍ تحديد الموقع...'
+                  : locationShared && deliveryCoords
+                    ? 'تم حفظ إحداثيات GPS (تحديث)'
+                    : locationError
+                      ? 'إعادة محاولة تحديد الموقع'
+                      : 'مشاركة اللوكيشن (GPS)'}
               </button>
             </div>
+
+            {locationShared && deliveryCoords && (
+              <div className="bg-[#e6f4ec] border border-[#b7e2c8] rounded-2xl px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-[#003820]">
+                <span>
+                  تم إرفاق الإحداثيات للكابتن:{' '}
+                  <span className="font-mono font-bold" dir="ltr">
+                    {deliveryCoords.lat.toFixed(5)}, {deliveryCoords.lng.toFixed(5)}
+                  </span>
+                  {deliveryCoords.accuracy ? ` (دقة ~${deliveryCoords.accuracy}م)` : ''}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLocationShared(false);
+                    setDeliveryCoords(null);
+                  }}
+                  className="text-[11px] font-bold text-[#ba1a1a] hover:underline"
+                >
+                  إزالة الموقع
+                </button>
+              </div>
+            )}
+
+            {locationError && (
+              <div role="alert" className="bg-[#fff5f5] border border-[#ffdad6] rounded-2xl px-3.5 py-2.5 text-xs text-[#93000a]">
+                {locationError}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="space-y-1.5">
@@ -834,6 +925,17 @@ export const OrderTrackingPage: React.FC = () => {
               <span>{order.total} ج.م</span>
             </div>
             <p className="text-xs text-[#404942]">العنوان: {order.deliveryAddress}</p>
+            {order.deliveryCoords && (
+              <a
+                href={`https://www.google.com/maps?q=${order.deliveryCoords.lat},${order.deliveryCoords.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0f5132] hover:underline"
+              >
+                <MapPin size={14} />
+                موقع التوصيل المرفق على الخريطة (GPS)
+              </a>
+            )}
           </div>
         </FadeInUp>
 

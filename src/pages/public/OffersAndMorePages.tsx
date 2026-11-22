@@ -253,7 +253,13 @@ export const OfferDetailPage: React.FC = () => {
 
         {/* Merchant Card */}
         {merchant && (() => {
-          const merchantStatus = evaluateOpenStatus(merchant.hours, merchant.openNow ?? true);
+          const merchantStatus = evaluateOpenStatus(
+            merchant.hours,
+            merchant.openNow,
+            undefined,
+            merchant.workingSchedule,
+            merchant.is24Hours
+          );
           return (
           <FadeInUp delay={0.18}>
             <div className="bg-white border border-[#e4ece7] rounded-3xl p-5 shadow-civic-1 space-y-3">
@@ -264,7 +270,11 @@ export const OfferDetailPage: React.FC = () => {
                 </div>
                 <span
                   className={`text-xs font-bold px-3 py-1 rounded-xl shrink-0 ${
-                    merchantStatus.isOpen ? 'text-[#146c43] bg-[#e6f4ec]' : 'text-[#707971] bg-[#f1f4f2]'
+                    merchantStatus.state === 'open'
+                      ? 'text-[#146c43] bg-[#e6f4ec]'
+                      : merchantStatus.state === 'unknown'
+                        ? 'text-[#735c00] bg-[#fef3c7]'
+                        : 'text-[#707971] bg-[#f1f4f2]'
                   }`}
                 >
                   {merchantStatus.label}
@@ -721,12 +731,20 @@ export const TrackRequestPage: React.FC = () => {
     return () => unsub();
   }, [secureToken]);
 
-  const statusMeta: Record<Submission['status'], { label: string; color: string; bg: string }> = {
-    received: { label: 'تم الاستلام بنجاح', color: '#0369a1', bg: '#e0f2fe' },
-    reviewing: { label: 'قيد المراجعة والتدقيق', color: '#92400e', bg: '#fef3c7' },
-    approved: { label: 'تم الاعتماد والنشر', color: '#0f5132', bg: '#e6f4ec' },
-    rejected: { label: 'مرفوض (يرجى مراجعة الملاحظة)', color: '#93000a', bg: '#ffdad6' },
-    expired: { label: 'انتهت صلاحية رابط المتابعة', color: '#404942', bg: '#ebefed' },
+  const getStatusDisplay = (sub: Submission): { label: string; color: string; bg: string } => {
+    if (sub.status === 'approved') {
+      if (sub.applied || sub.publishedTargetId) {
+        return { label: 'تم الاعتماد والتطبيق في الدليل', color: '#0f5132', bg: '#e6f4ec' };
+      }
+      return { label: 'تمت المراجعة والاعتماد', color: '#0f5132', bg: '#e6f4ec' };
+    }
+    const map: Record<Exclude<Submission['status'], 'approved'>, { label: string; color: string; bg: string }> = {
+      received: { label: 'تم الاستلام بنجاح', color: '#0369a1', bg: '#e0f2fe' },
+      reviewing: { label: 'قيد المراجعة والتدقيق', color: '#92400e', bg: '#fef3c7' },
+      rejected: { label: 'مرفوض (يرجى مراجعة الملاحظة)', color: '#93000a', bg: '#ffdad6' },
+      expired: { label: 'انتهت صلاحية رابط المتابعة', color: '#404942', bg: '#ebefed' },
+    };
+    return map[sub.status];
   };
 
   return (
@@ -776,7 +794,9 @@ export const TrackRequestPage: React.FC = () => {
           </AnimatedEmptyState>
         )}
 
-        {submission && (
+        {submission && (() => {
+          const badge = getStatusDisplay(submission);
+          return (
           <FadeInUp delay={0.04}>
             <div className="bg-white border border-[#e4ece7] rounded-3xl p-5 shadow-civic-1 space-y-4">
               <div className="flex items-start justify-between gap-3">
@@ -787,11 +807,11 @@ export const TrackRequestPage: React.FC = () => {
                 <span
                   className="text-xs font-bold px-3 py-1.5 rounded-xl shrink-0"
                   style={{
-                    backgroundColor: statusMeta[submission.status].bg,
-                    color: statusMeta[submission.status].color,
+                    backgroundColor: badge.bg,
+                    color: badge.color,
                   }}
                 >
-                  {statusMeta[submission.status].label}
+                  {badge.label}
                 </span>
               </div>
 
@@ -810,7 +830,8 @@ export const TrackRequestPage: React.FC = () => {
               </div>
             </div>
           </FadeInUp>
-        )}
+          );
+        })()}
       </div>
     </StackLayout>
   );

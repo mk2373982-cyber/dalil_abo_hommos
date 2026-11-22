@@ -22,20 +22,23 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
+  Trash2,
   Upload,
+  UserPlus,
+  Users,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { AdminShell } from '../../components/SharedUI';
 import { AnimatedFilterChip, FadeInUp } from '../../components/MotionEffects';
 import { buildWhatsAppUrl, parseCsvLine } from '../../lib/formatters';
 import { buildMerchantWhatsAppReport, computePlacePerformance } from '../../lib/merchantReport';
-import type { Campaign, FinanceSettlement, Offer, Place } from '../../types';
+import type { AdminRole, AdminUser, Campaign, FinanceSettlement, Offer, PartnerScope, Place } from '../../types';
 
 // ============================================================
 // 1. WHATSAPP MANUAL QUEUE (SCREEN_8)
 // ============================================================
 export const AdminWhatsappQueuePage: React.FC = () => {
-  const { whatsappQueue, saveWhatsappQueueItem, updateWhatsappStatus, showToast } = useApp();
+  const { whatsappQueue, isAuditor, saveWhatsappQueueItem, updateWhatsappStatus, showToast } = useApp();
   const [recipientName, setRecipientName] = useState('');
   const [phone, setPhone] = useState('');
   const [templateName, setTemplateName] = useState('ترحيب بنشاط جديد');
@@ -139,9 +142,10 @@ export const AdminWhatsappQueuePage: React.FC = () => {
           />
             <button
               type="submit"
-              className="w-full min-h-[46px] rounded-2xl bg-[#003820] text-white text-sm font-bold flex items-center justify-center gap-2"
+              disabled={isAuditor}
+              className="w-full min-h-[46px] rounded-2xl bg-[#003820] disabled:opacity-50 text-white text-sm font-bold flex items-center justify-center gap-2"
             >
-              <Plus size={17} /> إضافة للطابور
+              <Plus size={17} /> {isAuditor ? 'وضع القراءة فقط' : 'إضافة للطابور'}
             </button>
           </form>
         </FadeInUp>
@@ -185,7 +189,7 @@ export const AdminWhatsappQueuePage: React.FC = () => {
                   >
                     <MessageCircle size={15} /> فتح واتساب للإرسال
                   </a>
-                  {item.status !== 'sent' && (
+                  {!isAuditor && item.status !== 'sent' && (
                     <button
                       type="button"
                       onClick={() => void updateWhatsappStatus(item.id, 'sent')}
@@ -208,7 +212,7 @@ export const AdminWhatsappQueuePage: React.FC = () => {
 // 2. CAMPAIGNS (5 FAIR-ROTATION SLOTS) & OFFERS (SCREEN_16)
 // ============================================================
 export const AdminCampaignsPage: React.FC = () => {
-  const { campaigns, offers, places, categories, saveCampaign, saveOffer, showToast } = useApp();
+  const { campaigns, offers, places, categories, isAuditor, saveCampaign, saveOffer, showToast } = useApp();
   const [editingSlot, setEditingSlot] = useState<Campaign | null>(null);
   const [newOfferTitle, setNewOfferTitle] = useState('');
   const [selectedOfferPlaceId, setSelectedOfferPlaceId] = useState('');
@@ -293,8 +297,9 @@ export const AdminCampaignsPage: React.FC = () => {
                     </span>
                     <button
                       type="button"
+                      disabled={isAuditor}
                       onClick={() => void saveCampaign({ ...camp, active: !camp.active })}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold disabled:opacity-50 ${
                         camp.active ? 'bg-[#e6f4ec] text-[#0f5132]' : 'bg-[#f1f4f2] text-[#404942]'
                       }`}
                     >
@@ -308,13 +313,15 @@ export const AdminCampaignsPage: React.FC = () => {
                   <div className="flex items-center justify-between text-[11px] text-[#707971] pt-2 border-t border-[#e4ece7]">
                     <span>ظهور: {(camp.impressions || 0).toLocaleString('ar-EG')}</span>
                     <span>نقرات: {(camp.clicks || 0).toLocaleString('ar-EG')}</span>
-                    <button
-                      type="button"
-                      onClick={() => setEditingSlot(camp)}
-                      className="text-[#0f5132] font-bold hover:underline"
-                    >
-                      تعديل
-                    </button>
+                    {!isAuditor && (
+                      <button
+                        type="button"
+                        onClick={() => setEditingSlot(camp)}
+                        className="text-[#0f5132] font-bold hover:underline"
+                      >
+                        تعديل
+                      </button>
+                    )}
                   </div>
                 </div>
               </FadeInUp>
@@ -426,9 +433,10 @@ export const AdminCampaignsPage: React.FC = () => {
             />
               <button
                 type="submit"
-                className="w-full min-h-[46px] rounded-2xl bg-[#003820] text-white text-sm font-bold"
+                disabled={isAuditor}
+                className="w-full min-h-[46px] rounded-2xl bg-[#003820] disabled:opacity-50 text-white text-sm font-bold"
               >
-                نشر في تبويب «التخفيضات»
+                {isAuditor ? 'وضع القراءة فقط' : 'نشر في تبويب «التخفيضات»'}
               </button>
             </form>
           </FadeInUp>
@@ -449,8 +457,9 @@ export const AdminCampaignsPage: React.FC = () => {
                     </div>
                     <button
                       type="button"
+                      disabled={isAuditor}
                       onClick={() => void saveOffer({ ...off, active: !off.active })}
-                      className={`min-h-[36px] px-3 rounded-xl text-xs font-bold shrink-0 ${
+                      className={`min-h-[36px] px-3 rounded-xl text-xs font-bold shrink-0 disabled:opacity-50 ${
                         off.active ? 'bg-[#e6f4ec] text-[#0f5132]' : 'bg-[#f1f4f2] text-[#707971]'
                       }`}
                     >
@@ -538,7 +547,7 @@ export const AdminCampaignsPage: React.FC = () => {
 // 3. STRICT PARTNER FINANCE ENGINE — رائد & محمد (SCREEN_12)
 // ============================================================
 export const AdminFinancePage: React.FC = () => {
-  const { financeConfig, financeSettlements, saveFinanceConfig, closeNewSettlement, user, showToast } =
+  const { financeConfig, financeSettlements, isAuditor, saveFinanceConfig, closeNewSettlement, user, showToast } =
     useApp();
 
   const [raedInput, setRaedInput] = useState<string>(
@@ -743,14 +752,16 @@ export const AdminFinancePage: React.FC = () => {
       title="حسابات الشريكين والتسويات المالية"
       subtitle="إدارة نسب توزيع الأرباح بين «رائد» و«محمد» مع قفل التسويات السابقة تاريخياً"
       headerAction={
-        <button
-          type="button"
-          disabled={!financeConfig.isConfigured}
-          onClick={() => setSettlementOpen(true)}
-          className="min-h-[42px] px-4 py-2 rounded-2xl bg-[#003820] disabled:opacity-45 text-white text-xs font-bold flex items-center gap-1.5"
-        >
-          <Lock size={15} /> إغلاق دورة مالية جديدة
-        </button>
+        !isAuditor ? (
+          <button
+            type="button"
+            disabled={!financeConfig.isConfigured}
+            onClick={() => setSettlementOpen(true)}
+            className="min-h-[42px] px-4 py-2 rounded-2xl bg-[#003820] disabled:opacity-45 text-white text-xs font-bold flex items-center gap-1.5"
+          >
+            <Lock size={15} /> إغلاق دورة مالية جديدة
+          </button>
+        ) : undefined
       }
     >
       <div className="space-y-6">
@@ -869,17 +880,18 @@ export const AdminFinancePage: React.FC = () => {
             <div className="grid grid-cols-2 gap-3 pt-1">
               <button
                 type="button"
+                disabled={isAuditor}
                 onClick={handleCancel}
-                className="min-h-[46px] rounded-2xl bg-[#f1f4f2] hover:bg-[#e4ece7] text-[#404942] text-sm font-bold flex items-center justify-center gap-1.5"
+                className="min-h-[46px] rounded-2xl bg-[#f1f4f2] hover:bg-[#e4ece7] disabled:opacity-50 text-[#404942] text-sm font-bold flex items-center justify-center gap-1.5"
               >
                 <RotateCcw size={16} /> إلغاء واستعادة
               </button>
               <button
                 type="submit"
-                disabled={saving}
-                className="min-h-[46px] rounded-2xl bg-[#003820] hover:bg-[#0f5132] text-white text-sm font-bold flex items-center justify-center gap-1.5"
+                disabled={saving || isAuditor}
+                className="min-h-[46px] rounded-2xl bg-[#003820] hover:bg-[#0f5132] disabled:opacity-50 text-white text-sm font-bold flex items-center justify-center gap-1.5"
               >
-                <Save size={16} /> {saving ? 'جارٍ الحفظ...' : 'حفظ النسب'}
+                <Save size={16} /> {isAuditor ? 'قراءة فقط' : saving ? 'جارٍ الحفظ...' : 'حفظ النسب'}
               </button>
             </div>
             </form>
@@ -1048,7 +1060,7 @@ export const AdminFinancePage: React.FC = () => {
 // 4. CSV BATCH IMPORT (SCREEN_42)
 // ============================================================
 export const AdminImportPage: React.FC = () => {
-  const { categories, savePlace, showToast } = useApp();
+  const { categories, isAuditor, savePlace, showToast } = useApp();
   const [targetCatId, setTargetCatId] = useState(categories[0]?.id || 'cat-general');
   const [csvText, setCsvText] = useState(
     'الاسم,التخصص,المنطقة,العنوان,الهاتف\nصيدلية الشفاء الجديدة,صيدلية 24 ساعة,شارع المحطة,أمام محطة قطار أبوحمص,01012345678\nمعمل البرج الحديث,تحاليل طبية,شارع بورسعيد,بجوار البنك الأهلي,01087654321'
@@ -1088,6 +1100,7 @@ export const AdminImportPage: React.FC = () => {
   };
 
   const handleImportAll = async () => {
+    if (isAuditor) return;
     if (parsedRows.length === 0) {
       showToast('لا توجد صفوف صالحة للاستيراد', 'error');
       return;
@@ -1108,10 +1121,8 @@ export const AdminImportPage: React.FC = () => {
           address: row.address,
           phone: row.phone,
           whatsapp: row.phone,
-          verified: true,
+          verified: false,
           openNow: true,
-          rating: 4.7,
-          reviewCount: 1,
           qrCode: `ABH-${Math.floor(1000 + Math.random() * 9000)}`,
         };
         try {
@@ -1239,7 +1250,15 @@ export const AdminImportPage: React.FC = () => {
 // 5. ANALYTICS & ZERO-RESULT SEARCH DETECTOR (SCREEN_10)
 // ============================================================
 export const AdminAnalyticsPage: React.FC = () => {
-  const { analyticsEvents, places, settings, showToast } = useApp();
+  const {
+    analyticsEvents,
+    analyticsSampleLimit,
+    hasMoreAnalytics,
+    loadMoreAnalytics,
+    places,
+    settings,
+    showToast,
+  } = useApp();
 
   const callClicks = analyticsEvents.filter((e) => e.eventType === 'call_click').length;
   const waClicks = analyticsEvents.filter((e) => e.eventType === 'whatsapp_click').length;
@@ -1280,10 +1299,33 @@ export const AdminAnalyticsPage: React.FC = () => {
       subtitle="رصد تفاعل أهالي أبوحمص واكتشاف الخدمات التي يبحثون عنها ولم تُضف بعد"
     >
       <div className="space-y-6">
+        {/* Honest Sample Scope Notice */}
+        <FadeInUp delay={0.01}>
+          <div className="bg-[#e0f2fe] border border-[#bae6fd] rounded-3xl p-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-0.5 text-xs text-[#0369a1]">
+              <p className="font-bold">
+                نطاق التقرير الحالي: أحدث {analyticsEvents.length} حدث مسجّل (حد التحميل الحالي: {analyticsSampleLimit})
+              </p>
+              <p className="text-[#0c4a6e]">
+                الأرقام التالية تمثل العينة الأحدث المرتّبة زمنياً من Firestore وليست بالضرورة إجمالي النشاط التاريخي الكامل.
+              </p>
+            </div>
+            {hasMoreAnalytics && (
+              <button
+                type="button"
+                onClick={loadMoreAnalytics}
+                className="min-h-[38px] px-4 rounded-xl bg-[#0369a1] text-white text-xs font-bold shrink-0"
+              >
+                تحميل أحداث أقدم
+              </button>
+            )}
+          </div>
+        </FadeInUp>
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <FadeInUp index={0} className="h-full">
             <div className="bg-white border border-[#e4ece7] rounded-3xl p-5 shadow-civic-1 h-full">
-              <p className="text-xs text-[#404942] font-semibold">إجمالي الزيارات</p>
+              <p className="text-xs text-[#404942] font-semibold">عداد الزيارات العام</p>
               <p className="text-2xl font-bold text-[#003820] tabular-nums mt-1">
                 {settings.visitsCount.toLocaleString('ar-EG')}
               </p>
@@ -1447,14 +1489,49 @@ export const AdminAnalyticsPage: React.FC = () => {
 // 6. GLOBAL SETTINGS & CIVIC DISCLAIMER (SCREEN_4)
 // ============================================================
 export const AdminSettingsPage: React.FC = () => {
-  const { settings, isSuperAdmin, savePublicSettings, seedCloudDatabase, showToast } = useApp();
+  const {
+    settings,
+    places,
+    isSuperAdmin,
+    adminsList,
+    saveAdminUser,
+    deleteAdminUser,
+    savePublicSettings,
+    initializeEssentialConfig,
+    seedDemoCatalog,
+    migrateRestaurantMenuPriceMaps,
+    showToast,
+  } = useApp();
+
   const [appName, setAppName] = useState(settings.appName);
   const [disclaimer, setDisclaimer] = useState(settings.disclaimer);
   const [supportPhone, setSupportPhone] = useState(settings.supportPhone || '');
   const [supportWhatsapp, setSupportWhatsapp] = useState(settings.supportWhatsapp || '');
-  const [visitsCount, setVisitsCount] = useState(String(settings.visitsCount || 18500));
+  const [visitsCount, setVisitsCount] = useState(String(settings.visitsCount || 0));
   const [saving, setSaving] = useState(false);
+  const [opsBusy, setOpsBusy] = useState(false);
   const syncedKeyRef = useRef<string>('');
+
+  // Partner / Admin Team Management State
+  const [memberUid, setMemberUid] = useState('');
+  const [memberEmail, setMemberEmail] = useState('');
+  const [memberName, setMemberName] = useState('');
+  const [memberRole, setMemberRole] = useState<AdminRole>('partner');
+  const [memberScopes, setMemberScopes] = useState<PartnerScope[]>(['clinic']);
+  const [memberPlaces, setMemberPlaces] = useState<string[]>([]);
+  const [memberActive, setMemberActive] = useState(true);
+  const [savingMember, setSavingMember] = useState(false);
+
+  const assignablePlaces = useMemo(
+    () =>
+      places.filter((p) => p.categorySlug === 'medical' || p.categorySlug === 'restaurants'),
+    [places]
+  );
+
+  const demoPlacesForReview = useMemo(
+    () => places.filter((p) => p.isDemoData),
+    [places]
+  );
 
   useEffect(() => {
     const syncKey = `${settings.appName}|${settings.disclaimer}|${settings.supportPhone ?? ''}|${settings.supportWhatsapp ?? ''}|${settings.visitsCount}|${settings.updatedAt ?? ''}`;
@@ -1487,76 +1564,141 @@ export const AdminSettingsPage: React.FC = () => {
     }
   };
 
+  const toggleScope = (scope: PartnerScope) => {
+    setMemberScopes((prev) =>
+      prev.includes(scope) ? prev.filter((s) => s !== scope) : [...prev, scope]
+    );
+  };
+
+  const toggleManagedPlace = (placeId: string) => {
+    setMemberPlaces((prev) =>
+      prev.includes(placeId) ? prev.filter((id) => id !== placeId) : [...prev, placeId]
+    );
+  };
+
+  const handleSaveMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!memberUid.trim() || !memberEmail.trim()) {
+      showToast('يرجى إدخال معرّف Firebase UID والبريد الإلكتروني للمستخدم', 'error');
+      return;
+    }
+    if (memberRole === 'partner' && memberScopes.length === 0) {
+      showToast('يرجى تحديد نطاق واحد على الأقل للشريك (عيادة / مطعم / كابتن)', 'error');
+      return;
+    }
+    setSavingMember(true);
+    try {
+      const record: AdminUser = {
+        uid: memberUid.trim(),
+        email: memberEmail.trim().toLowerCase(),
+        name: memberName.trim() || memberEmail.trim(),
+        role: memberRole,
+        active: memberActive,
+        ...(memberRole === 'partner'
+          ? {
+              partnerTypes: memberScopes,
+              managedPlaceIds: memberPlaces,
+            }
+          : {
+              partnerTypes: [],
+              managedPlaceIds: [],
+            }),
+      };
+      await saveAdminUser(record);
+      setMemberUid('');
+      setMemberEmail('');
+      setMemberName('');
+      setMemberRole('partner');
+      setMemberScopes(['clinic']);
+      setMemberPlaces([]);
+      setMemberActive(true);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'تعذر حفظ صلاحيات المستخدم', 'error');
+    } finally {
+      setSavingMember(false);
+    }
+  };
+
+  const loadMemberIntoForm = (m: AdminUser) => {
+    setMemberUid(m.uid);
+    setMemberEmail(m.email);
+    setMemberName(m.name || '');
+    setMemberRole(m.role);
+    setMemberScopes(m.partnerTypes || []);
+    setMemberPlaces(m.managedPlaceIds || []);
+    setMemberActive(m.active !== false);
+  };
+
   return (
     <AdminShell
-      title="الإعدادات العامة والهوية المجتمعية"
-      subtitle="نص إخلاء المسؤولية المستقلة، أرقام التواصل الرسمية، ومزامنة السحابة"
+      title="الإعدادات العامة وعزل صلاحيات الشركاء"
+      subtitle="الهوية المجتمعية، ربط الشركاء بأنشطتهم، والتهيئة الآمنة لقاعدة البيانات"
     >
-      <div className="max-w-3xl space-y-5">
+      <div className="max-w-4xl space-y-6">
         <FadeInUp delay={0.02}>
           <form
             onSubmit={handleSave}
             className="bg-white border border-[#e4ece7] rounded-3xl p-5 sm:p-6 shadow-civic-1 space-y-4"
           >
-          <h2 className="text-base font-bold text-[#003820] flex items-center gap-2">
-            <Settings size={18} /> إعدادات المنصة العامة
-          </h2>
+            <h2 className="text-base font-bold text-[#003820] flex items-center gap-2">
+              <Settings size={18} /> إعدادات المنصة العامة
+            </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold">اسم المنصة</label>
-              <input
-                type="text"
-                value={appName}
-                onChange={(e) => setAppName(e.target.value)}
-                className="w-full min-h-[44px] px-3.5 rounded-2xl bg-[#f1f4f2] text-sm outline-none"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold">اسم المنصة</label>
+                <input
+                  type="text"
+                  value={appName}
+                  onChange={(e) => setAppName(e.target.value)}
+                  className="w-full min-h-[44px] px-3.5 rounded-2xl bg-[#f1f4f2] text-sm outline-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold">عداد الزيارات المعروض بالرأس</label>
+                <input
+                  type="number"
+                  value={visitsCount}
+                  onChange={(e) => setVisitsCount(e.target.value)}
+                  className="w-full min-h-[44px] px-3.5 rounded-2xl bg-[#f1f4f2] text-sm tabular-nums outline-none"
+                />
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold">عداد الزيارات المعروض بالرأس</label>
-              <input
-                type="number"
-                value={visitsCount}
-                onChange={(e) => setVisitsCount(e.target.value)}
-                className="w-full min-h-[44px] px-3.5 rounded-2xl bg-[#f1f4f2] text-sm tabular-nums outline-none"
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold">هاتف الدعم الفني</label>
-              <input
-                type="tel"
-                dir="ltr"
-                value={supportPhone}
-                onChange={(e) => setSupportPhone(e.target.value)}
-                className="w-full min-h-[44px] px-3.5 rounded-2xl bg-[#f1f4f2] text-sm font-mono text-left outline-none"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold">هاتف الدعم الفني</label>
+                <input
+                  type="tel"
+                  dir="ltr"
+                  value={supportPhone}
+                  onChange={(e) => setSupportPhone(e.target.value)}
+                  className="w-full min-h-[44px] px-3.5 rounded-2xl bg-[#f1f4f2] text-sm font-mono text-left outline-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold">واتساب الإدارة</label>
+                <input
+                  type="tel"
+                  dir="ltr"
+                  value={supportWhatsapp}
+                  onChange={(e) => setSupportWhatsapp(e.target.value)}
+                  className="w-full min-h-[44px] px-3.5 rounded-2xl bg-[#f1f4f2] text-sm font-mono text-left outline-none"
+                />
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold">واتساب الإدارة</label>
-              <input
-                type="tel"
-                dir="ltr"
-                value={supportWhatsapp}
-                onChange={(e) => setSupportWhatsapp(e.target.value)}
-                className="w-full min-h-[44px] px-3.5 rounded-2xl bg-[#f1f4f2] text-sm font-mono text-left outline-none"
-              />
-            </div>
-          </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-bold">
-              نص المبادرة وإخلاء المسؤولية (مبادرة مجتمعية مستقلة غير حكومية)
-            </label>
-            <textarea
-              rows={3}
-              value={disclaimer}
-              onChange={(e) => setDisclaimer(e.target.value)}
-              className="w-full p-3.5 rounded-2xl bg-[#f1f4f2] text-sm outline-none"
-            />
-          </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold">
+                نص المبادرة وإخلاء المسؤولية (مبادرة مجتمعية مستقلة غير حكومية)
+              </label>
+              <textarea
+                rows={3}
+                value={disclaimer}
+                onChange={(e) => setDisclaimer(e.target.value)}
+                className="w-full p-3.5 rounded-2xl bg-[#f1f4f2] text-sm outline-none"
+              />
+            </div>
 
             <button
               type="submit"
@@ -1568,31 +1710,280 @@ export const AdminSettingsPage: React.FC = () => {
           </form>
         </FadeInUp>
 
+        {/* Partner & Admin RBAC Isolation Management */}
         {isSuperAdmin && (
-          <FadeInUp delay={0.08}>
-            <div className="bg-[#f7faf8] border border-[#e4ece7] rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <FadeInUp delay={0.06}>
+            <div className="bg-white border border-[#e4ece7] rounded-3xl p-5 sm:p-6 shadow-civic-1 space-y-5">
+              <div>
+                <h2 className="text-base font-bold text-[#003820] flex items-center gap-2">
+                  <Users size={18} /> إدارة المشرفين والشركاء وعزل الصلاحيات (/admins)
+                </h2>
+                <p className="text-xs text-[#404942] mt-1">
+                  اربط كل حساب شريك عبر معرّف Firebase UID بنطاقه (عيادة / مطعم / كابتن) وبالأنشطة المحددة له فقط. يتم فرض هذا العزل مباشرة داخل قواعد Firestore.
+                </p>
+              </div>
+
+              <form onSubmit={handleSaveMember} className="bg-[#f7faf8] border border-[#e4ece7] rounded-2xl p-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold">معرّف المستخدم (Firebase UID) *</label>
+                    <input
+                      type="text"
+                      required
+                      dir="ltr"
+                      value={memberUid}
+                      onChange={(e) => setMemberUid(e.target.value)}
+                      placeholder="UID من صفحة دخول الشريك"
+                      className="w-full min-h-[42px] px-3 rounded-xl bg-white border border-[#d7dbd9] text-xs font-mono text-left"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold">البريد الإلكتروني *</label>
+                    <input
+                      type="email"
+                      required
+                      dir="ltr"
+                      value={memberEmail}
+                      onChange={(e) => setMemberEmail(e.target.value)}
+                      placeholder="partner@gmail.com"
+                      className="w-full min-h-[42px] px-3 rounded-xl bg-white border border-[#d7dbd9] text-xs font-mono text-left"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold">الاسم المعروض</label>
+                    <input
+                      type="text"
+                      value={memberName}
+                      onChange={(e) => setMemberName(e.target.value)}
+                      placeholder="مثال: سكرتارية د. أحمد"
+                      className="w-full min-h-[42px] px-3 rounded-xl bg-white border border-[#d7dbd9] text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold">الدور الوظيفي (Role)</label>
+                    <select
+                      value={memberRole}
+                      onChange={(e) => setMemberRole(e.target.value as AdminRole)}
+                      className="w-full min-h-[42px] px-3 rounded-xl bg-white border border-[#d7dbd9] text-xs font-bold"
+                    >
+                      <option value="partner">شريك تشغيل معزول (Partner)</option>
+                      <option value="moderator">مشرف محتوى (Moderator)</option>
+                      <option value="auditor">مراجع مالي وإداري — قراءة فقط (Auditor)</option>
+                      <option value="super_admin">مدير عام (Super Admin)</option>
+                    </select>
+                  </div>
+                  <label className="flex items-center gap-2 text-xs font-bold pt-4 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={memberActive}
+                      onChange={(e) => setMemberActive(e.target.checked)}
+                      className="w-4 h-4 accent-[#0f5132]"
+                    />
+                    حساب مفعل (إلغاء التفعيل يوقف الوصول فوراً)
+                  </label>
+                </div>
+
+                {memberRole === 'partner' && (
+                  <div className="space-y-3 pt-2 border-t border-[#e4ece7]">
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-bold text-[#003820]">نطاقات الشريك المسموحة:</p>
+                      <div className="flex flex-wrap gap-3">
+                        {[
+                          { id: 'clinic' as PartnerScope, label: 'سكرتارية عيادة (clinic)' },
+                          { id: 'restaurant' as PartnerScope, label: 'مطبخ مطعم (restaurant)' },
+                          { id: 'captain' as PartnerScope, label: 'كابتن توصيل (captain)' },
+                        ].map((sc) => (
+                          <label key={sc.id} className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={memberScopes.includes(sc.id)}
+                              onChange={() => toggleScope(sc.id)}
+                              className="w-4 h-4 accent-[#0f5132]"
+                            />
+                            {sc.label}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {(memberScopes.includes('clinic') || memberScopes.includes('restaurant')) && (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-bold text-[#003820]">
+                          العيادات / المطاعم المصرّح لهذا الحساب بإدارتها ({memberPlaces.length}):
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-white rounded-xl border border-[#e4ece7]">
+                          {assignablePlaces.map((pl) => (
+                            <label
+                              key={pl.id}
+                              className="flex items-center gap-2 text-xs p-1.5 rounded-lg hover:bg-[#f7faf8] cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={memberPlaces.includes(pl.id)}
+                                onChange={() => toggleManagedPlace(pl.id)}
+                                className="w-4 h-4 accent-[#0f5132]"
+                              />
+                              <span className="truncate font-semibold">{pl.name}</span>
+                              <span className="text-[10px] text-[#707971] shrink-0">
+                                ({pl.categorySlug === 'medical' ? 'عيادة' : 'مطعم'})
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={savingMember}
+                  className="min-h-[42px] px-5 rounded-xl bg-[#003820] text-white text-xs font-bold inline-flex items-center gap-1.5"
+                >
+                  <UserPlus size={15} />
+                  {savingMember ? 'جارٍ الحفظ...' : 'حفظ / تحديث صلاحيات الحساب'}
+                </button>
+              </form>
+
+              {/* Current Admins & Partners List */}
+              <div className="divide-y divide-[#e4ece7]">
+                {adminsList.map((m) => (
+                  <div key={m.uid} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-bold text-[#181c1c]">{m.name || m.email}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-[#e6f4ec] text-[#0f5132] text-[10px] font-bold">
+                          {m.role}
+                        </span>
+                        {m.active === false && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#ffdad6] text-[#93000a] text-[10px] font-bold">
+                            موقوف
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-mono text-[11px] text-[#404942] truncate">
+                        {m.email} · UID: {m.uid}
+                      </p>
+                      {m.role === 'partner' && (
+                        <p className="text-[11px] text-[#707971]">
+                          النطاقات: {(m.partnerTypes || []).join(', ') || '—'} · الأنشطة:{' '}
+                          {(m.managedPlaceIds || []).length}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => loadMemberIntoForm(m)}
+                        className="px-3 py-1.5 rounded-xl bg-[#f1f4f2] hover:bg-[#e6f4ec] text-[#003820] font-bold"
+                      >
+                        تعديل
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void deleteAdminUser(m.uid)}
+                        className="p-2 rounded-xl bg-[#ffdad6]/70 text-[#93000a]"
+                        aria-label="حذف المستخدم"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {adminsList.length === 0 && (
+                  <p className="text-xs text-[#707971] py-4 text-center">
+                    لا توجد حسابات إضافية مسجلة بعد (حساب المدير العام الأساسي يعمل عبر الصلاحيات الافتراضية).
+                  </p>
+                )}
+              </div>
+            </div>
+          </FadeInUp>
+        )}
+
+        {/* Safe Initialization, Migration & Explicit Demo Seeding */}
+        {isSuperAdmin && (
+          <FadeInUp delay={0.1}>
+            <div className="bg-[#f7faf8] border border-[#e4ece7] rounded-3xl p-5 space-y-4">
               <div className="flex items-start gap-3">
                 <ShieldCheck size={22} className="text-[#0f5132] shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-bold text-[#181c1c]">مزامنة البيانات الافتراضية على Firestore</p>
-                  <p className="text-xs text-[#404942]">
-                    يُستخدم لإعادة تهيئة البيانات التأسيسية للدليل في السحابة عند الحاجة (دون المساس بنسبة الشراكة أو الإعدادات الحالية).
+                  <p className="text-sm font-bold text-[#181c1c]">
+                    التهيئة الآمنة وترحيل البيانات (بدون مسح أو استبدال لتعديلات الإدارة)
+                  </p>
+                  <p className="text-xs text-[#404942] mt-0.5 leading-relaxed">
+                    لا يتم حقن بيانات تجريبية أو تسويات مالية وهمية تلقائياً في الإنتاج. جميع العمليات التالية تكتب فقط المستندات أو الحقول الناقصة دون الكتابة فوق تعديلاتك القائمة.
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await seedCloudDatabase(true);
-                  } catch {
-                    showToast('تعذرت إعادة مزامنة السحابة حالياً', 'error');
-                  }
-                }}
-                className="min-h-[42px] px-4 rounded-2xl bg-white border border-[#0f5132] text-[#003820] text-xs font-bold flex items-center gap-1.5 shrink-0"
-              >
-                <CloudUpload size={15} /> إعادة مزامنة السحابة
-              </button>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <button
+                  type="button"
+                  disabled={opsBusy}
+                  onClick={async () => {
+                    setOpsBusy(true);
+                    try {
+                      await initializeEssentialConfig();
+                    } finally {
+                      setOpsBusy(false);
+                    }
+                  }}
+                  className="min-h-[44px] px-3.5 rounded-2xl bg-[#003820] text-white text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  <CloudUpload size={15} /> تهيئة الإعدادات والأقسام الناقصة
+                </button>
+                <button
+                  type="button"
+                  disabled={opsBusy}
+                  onClick={async () => {
+                    setOpsBusy(true);
+                    try {
+                      await migrateRestaurantMenuPriceMaps();
+                    } finally {
+                      setOpsBusy(false);
+                    }
+                  }}
+                  className="min-h-[44px] px-3.5 rounded-2xl bg-white border border-[#0f5132] text-[#003820] text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  <CheckCircle2 size={15} /> ترحيل خرائط الأسعار والطوابير
+                </button>
+                <button
+                  type="button"
+                  disabled={opsBusy}
+                  onClick={async () => {
+                    setOpsBusy(true);
+                    try {
+                      await seedDemoCatalog();
+                    } finally {
+                      setOpsBusy(false);
+                    }
+                  }}
+                  className="min-h-[44px] px-3.5 rounded-2xl bg-[#fef3c7] border border-[#f5d061] text-[#735c00] text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  <AlertTriangle size={15} /> إضافة عينات عرض تجريبية (اختياري)
+                </button>
+              </div>
+
+              {demoPlacesForReview.length > 0 && (
+                <div className="bg-white border border-[#f5d061] rounded-2xl p-4 space-y-2">
+                  <p className="text-xs font-bold text-[#735c00]">
+                    مراجعة السجلات المصنفة كبيانات تجريبية ({demoPlacesForReview.length}) — لا تُحذف تلقائياً:
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {demoPlacesForReview.map((pl) => (
+                      <span
+                        key={pl.id}
+                        className="px-2.5 py-1 rounded-xl bg-[#fef3c7]/60 text-[#735c00] text-[11px] font-semibold"
+                      >
+                        {pl.name} ({pl.id})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </FadeInUp>
         )}
