@@ -40,7 +40,7 @@ import {
   sortPlacesByPromoPriority,
 } from '../../lib/promoFilters';
 import { matchesArabicQuery } from '../../lib/arabicSearch';
-import { evaluateOpenStatus } from '../../lib/workingHours';
+import { evaluateOpenStatus, formatWeeklyScheduleSummary, getCairoDateString } from '../../lib/workingHours';
 import { readCitizenProfile } from '../../lib/citizenProfile';
 import { usePageSeo } from '../../lib/shareCard';
 import {
@@ -49,7 +49,7 @@ import {
   triggerBrowserNotification,
   triggerVibration,
 } from '../../lib/alertSounds';
-import { buildWhatsAppUrl } from '../../lib/formatters';
+import { buildWhatsAppUrl, validateEgyptPhone } from '../../lib/formatters';
 import type { ClinicQueue, ClinicTicket } from '../../types';
 
 export const MedicalListPage: React.FC = () => {
@@ -181,10 +181,12 @@ export const MedicalListPage: React.FC = () => {
                         <h3 className="text-base font-bold text-[#181c1c] truncate">{doctor.name}</h3>
                         {doctor.verified && <BadgeCheck size={16} className="text-[#cca730] shrink-0" />}
                       </div>
-                      <span className="text-xs font-bold text-[#735c00] inline-flex items-center gap-1 shrink-0 tabular-nums">
-                        <Star size={13} className="fill-[#cca730] text-[#cca730]" />
-                        {doctor.rating ?? 4.8}
-                      </span>
+                      {typeof doctor.rating === 'number' && doctor.rating > 0 && (
+                        <span className="text-xs font-bold text-[#735c00] inline-flex items-center gap-1 shrink-0 tabular-nums">
+                          <Star size={13} className="fill-[#cca730] text-[#cca730]" />
+                          {doctor.rating}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs font-medium text-[#146c43]">{doctor.specialty}</p>
                     <p className="text-xs text-[#404942] flex items-center gap-1 truncate">
@@ -198,24 +200,64 @@ export const MedicalListPage: React.FC = () => {
                 <div className="bg-[#f7faf8] border border-[#e4ece7] rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
                   <div>
                     {(() => {
-                      const openStatus = evaluateOpenStatus(doctor.hours, doctor.openNow ?? true);
-                      return (
-                        <p className={`text-xs font-bold ${openStatus.isOpen ? 'text-[#0f5132]' : 'text-[#707971]'}`}>
-                          {queue?.status === 'paused'
+                      const openStatus = evaluateOpenStatus(
+                        doctor.hours,
+                        doctor.openNow,
+                        undefined,
+                        doctor.workingSchedule,
+                        doctor.is24Hours
+                      );
+                      const statusLabel =
+                        queue?.status === 'closed'
+                          ? 'الحجز مغلق حالياً بالعيادة'
+                          : queue?.status === 'paused'
                             ? 'العيادة في استراحة مؤقتة'
                             : queue?.status === 'emergency'
                               ? 'حالة طارئة بالعيادة حالياً'
-                              : openStatus.label}
+                              : openStatus.label;
+                      const isPositive =
+                        (!queue || queue.status === 'open') && openStatus.state === 'open';
+                      return (
+                        <p
+                          className={`text-xs font-bold ${
+                            queue?.status === 'closed' || queue?.status === 'emergency'
+                              ? 'text-[#ba1a1a]'
+                              : isPositive
+                                ? 'text-[#0f5132]'
+                                : openStatus.state === 'unknown'
+                                  ? 'text-[#735c00]'
+                                  : 'text-[#707971]'
+                          }`}
+                        >
+                          {statusLabel}
                         </p>
                       );
                     })()}
                     <p className="text-xs text-[#404942] tabular-nums">
-                      الدور الحالي عند الكشف: <strong>#{queue?.currentNumber ?? 5}</strong>
+                      {(() => {
+                        const today = getCairoDateString();
+                        if (!queue) return 'طابور العيادة قيد التجهيز';
+                        if (queue.sessionDate && queue.sessionDate !== today) {
+                          return 'جلسة اليوم لم تبدأ بعد';
+                        }
+                        if (queue.currentNumber > 0) {
+                          return (
+                            <>
+                              الدور الحالي عند الكشف: <strong>#{queue.currentNumber}</strong>
+                            </>
+                          );
+                        }
+                        return queue.lastTicketNumber > 0
+                          ? `بانتظار بدء الكشف (محجوز: ${queue.lastTicketNumber})`
+                          : 'لا توجد حجوزات حتى الآن اليوم';
+                      })()}
                     </p>
                   </div>
                   <div className="text-left tabular-nums">
                     <p className="text-[11px] text-[#707971]">قيمة الكشف</p>
-                    <p className="text-base font-bold text-[#003820]">{doctor.consultationFee ?? 150} ج.م</p>
+                    <p className="text-base font-bold text-[#003820]">
+                      {typeof doctor.consultationFee === 'number' ? `${doctor.consultationFee} ج.م` : 'يُحدد بالعيادة'}
+                    </p>
                   </div>
                 </div>
 
@@ -226,7 +268,7 @@ export const MedicalListPage: React.FC = () => {
                     className="col-span-6 min-h-[46px] bg-[#003820] hover:bg-[#0f5132] text-white text-xs sm:text-sm font-bold rounded-2xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
                   >
                     <Ticket size={16} />
-                    احجز دورك الآن
+                    {queue && queue.status !== 'open' ? 'تفاصيل الحجز' : 'احجز دورك الآن'}
                   </Link>
                   <a
                     href={`tel:${doctor.phone}`}
@@ -298,8 +340,16 @@ export const DoctorProfilePage: React.FC = () => {
 
   const queue = clinicQueues.find((q) => q.doctorId === doctor.id);
   const isFav = favorites.includes(doctor.id);
-  const openStatus = evaluateOpenStatus(doctor.hours, doctor.openNow ?? true);
+  const openStatus = evaluateOpenStatus(
+    doctor.hours,
+    doctor.openNow,
+    undefined,
+    doctor.workingSchedule,
+    doctor.is24Hours
+  );
   const shareUrl = `${window.location.origin}/medical/doctors/${doctor.id}`;
+  const todayCairo = getCairoDateString();
+  const isSameDayQueue = Boolean(queue && (!queue.sessionDate || queue.sessionDate === todayCairo));
 
   return (
     <StackLayout
@@ -332,19 +382,27 @@ export const DoctorProfilePage: React.FC = () => {
                 className="w-24 h-24 rounded-2xl shrink-0"
               />
               <div className="space-y-1.5 min-w-0">
-                <p className="text-xs font-bold text-[#735c00] inline-flex items-center gap-1">
-                  <BadgeCheck size={15} className="text-[#cca730]" />
-                  طبيب معتمد وموثق بدليل أبوحمص
-                </p>
+                {doctor.verified && (
+                  <p className="text-xs font-bold text-[#735c00] inline-flex items-center gap-1">
+                    <BadgeCheck size={15} className="text-[#cca730]" />
+                    طبيب معتمد وموثق بدليل أبوحمص
+                  </p>
+                )}
                 <h2 className="text-xl font-bold text-[#181c1c]">{doctor.name}</h2>
                 <p className="text-xs sm:text-sm font-medium text-[#146c43]">{doctor.specialty}</p>
-                <div className="flex items-center gap-2 text-xs text-[#404942] tabular-nums">
-                  <span className="inline-flex items-center gap-1 font-bold text-[#735c00]">
-                    <Star size={13} className="fill-[#cca730] text-[#cca730]" />
-                    {doctor.rating ?? 4.9} ({doctor.reviewCount ?? 200}+ تقييم)
-                  </span>
-                  <span>·</span>
-                  <span>{doctor.experienceYears ?? 12} عام خبرة</span>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-[#404942] tabular-nums">
+                  {typeof doctor.rating === 'number' && doctor.rating > 0 && (
+                    <span className="inline-flex items-center gap-1 font-bold text-[#735c00]">
+                      <Star size={13} className="fill-[#cca730] text-[#cca730]" />
+                      {doctor.rating}
+                      {typeof doctor.reviewCount === 'number' && doctor.reviewCount > 0
+                        ? ` (${doctor.reviewCount} تقييم)`
+                        : ''}
+                    </span>
+                  )}
+                  {typeof doctor.experienceYears === 'number' && doctor.experienceYears > 0 && (
+                    <span>{doctor.experienceYears} عام خبرة</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -398,12 +456,18 @@ export const DoctorProfilePage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-[#003820] text-white flex flex-col items-center justify-center tabular-nums">
                   <span className="text-[10px] text-[#9ff1bd]">الدور</span>
-                  <span className="text-lg font-bold leading-none">#{queue.currentNumber}</span>
+                  <span className="text-lg font-bold leading-none">
+                    {isSameDayQueue && queue.currentNumber > 0 ? `#${queue.currentNumber}` : '—'}
+                  </span>
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-[#003820]">متابعة الطابور الحي الآن</h3>
                   <p className="text-xs text-[#146c43] tabular-nums">
-                    آخر حجز مسجل: #{queue.lastTicketNumber} · متوسط الانتظار {queue.avgMinutesPerPatient ?? 10} د/مريض
+                    {isSameDayQueue
+                      ? queue.lastTicketNumber > 0
+                        ? `آخر حجز مسجل اليوم: #${queue.lastTicketNumber} · متوسط الانتظار ${queue.avgMinutesPerPatient ?? 10} د/مريض`
+                        : `لا توجد حجوزات حتى الآن اليوم · متوسط الانتظار ${queue.avgMinutesPerPatient ?? 10} د/مريض`
+                      : 'جلسة يوم جديد — سيبدأ الترقيم من #1 عند أول حجز'}
                   </p>
                 </div>
               </div>
@@ -428,14 +492,24 @@ export const DoctorProfilePage: React.FC = () => {
                 </h3>
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                    openStatus.isOpen ? 'bg-[#e6f4ec] text-[#0f5132]' : 'bg-[#f1f4f2] text-[#707971]'
+                    openStatus.state === 'open'
+                      ? 'bg-[#e6f4ec] text-[#0f5132]'
+                      : openStatus.state === 'unknown'
+                        ? 'bg-[#fef3c7] text-[#735c00]'
+                        : 'bg-[#f1f4f2] text-[#707971]'
                   }`}
                 >
                   {openStatus.label}
                 </span>
               </div>
-              <p className="text-sm text-[#404942]">{doctor.hours || 'السبت إلى الخميس: 4:00 م - 9:00 م'}</p>
-              <p className="text-xs font-medium text-[#ba1a1a]">الجمعة: عطلة أسبوعية رسمية</p>
+              <p className="text-sm text-[#404942]">
+                {doctor.workingSchedule
+                  ? formatWeeklyScheduleSummary(doctor.workingSchedule)
+                  : doctor.hours || 'مواعيد غير محددة — يرجى التواصل مع العيادة للتأكد'}
+              </p>
+              {openStatus.state === 'unknown' && (
+                <p className="text-xs text-[#707971]">تعذر التحقق التلقائي من المواعيد؛ يُفضّل التواصل مع العيادة قبل التوجه.</p>
+              )}
             </div>
 
             <hr className="border-[#e4ece7]" />
@@ -546,10 +620,25 @@ export const DoctorBookingPage: React.FC = () => {
     );
   }
 
+  const todayCairo = getCairoDateString();
+  const isNewDayRollover = Boolean(queue && queue.sessionDate && queue.sessionDate !== todayCairo);
+  const bookingAllowed = Boolean(queue && queue.status === 'open');
+  const expectedNextTicket = queue ? (isNewDayRollover ? 1 : queue.lastTicketNumber + 1) : 1;
+  const displayedCurrentNum = queue && !isNewDayRollover ? queue.currentNumber : 0;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (patientName.trim().length < 2 || patientPhone.trim().length < 8) {
-      showToast('يرجى كتابة اسم المريض ورقم الهاتف بشكل صحيح', 'error');
+    if (!bookingAllowed) {
+      showToast('الحجز الإلكتروني متوقف حالياً لهذه العيادة', 'error');
+      return;
+    }
+    const phoneCheck = validateEgyptPhone(patientPhone);
+    if (!phoneCheck.valid) {
+      showToast(phoneCheck.error || 'رقم الهاتف غير صالح', 'error');
+      return;
+    }
+    if (patientName.trim().length < 2) {
+      showToast('يرجى كتابة اسم المريض بشكل صحيح', 'error');
       return;
     }
     setSubmitting(true);
@@ -558,14 +647,18 @@ export const DoctorBookingPage: React.FC = () => {
         doctorId: doctor.id,
         doctorName: doctor.name,
         patientName,
-        patientPhone,
+        patientPhone: phoneCheck.normalized,
         visitType,
-        fee: doctor.consultationFee ?? 150,
+        fee: doctor.consultationFee ?? 0,
         notes,
       });
       navigate('/medical/booking/confirmed', { state: { ticket, doctor } });
-    } catch {
-      showToast('تعذر تثبيت الحجز حالياً، يرجى مراجعة البيانات والمحاولة مرة أخرى', 'error');
+    } catch (err) {
+      const msg =
+        err instanceof Error && err.message
+          ? err.message
+          : 'تعذر تثبيت الحجز حالياً، يرجى مراجعة البيانات والمحاولة مرة أخرى';
+      showToast(msg, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -579,18 +672,47 @@ export const DoctorBookingPage: React.FC = () => {
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <FadeInUp index={0}>
-          <div className="bg-[#e6f4ec] border border-[#b0f1c7] rounded-3xl p-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold text-[#146c43]">رقم الدور المتوقع لحجزك</p>
-              <p className="text-2xl font-bold text-[#003820] tabular-nums">
-                #{(queue?.lastTicketNumber ?? 8) + 1}
+          {!bookingAllowed ? (
+            <div className="bg-[#fff5f5] border border-[#ffdad6] rounded-3xl p-4 space-y-2 text-[#93000a]">
+              <div className="flex items-center gap-2 font-bold text-sm">
+                <AlertTriangle size={18} />
+                <span>
+                  {!queue
+                    ? 'طابور الحجز الإلكتروني غير مهيأ لهذه العيادة بعد'
+                    : queue.status === 'closed'
+                      ? 'العيادة مغلقة حالياً ولا تستقبل حجوزات إلكترونية'
+                      : queue.status === 'paused'
+                        ? 'العيادة في استراحة مؤقتة حالياً'
+                        : 'توجد حالة طارئة بالعيادة والحجز متوقف مؤقتاً'}
+                </span>
+              </div>
+              {queue?.pausedReason && <p className="text-xs">{queue.pausedReason}</p>}
+              <p className="text-xs text-[#7a2e2e]">
+                يمكنك الاتصال مباشرة بالعيادة عبر الرقم{' '}
+                <a href={`tel:${doctor.phone}`} className="underline font-bold" dir="ltr">
+                  {doctor.phone}
+                </a>{' '}
+                للتنسيق مع السكرتارية.
               </p>
             </div>
-            <div className="text-left text-xs text-[#003820] tabular-nums">
-              <p>الدور الحالي: #{queue?.currentNumber ?? 5}</p>
-              <p className="text-[#146c43] font-semibold">الدفع عند الحضور بالعيادة</p>
+          ) : (
+            <div className="bg-[#e6f4ec] border border-[#b0f1c7] rounded-3xl p-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-[#146c43]">
+                  رقم الدور المتوقع ليوم {todayCairo}
+                </p>
+                <p className="text-2xl font-bold text-[#003820] tabular-nums">#{expectedNextTicket}</p>
+              </div>
+              <div className="text-left text-xs text-[#003820] tabular-nums">
+                <p>
+                  {displayedCurrentNum > 0
+                    ? `الدور الحالي: #${displayedCurrentNum}`
+                    : 'لم يبدأ الكشف بعد'}
+                </p>
+                <p className="text-[#146c43] font-semibold">الدفع عند الحضور بالعيادة</p>
+              </div>
             </div>
-          </div>
+          )}
         </FadeInUp>
 
         <FadeInUp index={1}>
@@ -655,10 +777,14 @@ export const DoctorBookingPage: React.FC = () => {
         <FadeInUp index={2}>
           <button
             type="submit"
-            disabled={submitting}
-            className="w-full min-h-[52px] bg-[#003820] hover:bg-[#0f5132] disabled:opacity-60 text-white font-bold text-sm rounded-2xl shadow-civic-2 active:scale-95 transition-transform"
+            disabled={submitting || !bookingAllowed}
+            className="w-full min-h-[52px] bg-[#003820] hover:bg-[#0f5132] disabled:opacity-50 text-white font-bold text-sm rounded-2xl shadow-civic-2 active:scale-95 transition-transform"
           >
-            {submitting ? 'جارٍ تثبيت رقم الدور في العيادة...' : 'تأكيد الحجز واستلام رقم الدور'}
+            {!bookingAllowed
+              ? 'الحجز غير متاح حالياً'
+              : submitting
+                ? 'جارٍ تثبيت رقم الدور في العيادة...'
+                : 'تأكيد الحجز واستلام رقم الدور'}
           </button>
         </FadeInUp>
       </form>

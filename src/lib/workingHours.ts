@@ -22,6 +22,18 @@ export const WEEKDAY_ARABIC_LABELS: Record<WeekdayKey, string> = {
   fri: 'الجمعة',
 };
 
+export function createEmptySchedule(): WeeklySchedule {
+  return {
+    sat: [],
+    sun: [],
+    mon: [],
+    tue: [],
+    wed: [],
+    thu: [],
+    fri: [],
+  };
+}
+
 const JS_DAY_TO_KEY: WeekdayKey[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
 const SHORT_EN_TO_KEY: Record<string, WeekdayKey> = {
@@ -52,8 +64,8 @@ interface CairoClock {
 }
 
 /**
- * Returns the current date string (YYYY-MM-DD) in Africa/Cairo timezone.
- * Used to partition clinic queues & tickets cleanly by Cairo working day.
+- Returns the current date string (YYYY-MM-DD) in Africa/Cairo timezone.
+- Used to partition clinic queues & tickets cleanly by Cairo working day.
  */
 export function getCairoDateString(now: Date = new Date()): string {
   try {
@@ -142,7 +154,7 @@ function format24hToArabic(hhmm: string): string {
 }
 
 /**
- * Generates a concise human-readable Arabic summary string from a structured WeeklySchedule.
+- Generates a concise human-readable Arabic summary string from a structured WeeklySchedule.
  */
 export function formatWeeklyScheduleSummary(schedule?: WeeklySchedule, is24Hours?: boolean): string {
   if (is24Hours) return 'مفتوح 24 ساعة طوال أيام الأسبوع';
@@ -314,8 +326,8 @@ function expandDayRange(startKey: WeekdayKey, endKey: WeekdayKey): WeekdayKey[] 
 }
 
 /**
- * Attempts to parse a legacy Arabic/English hours string into a structured WeeklySchedule.
- * Returns null if the string cannot be reliably parsed.
+- Attempts to parse a legacy Arabic/English hours string into a structured WeeklySchedule.
+- Returns null if the string cannot be reliably parsed.
  */
 export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySchedule; is24Hours?: boolean } | null {
   if (!hours || !hours.trim()) return null;
@@ -410,95 +422,4 @@ export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySche
   if (!parsedAnySlot) return null;
 
   // Ensure every weekday key is explicitly present when day-scoped segments were parsed
-  // (e.g., if only Sat-Wed & Thu were defined, Friday is explicitly [] = closed!)
-  if (hasExplicitDayScopedSegment) {
-    ORDERED_WEEKDAYS.forEach((d) => {
-      if (!schedule[d]) {
-        schedule[d] = [];
-      }
-    });
-  }
-
-  explicitlyClosedDays.forEach((d) => {
-    schedule[d] = [];
-  });
-
-  return { schedule };
-}
-
-/**
- * Evaluates live Open / Closed / Unknown status in Africa/Cairo timezone.
- * Priority:
- *   1. Structured `is24Hours` / `workingSchedule` (per-day shifts + overnight carryover)
- *   2. Parsed legacy `hours` string (including multi-segment Arabic schedules & holidays)
- *   3. Unknown state (`غير مؤكد`) when missing or unparseable — never guesses "open"!
- */
-export function evaluateOpenStatus(
-  hours?: string,
-  _fallbackOpenNow?: boolean,
-  now: Date = new Date(),
-  workingSchedule?: WeeklySchedule,
-  is24Hours?: boolean
-): OpenStatusResult {
-  if (is24Hours) {
-    return { isOpen: true, state: 'open', label: 'مفتوح 24 ساعة', isAuto: true };
-  }
-
-  const clock = getCairoClock(now);
-
-  // 1. Evaluate structured weeklySchedule when at least one weekday is configured
-  const hasStructuredSchedule =
-    workingSchedule &&
-    ORDERED_WEEKDAYS.some((d) => Array.isArray(workingSchedule[d]));
-
-  if (hasStructuredSchedule && workingSchedule) {
-    const todaySlots = workingSchedule[clock.dayKey] ?? [];
-    const prevSlots = workingSchedule[clock.prevDayKey] ?? [];
-    const isOpen = evaluateSlotsOnClock(todaySlots, prevSlots, clock.minutesOfDay);
-
-    if (isOpen) {
-      return { isOpen: true, state: 'open', label: 'مفتوح الآن', isAuto: true };
-    }
-    if (todaySlots.length === 0) {
-      return {
-        isOpen: false,
-        state: 'closed',
-        label: clock.dayKey === 'fri' ? 'مغلق (إجازة الجمعة)' : 'مغلق اليوم',
-        isAuto: true,
-      };
-    }
-    return { isOpen: false, state: 'closed', label: 'مغلق حالياً', isAuto: true };
-  }
-
-  // 2. Fallback to parsing legacy `hours` text
-  const parsed = parseHoursTextToSchedule(hours);
-  if (parsed?.is24Hours) {
-    return { isOpen: true, state: 'open', label: 'مفتوح 24 ساعة', isAuto: true };
-  }
-  if (parsed) {
-    const todaySlots = parsed.schedule[clock.dayKey] ?? [];
-    const prevSlots = parsed.schedule[clock.prevDayKey] ?? [];
-    const isOpen = evaluateSlotsOnClock(todaySlots, prevSlots, clock.minutesOfDay);
-
-    if (isOpen) {
-      return { isOpen: true, state: 'open', label: 'مفتوح الآن', isAuto: true };
-    }
-    if (todaySlots.length === 0) {
-      return {
-        isOpen: false,
-        state: 'closed',
-        label: clock.dayKey === 'fri' ? 'مغلق (إجازة الجمعة)' : 'مغلق اليوم',
-        isAuto: true,
-      };
-    }
-    return { isOpen: false, state: 'closed', label: 'مغلق حالياً', isAuto: true };
-  }
-
-  // 3. Unparseable or missing schedule -> explicit unknown state (never guess open!)
-  return {
-    isOpen: false,
-    state: 'unknown',
-    label: 'مواعيد غير مؤكدة',
-    isAuto: false,
-  };
-}
+  // (e.g., if only Sat-Wed & Thu were defined, Friday is explicitly []

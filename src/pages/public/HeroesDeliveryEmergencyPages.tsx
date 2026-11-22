@@ -160,12 +160,19 @@ export const HeroesListPage: React.FC = () => {
                       <MapPin size={13} className="shrink-0" />
                       <span className="truncate">{hero.area}</span>
                     </p>
-                    <div className="flex items-center gap-3 text-xs pt-1 tabular-nums">
-                      <span className="font-bold text-[#735c00] inline-flex items-center gap-1">
-                        <Star size={13} className="fill-[#cca730] text-[#cca730]" />
-                        {hero.rating ?? 4.9} ({hero.reviewCount ?? 90} تقييم)
-                      </span>
-                      <span className="text-[#404942]">خبرة {hero.experienceYears ?? 10} سنة</span>
+                    <div className="flex flex-wrap items-center gap-3 text-xs pt-1 tabular-nums">
+                      {typeof hero.rating === 'number' && hero.rating > 0 && (
+                        <span className="font-bold text-[#735c00] inline-flex items-center gap-1">
+                          <Star size={13} className="fill-[#cca730] text-[#cca730]" />
+                          {hero.rating}
+                          {typeof hero.reviewCount === 'number' && hero.reviewCount > 0
+                            ? ` (${hero.reviewCount} تقييم)`
+                            : ''}
+                        </span>
+                      )}
+                      {typeof hero.experienceYears === 'number' && hero.experienceYears > 0 && (
+                        <span className="text-[#404942]">خبرة {hero.experienceYears} سنة</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -240,17 +247,23 @@ export const HeroProfilePage: React.FC = () => {
               <div className="space-y-1.5 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h2 className="text-lg font-bold text-[#181c1c] truncate">{hero.name}</h2>
-                  <BadgeCheck size={17} className="text-[#cca730] shrink-0" />
+                  {hero.verified && <BadgeCheck size={17} className="text-[#cca730] shrink-0" />}
                 </div>
                 <p className="text-xs font-medium text-[#146c43]">{hero.specialty}</p>
                 <p className="text-xs text-[#404942]">{hero.address}</p>
-                <div className="flex items-center gap-3 text-xs pt-1 tabular-nums">
-                  <span className="font-bold text-[#735c00] inline-flex items-center gap-1">
-                    <Star size={13} className="fill-[#cca730] text-[#cca730]" />
-                    {hero.rating ?? 4.9} ({hero.reviewCount ?? 120} تقييم)
-                  </span>
-                  <span>·</span>
-                  <span>خبرة {hero.experienceYears ?? 15} سنة</span>
+                <div className="flex flex-wrap items-center gap-3 text-xs pt-1 tabular-nums">
+                  {typeof hero.rating === 'number' && hero.rating > 0 && (
+                    <span className="font-bold text-[#735c00] inline-flex items-center gap-1">
+                      <Star size={13} className="fill-[#cca730] text-[#cca730]" />
+                      {hero.rating}
+                      {typeof hero.reviewCount === 'number' && hero.reviewCount > 0
+                        ? ` (${hero.reviewCount} تقييم)`
+                        : ''}
+                    </span>
+                  )}
+                  {typeof hero.experienceYears === 'number' && hero.experienceYears > 0 && (
+                    <span>خبرة {hero.experienceYears} سنة</span>
+                  )}
                 </div>
               </div>
             </div>

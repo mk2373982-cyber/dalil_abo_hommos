@@ -8,9 +8,11 @@ import {
   Clock,
   CloudUpload,
   Coins,
+  Copy,
   Inbox,
   Layers,
   LogIn,
+  LogOut,
   ShieldCheck,
   Stethoscope,
   Store,
@@ -21,7 +23,17 @@ import { AdminShell } from '../../components/SharedUI';
 import { FadeInUp, PageTransition } from '../../components/MotionEffects';
 
 export const AdminLoginPage: React.FC = () => {
-  const { authReady, isAdmin, signInAdmin, user } = useApp();
+  const {
+    authReady,
+    isAdmin,
+    isPartner,
+    canAccessPartnerScope,
+    signInAdmin,
+    signOutAdmin,
+    signInError,
+    showToast,
+    user,
+  } = useApp();
   const navigate = useNavigate();
   const [signingIn, setSigningIn] = useState(false);
 
@@ -149,9 +161,72 @@ export const AdminLoginPage: React.FC = () => {
                 </p>
               </div>
 
-              {user && !isAdmin && (
+              {signInError && (
                 <div className="p-4 rounded-2xl bg-[#ffdad6] text-[#93000a] text-xs font-semibold leading-relaxed">
-                  الحساب الحالي ({user.email}) مسجل الدخول لكنه غير مدرج ضمن قائمة المشرفين المعتمدين في Firestore.
+                  {signInError}
+                </div>
+              )}
+
+              {user && !isAdmin && (
+                <div className="p-4 rounded-2xl bg-[#fef3c7] border border-[#f5d061] text-[#735c00] text-xs leading-relaxed space-y-3">
+                  <p className="font-bold">
+                    {isPartner
+                      ? `أنت مسجل حالياً كشريك تشغيل (${user.email}). يمكنك الدخول مباشرة إلى لوحة التشغيل المخصصة لنشاطك أدناه:`
+                      : `الحساب الحالي (${user.email}) مسجل الدخول لكنه غير مدرج ضمن قائمة المشرفين المعتمدين.`}
+                  </p>
+                  {isPartner ? (
+                    <div className="flex flex-wrap gap-2">
+                      {canAccessPartnerScope('clinic') && (
+                        <Link
+                          to="/clinic/console"
+                          className="px-3.5 py-2 rounded-xl bg-[#003820] text-white font-bold text-xs"
+                        >
+                          دخول لوحة العيادة
+                        </Link>
+                      )}
+                      {canAccessPartnerScope('restaurant') && (
+                        <Link
+                          to="/restaurant/kitchen"
+                          className="px-3.5 py-2 rounded-xl bg-[#003820] text-white font-bold text-xs"
+                        >
+                          دخول مطبخ المطعم
+                        </Link>
+                      )}
+                      {canAccessPartnerScope('captain') && (
+                        <Link
+                          to="/captain/dashboard"
+                          className="px-3.5 py-2 rounded-xl bg-[#003820] text-white font-bold text-xs"
+                        >
+                          دخول لوحة الكابتن
+                        </Link>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-2 bg-white rounded-xl px-3 py-2 border border-[#e4ece7]">
+                      <span className="font-mono text-[11px] text-[#181c1c] truncate" dir="ltr">
+                        UID: {user.uid}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard?.writeText(user.uid);
+                          showToast('تم نسخ معرّف الحساب (UID) — أرسله للمشرف العام لإضافتك', 'success');
+                        }}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0f5132] shrink-0"
+                      >
+                        <Copy size={13} />
+                        نسخ UID
+                      </button>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void signOutAdmin()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#e4ece7] text-[#181c1c] font-bold text-xs"
+                  >
+                    <LogOut size={14} />
+                    تسجيل الخروج لتبديل الحساب
+                  </button>
                 </div>
               )}
 
@@ -197,9 +272,10 @@ export const AdminDashboardPage: React.FC = () => {
     whatsappQueue,
     financeConfig,
     isCloudSeeded,
+    isDemoPreviewMode,
     isSuperAdmin,
     adminRole,
-    seedCloudDatabase,
+    initializeEssentialConfig,
     showToast,
   } = useApp();
   const [seeding, setSeeding] = useState(false);
@@ -230,7 +306,7 @@ export const AdminDashboardPage: React.FC = () => {
     {
       label: 'الطلبات والبلاغات',
       value: String(pendingSubmissions.length),
-      sub: `من إجمالي ${submissions.length} طلب`,
+      sub: `من أحدث ${submissions.length} طلب محمّل`,
       to: '/admin/requests',
       icon: Inbox,
       bg: 'bg-[#fef3c7] text-[#92400e]',
@@ -245,12 +321,12 @@ export const AdminDashboardPage: React.FC = () => {
     },
   ];
 
-  const handleSeed = async () => {
+  const handleInitEssential = async () => {
     setSeeding(true);
     try {
-      await seedCloudDatabase(true);
+      await initializeEssentialConfig();
     } catch {
-      showToast('تعذرت مزامنة البيانات الأساسية حالياً، يرجى المحاولة لاحقاً', 'error');
+      showToast('تعذرت تهيئة الإعدادات الأساسية حالياً، يرجى المحاولة لاحقاً', 'error');
     } finally {
       setSeeding(false);
     }
@@ -265,16 +341,31 @@ export const AdminDashboardPage: React.FC = () => {
           <button
             type="button"
             disabled={seeding}
-            onClick={handleSeed}
+            onClick={handleInitEssential}
             className="min-h-[42px] px-4 py-2 rounded-2xl bg-[#003820] hover:bg-[#0f5132] disabled:opacity-60 text-white text-xs font-bold flex items-center gap-2 active:scale-95 transition-transform"
           >
             <CloudUpload size={16} />
-            <span>{seeding ? 'جارٍ المزامنة...' : isCloudSeeded ? 'إعادة مزامنة البيانات الأساسية' : 'تهيئة قاعدة البيانات السحابية'}</span>
+            <span>{seeding ? 'جارٍ التهيئة...' : 'تهيئة الإعدادات الناقصة (آمن)'}</span>
           </button>
         ) : undefined
       }
     >
       <div className="space-y-6">
+        {isDemoPreviewMode && (
+          <div className="p-4 rounded-2xl bg-[#fef3c7] border border-[#f5d061] text-[#735c00] text-xs font-semibold flex flex-wrap items-center justify-between gap-3">
+            <span>
+              وضع المعاينة التجريبية مفعّل حالياً (لم تُضبط بيانات الإنتاج في السحابة بعد). لن يتم إدخال بيانات تجريبية أو تسويات وهمية تلقائياً إلا بطلب صريح من صفحة الإعدادات.
+            </span>
+            {isSuperAdmin && (
+              <Link
+                to="/admin/settings"
+                className="px-3 py-1.5 rounded-xl bg-[#003820] text-white font-bold text-xs shrink-0"
+              >
+                إدارة التهيئة والبيانات
+              </Link>
+            )}
+          </div>
+        )}
         {/* KPIs */}
         <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {kpis.map((item, idx) => {

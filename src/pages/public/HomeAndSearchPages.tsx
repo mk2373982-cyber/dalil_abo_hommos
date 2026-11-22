@@ -299,7 +299,13 @@ export const HomePage: React.FC = () => {
                               : pl.categorySlug === 'heroes'
                                 ? `/heroes/${pl.id}`
                                 : `/places/${pl.id}`;
-                        const status = evaluateOpenStatus(pl.hours, pl.openNow ?? true);
+                        const status = evaluateOpenStatus(
+                          pl.hours,
+                          pl.openNow,
+                          undefined,
+                          pl.workingSchedule,
+                          pl.is24Hours
+                        );
                         return (
                           <button
                             key={pl.id}
@@ -320,10 +326,18 @@ export const HomePage: React.FC = () => {
                             </div>
                             <span
                               className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                                status.isOpen ? 'bg-[#e6f4ec] text-[#0f5132]' : 'bg-[#f1f4f2] text-[#707971]'
+                                status.state === 'open'
+                                  ? 'bg-[#e6f4ec] text-[#0f5132]'
+                                  : status.state === 'unknown'
+                                    ? 'bg-[#fef3c7] text-[#735c00]'
+                                    : 'bg-[#f1f4f2] text-[#707971]'
                               }`}
                             >
-                              {status.isOpen ? 'مفتوح' : 'مغلق'}
+                              {status.state === 'open'
+                                ? 'مفتوح'
+                                : status.state === 'unknown'
+                                  ? 'غير مؤكد'
+                                  : 'مغلق'}
                             </span>
                           </button>
                         );
@@ -658,20 +672,32 @@ export const HomePage: React.FC = () => {
                           {place.specialty || place.description}
                         </p>
                         <div className="flex flex-wrap items-center gap-2 text-xs text-[#707971]">
-                          <span className="inline-flex items-center gap-1 text-[#735c00] font-semibold tabular-nums">
-                            <Star size={12} className="fill-[#cca730] text-[#cca730]" />
-                            {place.rating ?? 4.8}
-                          </span>
-                          <span>·</span>
+                          {typeof place.rating === 'number' && place.rating > 0 && (
+                            <>
+                              <span className="inline-flex items-center gap-1 text-[#735c00] font-semibold tabular-nums">
+                                <Star size={12} className="fill-[#cca730] text-[#cca730]" />
+                                {place.rating}
+                              </span>
+                              <span>·</span>
+                            </>
+                          )}
                           <span className="truncate">{place.area}</span>
                           {(() => {
-                            const status = evaluateOpenStatus(place.hours, place.openNow ?? true);
+                            const status = evaluateOpenStatus(
+                              place.hours,
+                              place.openNow,
+                              undefined,
+                              place.workingSchedule,
+                              place.is24Hours
+                            );
                             return (
                               <span
                                 className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                  status.isOpen
+                                  status.state === 'open'
                                     ? 'bg-[#e6f4ec] text-[#0f5132]'
-                                    : 'bg-[#f1f4f2] text-[#707971]'
+                                    : status.state === 'unknown'
+                                      ? 'bg-[#fef3c7] text-[#735c00]'
+                                      : 'bg-[#f1f4f2] text-[#707971]'
                                 }`}
                               >
                                 {status.label}
@@ -814,7 +840,12 @@ export const SearchPage: React.FC = () => {
         const zoneMatch = selectedZone && placeZone && selectedZone.id === placeZone.id;
         if (!directMatch && !zoneMatch) return false;
       }
-      if (openNowOnly && !evaluateOpenStatus(p.hours, p.openNow ?? true).isOpen) return false;
+      if (
+        openNowOnly &&
+        evaluateOpenStatus(p.hours, p.openNow, undefined, p.workingSchedule, p.is24Hours).state !== 'open'
+      ) {
+        return false;
+      }
       if (!qNorm) return true;
       return matchesArabicQuery(
         `${p.name} ${p.specialty || ''} ${p.area} ${p.address} ${(p.tags || []).join(' ')}`,
@@ -1100,7 +1131,13 @@ export const SearchPage: React.FC = () => {
                         : place.categorySlug === 'heroes'
                           ? `/heroes/${place.id}`
                           : `/places/${place.id}`;
-                  const openStatus = evaluateOpenStatus(place.hours, place.openNow ?? true);
+                  const openStatus = evaluateOpenStatus(
+                    place.hours,
+                    place.openNow,
+                    undefined,
+                    place.workingSchedule,
+                    place.is24Hours
+                  );
                   const distKm = getPlaceDistanceKm(place, userCoords);
 
                   return (
@@ -1126,9 +1163,11 @@ export const SearchPage: React.FC = () => {
                               </span>
                               <span
                                 className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                  openStatus.isOpen
+                                  openStatus.state === 'open'
                                     ? 'bg-[#e6f4ec] text-[#0f5132]'
-                                    : 'bg-[#f1f4f2] text-[#707971]'
+                                    : openStatus.state === 'unknown'
+                                      ? 'bg-[#fef3c7] text-[#735c00]'
+                                      : 'bg-[#f1f4f2] text-[#707971]'
                                 }`}
                               >
                                 {openStatus.label}

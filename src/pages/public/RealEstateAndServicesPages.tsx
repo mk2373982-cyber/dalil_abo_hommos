@@ -852,7 +852,13 @@ export const GenericServiceCategoryPage: React.FC = () => {
         ) : (
           <AnimatedListContainer className="space-y-3">
             {categoryPlaces.map((place, idx) => {
-              const openStatus = evaluateOpenStatus(place.hours, place.openNow ?? true);
+              const openStatus = evaluateOpenStatus(
+                place.hours,
+                place.openNow,
+                undefined,
+                place.workingSchedule,
+                place.is24Hours
+              );
               return (
               <AnimatedListItem key={place.id} index={idx}>
                 <div className="bg-white border border-[#e4ece7] rounded-3xl p-4 shadow-civic-1 space-y-3">
@@ -867,7 +873,11 @@ export const GenericServiceCategoryPage: React.FC = () => {
                         </div>
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-lg shrink-0 ${
-                            openStatus.isOpen ? 'bg-[#e6f4ec] text-[#0f5132]' : 'bg-[#f1f4f2] text-[#707971]'
+                            openStatus.state === 'open'
+                              ? 'bg-[#e6f4ec] text-[#0f5132]'
+                              : openStatus.state === 'unknown'
+                                ? 'bg-[#fef3c7] text-[#735c00]'
+                                : 'bg-[#f1f4f2] text-[#707971]'
                           }`}
                         >
                           {openStatus.label}
@@ -936,7 +946,13 @@ export const PlaceDetailPage: React.FC = () => {
   }
 
   const isFav = favorites.includes(place.id);
-  const openStatus = evaluateOpenStatus(place.hours, place.openNow ?? true);
+  const openStatus = evaluateOpenStatus(
+    place.hours,
+    place.openNow,
+    undefined,
+    place.workingSchedule,
+    place.is24Hours
+  );
 
   return (
     <StackLayout

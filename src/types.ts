@@ -212,8 +212,7 @@ export interface ClinicQueue {
   specialty?: string;
   clinicAddress?: string;
   /** Working day in Africa/Cairo timezone (YYYY-MM-DD) */
-  /** Optional for compatibility with the existing, undated queue records. */
-  sessionDate?: string;
+
   currentNumber: number;
   lastTicketNumber: number;
   lastTicketId?: string;
@@ -228,8 +227,7 @@ export interface ClinicTicket {
   ticketCode: string;
   ticketNumber: number;
   /** Working day in Africa/Cairo timezone (YYYY-MM-DD) */
-  /** Optional until the booking flow and deployed rules support dated sessions. */
-  sessionDate?: string;
+
   doctorId: string;
   doctorName: string;
   patientName: string;
