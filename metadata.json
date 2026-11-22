@@ -1,0 +1,10 @@
+{
+  "name": "دليل أبوحمص",
+  "description": "الدليل المجتمعي والخدمي الموحد لأهالي مركز ومدينة أبوحمص بمحافظة البحيرة — عيادات، مطاعم، عقارات، حرفيين، توصيل، وطوارئ 24 ساعة.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

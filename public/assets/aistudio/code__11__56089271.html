@@ -1,0 +1,571 @@
+<!DOCTYPE html><html lang="ar" dir="rtl" class="h-full"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>دليل أبوحمص - الملف التعريفي للطبيب د. أحمد محمود الشريف</title>
+  
+  <!-- Fonts & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0f5132',
+            'primary-dark': '#0a3622',
+            'primary-light': '#198754',
+            surface: '#f7faf8',
+            'surface-container-lowest': '#ffffff',
+            'surface-container-low': '#f1f4f2',
+            'surface-container': '#ebeee9',
+            'surface-container-high': '#e5e9e4',
+            'secondary-container': '#d1e7dd',
+            gold: '#cca730',
+          },
+          fontFamily: {
+            sans: ['"IBM Plex Sans Arabic"', 'sans-serif'],
+          },
+          boxShadow: {
+            'glow-emerald': '0 8px 25px -4px rgba(15, 81, 50, 0.25)',
+            'subtle-card': '0 4px 20px -2px rgba(15, 81, 50, 0.05)',
+            'nav-capsule': '0 10px 30px rgba(15, 81, 50, 0.14)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body {
+      font-family: 'IBM Plex Sans Arabic', sans-serif;
+      background-color: #f7faf8;
+      color: #1f2937;
+      overflow-x: hidden;
+    }
+
+    /* Spring Entrance Animations */
+    @keyframes springEntrance {
+      0% {
+        opacity: 0;
+        transform: translateY(24px) scale(0.97);
+      }
+      60% {
+        opacity: 0.9;
+        transform: translateY(-3px) scale(1.008);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .stagger-1 { animation: springEntrance 0.65s cubic-bezier(0.34, 1.45, 0.7, 1) forwards; animation-delay: 0.05s; }
+    .stagger-2 { animation: springEntrance 0.65s cubic-bezier(0.34, 1.45, 0.7, 1) forwards; animation-delay: 0.12s; }
+    .stagger-3 { animation: springEntrance 0.65s cubic-bezier(0.34, 1.45, 0.7, 1) forwards; animation-delay: 0.18s; }
+    .stagger-4 { animation: springEntrance 0.65s cubic-bezier(0.34, 1.45, 0.7, 1) forwards; animation-delay: 0.25s; }
+    .stagger-5 { animation: springEntrance 0.65s cubic-bezier(0.34, 1.45, 0.7, 1) forwards; animation-delay: 0.32s; }
+
+    /* Tactile Press Physics */
+    .tactile-card {
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background-color 0.15s ease;
+      cursor: pointer;
+    }
+    .tactile-card:active {
+      transform: scale(0.965);
+    }
+
+    /* Pulse Glow & Shimmer */
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.18); opacity: 0.5; }
+    }
+    .animate-pulse-glow {
+      animation: pulseGlow 2.4s infinite ease-in-out;
+    }
+
+    /* Custom Scrollbar hide */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="w-full min-h-screen bg-[#f7faf8] antialiased flex justify-center">
+
+  <!-- Mobile Container Wrapper (390px Max) -->
+  <div class="w-full max-w-[420px] min-h-screen relative bg-[#f7faf8] flex flex-col shadow-2xl">
+
+    <!-- ========================================== -->
+    <!-- 1. TOP DUAL FLOATING PILLS HEADER (LOCKED) -->
+    <!-- ========================================== -->
+    <header class="fixed top-0 inset-x-0 max-w-[420px] mx-auto z-40 px-4 pt-3 pb-2 flex items-center justify-between pointer-events-none" dir="rtl">
+      <!-- Right Pill: Brand + Medical Badge -->
+      <div class="pointer-events-auto flex items-center gap-2 bg-surface-container-lowest/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-emerald-100/90 shadow-[0_4px_16px_rgba(15,81,50,0.08)] tactile-card">
+        <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-sm">
+          <span class="material-symbols-outlined text-[15px]">local_hospital</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-bold text-gray-800 tracking-tight">دليل أبوحمص</span>
+          <span class="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200/60">طبيب معتمد</span>
+        </div>
+      </div>
+
+      <!-- Left Pill: Floating Circular Back Button (Standard for Inner Screens) -->
+      <a href="{{DATA:SCREEN:SCREEN_4}}" class="pointer-events-auto w-9 h-9 rounded-full bg-surface-container-lowest/90 backdrop-blur-md border border-emerald-100/90 shadow-[0_4px_16px_rgba(15,81,50,0.08)] flex items-center justify-center text-gray-700 tactile-card" title="رجوع">
+        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+      </a>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- 2. MAIN CONTENT (pt-16 pb-32) -->
+    <!-- ========================================== -->
+    <main class="flex flex-col relative w-full pt-16 pb-32 min-h-screen bg-[#f7faf8]" dir="rtl">
+
+      <!-- HERO: DOCTOR PROFILE CARD -->
+      <section class="px-4 mt-2 stagger-1">
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0f5132] via-[#145a3a] to-[#0a3622] p-5 text-white shadow-[0_12px_32px_rgba(15,81,50,0.22)] border border-emerald-600/30">
+          <!-- Background decorative shapes -->
+          <div class="absolute -top-12 -left-12 w-36 h-36 rounded-full bg-emerald-400/10 blur-2xl pointer-events-none"></div>
+          <div class="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none"></div>
+
+          <!-- Top status pill & certification -->
+          <div class="flex items-center justify-between mb-4 relative z-10">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[11px] font-semibold text-emerald-100">
+              <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse-glow"></span>
+              متاح للكشف بالعيادة اليوم
+            </span>
+
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-400/20 backdrop-blur-md border border-amber-300/30 text-[10px] font-bold text-amber-200">
+              <span class="material-symbols-outlined text-xs text-amber-300">verified</span>
+              موثق بنقابة الأطباء
+            </span>
+          </div>
+
+          <!-- Doctor Avatar & Identity Info -->
+          <div class="flex items-center gap-4 relative z-10">
+            <!-- Doctor Image with 3D Ring Glow -->
+            <div class="relative flex-shrink-0">
+              <div class="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-white/20 shadow-[0_8px_20px_rgba(0,0,0,0.3)] bg-emerald-800">
+                <img src="https://lh3.googleusercontent.com/aida/ALJJyrAe_oLT_2Ftlwcq2zWKLmZg1hMV8jPRfICNJx9rZZ2LcdFITZFZ-SQSvYRu26Bxc6S8qNLTmMgoXJZ83jMe8cmbui58ZSltvVK9SobhuB1O0TGPTbQksQwO5MwXKwow1ufZXaOPuzxM_RN6cwFrQtSH7W7Uw7ODBCVOGWD6jH4h3K6ImUOwa_xDcHclDoNLdyVa_G9dH3Xmk3iVoM3PnDB6GkV4hFuw4LfWw2rB73c8" alt="د. أحمد محمود الشريف" class="w-full h-full object-cover">
+              </div>
+              <div class="absolute -bottom-1 -left-1 w-6 h-6 rounded-full bg-amber-400 text-gray-900 flex items-center justify-center font-black text-[10px] ring-2 ring-[#0f5132] shadow-sm">
+                <span class="material-symbols-outlined text-sm">stethoscope</span>
+              </div>
+            </div>
+
+            <!-- Doctor Name & Bio -->
+            <div class="flex-1 min-w-0">
+              <h1 class="text-xl font-bold text-white tracking-tight leading-snug">د. أحمد محمود الشريف</h1>
+              <p class="text-xs text-emerald-100 font-medium mt-0.5">استشاري أول طب الأطفال وحديثي الولادة</p>
+              <div class="flex items-center gap-2 mt-2 text-[11px] text-emerald-200/90 font-normal">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-xs">school</span>
+                  ماجستير طب القصر العيني
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Stat Counters Row -->
+          <div class="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-white/10 relative z-10">
+            <div class="text-center p-2 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5">
+              <div class="flex items-center justify-center gap-1 text-amber-300">
+                <span class="material-symbols-outlined text-sm">star</span>
+                <span class="text-sm font-bold">4.9</span>
+              </div>
+              <span class="text-[10px] text-emerald-200 block mt-0.5">١٨٠+ تقييم أهالينا</span>
+            </div>
+
+            <div class="text-center p-2 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5">
+              <div class="flex items-center justify-center gap-1 text-white">
+                <span class="material-symbols-outlined text-sm text-emerald-300">workspace_premium</span>
+                <span class="text-sm font-bold">+15</span>
+              </div>
+              <span class="text-[10px] text-emerald-200 block mt-0.5">سنة خبرة وتخصص</span>
+            </div>
+
+            <div class="text-center p-2 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5">
+              <div class="flex items-center justify-center gap-1 text-white">
+                <span class="material-symbols-outlined text-sm text-emerald-300">favorite</span>
+                <span class="text-sm font-bold">+4,200</span>
+              </div>
+              <span class="text-[10px] text-emerald-200 block mt-0.5">طفل تم علاجه</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 IMMEDIATE ACTION BUTTONS (CALL / WHATSAPP / LOCATION) -->
+      <section class="px-4 mt-3 stagger-2">
+        <div class="grid grid-cols-3 gap-2.5">
+          <!-- Direct Call Button -->
+          <a href="tel:01012345678" class="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-emerald-900/5 shadow-subtle-card tactile-card group">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-700 to-emerald-500 text-white flex items-center justify-center shadow-[0_6px_16px_rgba(15,81,50,0.2)] ring-4 ring-emerald-50 mb-1.5 group-hover:scale-105 transition-transform">
+              <span class="material-symbols-outlined text-xl">call</span>
+            </div>
+            <span class="text-xs font-bold text-gray-800">اتصال فوري</span>
+            <span class="text-[10px] text-gray-400 mt-0.5">خط العيادة المباشر</span>
+          </a>
+
+          <!-- WhatsApp Booking Button -->
+          <a href="https://wa.me/201012345678" class="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-emerald-900/5 shadow-subtle-card tactile-card group">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-green-600 to-emerald-400 text-white flex items-center justify-center shadow-[0_6px_16px_rgba(34,197,94,0.22)] ring-4 ring-green-50 mb-1.5 group-hover:scale-105 transition-transform">
+              <span class="material-symbols-outlined text-xl">chat</span>
+            </div>
+            <span class="text-xs font-bold text-gray-800">واتساب الحجز</span>
+            <span class="text-[10px] text-emerald-600 font-medium mt-0.5">تأكيد سريع للدور</span>
+          </a>
+
+          <!-- Location & Directions Button -->
+          <a href="#location" class="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-emerald-900/5 shadow-subtle-card tactile-card group">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white flex items-center justify-center shadow-[0_6px_16px_rgba(13,148,136,0.2)] ring-4 ring-teal-50 mb-1.5 group-hover:scale-105 transition-transform">
+              <span class="material-symbols-outlined text-xl">near_me</span>
+            </div>
+            <span class="text-xs font-bold text-gray-800">الاتجاهات</span>
+            <span class="text-[10px] text-gray-400 mt-0.5">ميدان المحطة</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- CLINIC SCHEDULE & FEES -->
+      <section class="px-4 mt-4 stagger-3">
+        <div class="bg-white rounded-2xl p-4 border border-emerald-900/5 shadow-subtle-card">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-xl bg-emerald-50 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg">calendar_month</span>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-gray-900">مواعيد الكشف والأسعار</h2>
+                <span class="text-[11px] text-gray-400">العيادة المركزية - برج الأطباء</span>
+              </div>
+            </div>
+            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100/70 text-emerald-800 border border-emerald-200">
+              مفتوح حتى ٩:٠٠ م
+            </span>
+          </div>
+
+          <!-- Price & Followup Row -->
+          <div class="grid grid-cols-2 gap-2.5 mt-3.5">
+            <div class="p-3 rounded-xl bg-surface-container-low/70 border border-emerald-900/5 flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-medium text-gray-500 block">قيمة الكشف</span>
+                <span class="text-base font-extrabold text-primary">١٥٠ ج.م</span>
+              </div>
+              <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg">payments</span>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-amber-50/80 border border-amber-200/60 flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-medium text-amber-800 block">إعادة الكشف مجاناً</span>
+                <span class="text-xs font-bold text-amber-900">لمدة ١٤ يوماً</span>
+              </div>
+              <div class="w-8 h-8 rounded-lg bg-amber-200/60 text-amber-800 flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg">autorenew</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Working Days Timetable -->
+          <div class="mt-3.5 space-y-2">
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-lowest border border-gray-100 text-xs">
+              <div class="flex items-center gap-2 font-semibold text-gray-800">
+                <span class="w-2 h-2 rounded-full bg-primary"></span>
+                <span>السبت إلى الأربعاء</span>
+              </div>
+              <div class="text-gray-600 font-medium">
+                من ٢:٠٠ ظهراً حتى ٩:٠٠ مساءً
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-lowest border border-gray-100 text-xs">
+              <div class="flex items-center gap-2 font-semibold text-gray-800">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>الخميس (فترة نهارية)</span>
+              </div>
+              <div class="text-gray-600 font-medium">
+                من ١:٠٠ ظهراً حتى ٦:٠٠ مساءً
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-red-50/60 border border-red-100 text-xs text-red-700">
+              <div class="flex items-center gap-2 font-semibold">
+                <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                <span>الجمعة</span>
+              </div>
+              <div class="font-medium text-[11px]">
+                عطلة أسبوعية (طوارئ الحضانة هاتفياً)
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SPECIALIZED CLINIC SERVICES -->
+      <section class="px-4 mt-4 stagger-4">
+        <div class="bg-white rounded-2xl p-4 border border-emerald-900/5 shadow-subtle-card">
+          <div class="flex items-center gap-2 pb-3 border-b border-gray-100 mb-3">
+            <div class="w-8 h-8 rounded-xl bg-emerald-50 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-lg">medical_services</span>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-gray-900">خدمات العيادة المتخصصة</h2>
+              <span class="text-[11px] text-gray-400">رعاية متكاملة لصحة طفلك منذ الولادة</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div class="p-2.5 rounded-xl bg-surface-container-low/60 border border-gray-100 flex items-center gap-2.5 tactile-card">
+              <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-sm">child_care</span>
+              </div>
+              <span class="text-[11px] font-semibold text-gray-700">متابعة حديثي الولادة والمبتسرين</span>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-surface-container-low/60 border border-gray-100 flex items-center gap-2.5 tactile-card">
+              <div class="w-7 h-7 rounded-lg bg-teal-600/10 text-teal-700 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-sm">air</span>
+              </div>
+              <span class="text-[11px] font-semibold text-gray-700">حساسية الصدر والربو الشعبي</span>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-surface-container-low/60 border border-gray-100 flex items-center gap-2.5 tactile-card">
+              <div class="w-7 h-7 rounded-lg bg-emerald-600/10 text-emerald-700 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-sm">vaccines</span>
+              </div>
+              <span class="text-[11px] font-semibold text-gray-700">التطعيمات الإضافية المعتمدة</span>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-surface-container-low/60 border border-gray-100 flex items-center gap-2.5 tactile-card">
+              <div class="w-7 h-7 rounded-lg bg-amber-600/10 text-amber-700 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-sm">straighten</span>
+              </div>
+              <span class="text-[11px] font-semibold text-gray-700">قياس النمو والتطور الذهني</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CLINIC LOCATION & MAP -->
+      <section id="location" class="px-4 mt-4 stagger-4">
+        <div class="bg-white rounded-2xl p-4 border border-emerald-900/5 shadow-subtle-card">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-xl bg-emerald-50 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg">location_on</span>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-gray-900">العنوان وسهولة الوصول</h2>
+                <span class="text-[11px] text-gray-400">مركز أبوحمص - محافظة البحيرة</span>
+              </div>
+            </div>
+            <span class="text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">موقع مركزي</span>
+          </div>
+
+          <!-- Interactive Map Mockup -->
+          <div class="relative w-full h-32 rounded-xl overflow-hidden border border-emerald-900/10 bg-emerald-50 mb-3 tactile-card">
+            <div class="absolute inset-0 opacity-40 bg-[radial-gradient(#0f5132_1px,transparent_1px)] [background-size:12px_12px]"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="flex flex-col items-center">
+                <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg ring-4 ring-white animate-bounce">
+                  <span class="material-symbols-outlined text-xl">local_hospital</span>
+                </div>
+                <span class="mt-1 px-2.5 py-0.5 rounded-full bg-white text-gray-800 text-[10px] font-bold shadow-md border border-gray-100">
+                  ميدان المحطة - برج الأطباء
+                </span>
+              </div>
+            </div>
+            <a href="https://maps.google.com" target="_blank" class="absolute bottom-2 left-2 px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur-sm text-gray-700 text-[10px] font-bold shadow-sm border border-gray-200 flex items-center gap-1">
+              <span>فتح بالخرائط</span>
+              <span class="material-symbols-outlined text-xs">open_in_new</span>
+            </a>
+          </div>
+
+          <!-- Exact address details -->
+          <div class="p-3 rounded-xl bg-surface-container-low/70 border border-gray-100 space-y-1.5 text-xs text-gray-700">
+            <div class="flex items-start gap-2">
+              <span class="material-symbols-outlined text-sm text-primary mt-0.5">apartment</span>
+              <span><strong>أبوحمص:</strong> ميدان المحطة • برج الأطباء التخصصي • الدور ٣ (أعلى صيدلية النور).</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-gray-500">
+              <span class="material-symbols-outlined text-xs">directions_walk</span>
+              <span>٣ دقائق مشياً على الأقدام من محطة قطار أبوحمص</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SMART QR CODE FOR PROFILE (MANDATORY VERIFIED FEATURE) -->
+      <section class="px-4 mt-4 stagger-5">
+        <div class="bg-white rounded-2xl p-4 border border-emerald-900/5 shadow-subtle-card">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-xl bg-emerald-50 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg">qr_code_scanner</span>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-gray-900">الباركود والملف الرقمي (QR)</h2>
+                <span class="text-[11px] text-gray-400">بطاقة العيادة الذكية للوصول والمشاركة</span>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">دليل أبوحمص</span>
+          </div>
+
+          <p class="text-xs text-gray-500 mb-3 leading-relaxed">
+            امسح الرمز بكاميرا الهاتف لحفظ كارت الطبيب مباشرة أو مشاركته مع العائلة بضغطة واحدة.
+          </p>
+
+          <!-- High fidelity stylized SVG QR Code Card -->
+          <div class="flex flex-col items-center justify-center p-4 rounded-2xl bg-surface-container-lowest border border-emerald-100 shadow-inner">
+            <div class="w-44 h-44 p-2 bg-white rounded-xl shadow-sm border border-emerald-100 flex items-center justify-center relative">
+              <!-- SVG QR Code Vector -->
+              <svg viewBox="0 0 100 100" class="w-full h-full text-emerald-950">
+                <!-- Top Left Marker -->
+                <rect x="5" y="5" width="26" height="26" rx="4" fill="none" stroke="#0f5132" stroke-width="6"></rect>
+                <rect x="13" y="13" width="10" height="10" rx="2" fill="#0f5132"></rect>
+                
+                <!-- Top Right Marker -->
+                <rect x="69" y="5" width="26" height="26" rx="4" fill="none" stroke="#0f5132" stroke-width="6"></rect>
+                <rect x="77" y="13" width="10" height="10" rx="2" fill="#0f5132"></rect>
+                
+                <!-- Bottom Left Marker -->
+                <rect x="5" y="69" width="26" height="26" rx="4" fill="none" stroke="#0f5132" stroke-width="6"></rect>
+                <rect x="13" y="77" width="10" height="10" rx="2" fill="#0f5132"></rect>
+                
+                <!-- Center Stethoscope Badge Overlay -->
+                <circle cx="50" cy="50" r="14" fill="#f7faf8" stroke="#0f5132" stroke-width="2"></circle>
+                <circle cx="50" cy="50" r="10" fill="#0f5132"></circle>
+                <text x="50" y="53.5" font-family="sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle">H</text>
+
+                <!-- Data Patterns -->
+                <rect x="36" y="8" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="46" y="8" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="56" y="8" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="36" y="18" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="56" y="18" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="8" y="36" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="18" y="36" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="28" y="36" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="8" y="46" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="28" y="46" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="8" y="56" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="28" y="56" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="69" y="36" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="84" y="36" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="74" y="46" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="89" y="46" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="69" y="56" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="84" y="56" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="36" y="69" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="46" y="69" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="56" y="69" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="36" y="79" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="56" y="79" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="36" y="89" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="46" y="89" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="56" y="89" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="69" y="74" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="84" y="74" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="74" y="84" width="5" height="5" fill="#0f5132"></rect>
+                <rect x="89" y="84" width="5" height="5" fill="#0f5132"></rect>
+              </svg>
+            </div>
+            <span class="text-[10px] font-medium text-emerald-800 mt-2 flex items-center gap-1">
+              <span class="material-symbols-outlined text-xs">verified_user</span>
+              بطاقة رقمية مشفرة ومعتمدة
+            </span>
+          </div>
+
+          <!-- Link & Copy Field -->
+          <div class="mt-3 flex items-center gap-2 p-2 rounded-xl bg-surface-container-low/70 border border-gray-100">
+            <span class="text-xs text-gray-500 font-mono flex-1 text-center truncate" dir="ltr">abuhoms.app/dr-ahmed</span>
+            <button class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-[11px] font-bold border border-emerald-200/80 tactile-card flex items-center gap-1">
+              <span class="material-symbols-outlined text-xs">content_copy</span>
+              نسخ
+            </button>
+          </div>
+
+          <!-- Share & Download Buttons -->
+          <div class="grid grid-cols-2 gap-2 mt-2.5">
+            <button class="p-2.5 rounded-xl bg-primary text-white text-xs font-bold shadow-md shadow-emerald-900/10 flex items-center justify-center gap-1.5 tactile-card">
+              <span class="material-symbols-outlined text-sm">download</span>
+              تحميل كصورة
+            </button>
+            <button class="p-2.5 rounded-xl bg-emerald-50 text-primary border border-emerald-200 text-xs font-bold flex items-center justify-center gap-1.5 tactile-card">
+              <span class="material-symbols-outlined text-sm">share</span>
+              مشاركة الملف
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- 3. FLOATING QUICK BOOK BAR (Above Nav Capsule) -->
+    <!-- ========================================== -->
+    <div class="fixed bottom-20 inset-x-4 max-w-sm mx-auto z-40 bg-white/95 backdrop-blur-md p-2.5 rounded-2xl border border-emerald-100 shadow-[0_8px_25px_rgba(15,81,50,0.12)] flex items-center justify-between" dir="rtl">
+      <div>
+        <span class="text-[10px] text-gray-400 font-medium block">حجز موعد كشف اليوم</span>
+        <div class="flex items-center gap-1.5">
+          <span class="text-sm font-extrabold text-primary">١٥٠ ج.م</span>
+          <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-md">دور رقم ٨ متاح</span>
+        </div>
+      </div>
+      <a href="{{DATA:SCREEN:SCREEN_96}}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-800 to-primary text-white text-xs font-bold shadow-md shadow-emerald-900/20 flex items-center gap-1.5 tactile-card"><span class="material-symbols-outlined text-sm">event_available</span><span>احجز دورك الآن</span></a>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 4. BOTTOM FLOATING GLASS NAVIGATION CAPSULE (LOCKED) -->
+    <!-- ========================================== -->
+    <nav class="fixed bottom-5 inset-x-4 max-w-sm mx-auto rounded-full shadow-[0_10px_30px_rgba(15,81,50,0.14)] bg-surface-container-lowest/95 backdrop-blur-md border border-emerald-100/90 px-6 py-2 z-50 flex items-center justify-around pointer-events-auto" dir="rtl">
+      
+      <!-- Tab 1: الرئيسية (Inactive) -->
+      <a href="#" class="flex flex-col items-center gap-0.5 text-gray-500 tactile-card group">
+        <span class="material-symbols-outlined text-xl group-hover:text-primary transition-colors">home</span>
+        <span class="text-[10px] font-medium">الرئيسية</span>
+      </a>
+
+      <!-- Tab 2: العقارات (Inactive) -->
+      <a href="#" class="flex flex-col items-center gap-0.5 text-gray-500 tactile-card group">
+        <span class="material-symbols-outlined text-xl group-hover:text-primary transition-colors">apartment</span>
+        <span class="text-[10px] font-medium">العقارات</span>
+      </a>
+
+      <!-- Tab 3: التخفيضات (Inactive) -->
+      <a href="#" class="flex flex-col items-center gap-0.5 text-gray-500 tactile-card group">
+        <span class="material-symbols-outlined text-xl group-hover:text-primary transition-colors">percent</span>
+        <span class="text-[10px] font-medium">التخفيضات</span>
+      </a>
+
+      <!-- Tab 4: المزيد (Active Highlighted) -->
+      <a href="#" class="flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-secondary-container/50 text-primary font-bold tactile-card">
+        <span class="material-symbols-outlined text-lg">more_horiz</span>
+        <span class="text-[10px]">المزيد</span>
+      </a>
+
+    </nav>
+
+  </div>
+
+
+
+
+
+
+</body></html>

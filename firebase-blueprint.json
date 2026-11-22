@@ -1,0 +1,398 @@
+{
+  "entities": {
+    "Category": {
+      "title": "Category",
+      "description": "Dynamic directory category managed from admin taxonomy screen",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 2, "maxLength": 60 },
+        "slug": { "type": "string", "minLength": 2, "maxLength": 60, "pattern": "^[a-z0-9\\-]+$" },
+        "iconKey": { "type": "string", "maxLength": 48 },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "bgColor": { "type": "string", "maxLength": 24 },
+        "iconColor": { "type": "string", "maxLength": 24 },
+        "templateType": { "type": "string", "enum": ["medical", "restaurants", "real-estate", "heroes", "general"] },
+        "order": { "type": "number" },
+        "active": { "type": "boolean" },
+        "description": { "type": "string", "maxLength": 240 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "slug", "iconKey", "bgColor", "iconColor", "templateType", "order", "active"]
+    },
+    "Place": {
+      "title": "Place",
+      "description": "Public directory listing (doctor, restaurant, craftsman, pharmacy, service)",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "categoryId": { "type": "string", "maxLength": 64 },
+        "categorySlug": { "type": "string", "maxLength": 64 },
+        "specialty": { "type": "string", "maxLength": 120 },
+        "area": { "type": "string", "maxLength": 80 },
+        "address": { "type": "string", "maxLength": 240 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "whatsapp": { "type": "string", "maxLength": 32 },
+        "description": { "type": "string", "maxLength": 1200 },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "verified": { "type": "boolean" },
+        "featured": { "type": "boolean" },
+        "openNow": { "type": "boolean" },
+        "hours": { "type": "string", "maxLength": 180 },
+        "consultationFee": { "type": "number" },
+        "experienceYears": { "type": "number" },
+        "qrCode": { "type": "string", "maxLength": 64 },
+        "tags": { "type": "array" },
+        "filterTags": { "type": "array", "description": "Subscribed dynamic promo filter IDs (max 15)" },
+        "filterExpirations": { "type": "object", "description": "Optional ISO date map (YYYY-MM-DD) for promo filter subscription expiry" },
+        "services": { "type": "array" },
+        "menuItems": { "type": "array" },
+        "gallery": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "categoryId", "categorySlug", "area", "address", "phone"]
+    },
+    "PromoFilter": {
+      "title": "PromoFilter",
+      "description": "Dynamic promotional badge and filter chip managed from admin dashboard",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 2, "maxLength": 48 },
+        "slug": { "type": "string", "minLength": 2, "maxLength": 48, "pattern": "^[a-z0-9\\-]+$" },
+        "iconKey": { "type": "string", "maxLength": 48 },
+        "badgeBgColor": { "type": "string", "maxLength": 24 },
+        "badgeTextColor": { "type": "string", "maxLength": 24 },
+        "priorityWeight": { "type": "number" },
+        "order": { "type": "number" },
+        "active": { "type": "boolean" },
+        "description": { "type": "string", "maxLength": 200 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "slug", "iconKey", "badgeBgColor", "badgeTextColor", "priorityWeight", "order", "active"]
+    },
+    "Property": {
+      "title": "Property",
+      "description": "Real estate listing in Abu Homs",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 4, "maxLength": 140 },
+        "listingType": { "type": "string", "enum": ["sale", "rent"] },
+        "propertyType": { "type": "string", "enum": ["apartment", "shop", "land", "warehouse"] },
+        "price": { "type": "number" },
+        "areaSqm": { "type": "number" },
+        "rooms": { "type": "number" },
+        "baths": { "type": "number" },
+        "floor": { "type": "string", "maxLength": 40 },
+        "finishing": { "type": "string", "maxLength": 60 },
+        "area": { "type": "string", "maxLength": 80 },
+        "address": { "type": "string", "maxLength": 240 },
+        "agencyId": { "type": "string", "maxLength": 64 },
+        "agencyName": { "type": "string", "maxLength": 120 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "whatsapp": { "type": "string", "maxLength": 32 },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "description": { "type": "string", "maxLength": 1200 },
+        "verified": { "type": "boolean" },
+        "featured": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["approved", "pending", "sold"] }
+      },
+      "required": ["title", "listingType", "propertyType", "price", "areaSqm", "area", "phone", "status"]
+    },
+    "Agency": {
+      "title": "Agency",
+      "description": "Verified real estate agency",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 120 },
+        "licenseNumber": { "type": "string", "maxLength": 60 },
+        "area": { "type": "string", "maxLength": 80 },
+        "address": { "type": "string", "maxLength": 240 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "whatsapp": { "type": "string", "maxLength": 32 },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "dealsCount": { "type": "number" },
+        "yearsExperience": { "type": "number" },
+        "verified": { "type": "boolean" }
+      },
+      "required": ["name", "area", "phone"]
+    },
+    "Offer": {
+      "title": "Offer",
+      "description": "Local discount and coupon offer",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 140 },
+        "subtitle": { "type": "string", "maxLength": 240 },
+        "placeId": { "type": "string", "maxLength": 64 },
+        "placeName": { "type": "string", "maxLength": 120 },
+        "categorySlug": { "type": "string", "maxLength": 64 },
+        "discountPercent": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "salePrice": { "type": "number" },
+        "couponCode": { "type": "string", "maxLength": 32 },
+        "expiresAt": { "type": "string", "maxLength": 64 },
+        "terms": { "type": "array" },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "active": { "type": "boolean" },
+        "featured": { "type": "boolean" }
+      },
+      "required": ["title", "placeName", "discountPercent", "salePrice", "couponCode", "active"]
+    },
+    "Campaign": {
+      "title": "Campaign",
+      "description": "Fair-rotation homepage promotional slot",
+      "type": "object",
+      "properties": {
+        "slotNumber": { "type": "number" },
+        "title": { "type": "string", "maxLength": 120 },
+        "subtitle": { "type": "string", "maxLength": 220 },
+        "badgeText": { "type": "string", "maxLength": 48 },
+        "ctaText": { "type": "string", "maxLength": 48 },
+        "targetRoute": { "type": "string", "maxLength": 160 },
+        "impressions": { "type": "number" },
+        "clicks": { "type": "number" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["slotNumber", "title", "targetRoute", "active"]
+    },
+    "EmergencyContact": {
+      "title": "EmergencyContact",
+      "description": "24/7 emergency hotline, night pharmacy, or blood bank",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 120 },
+        "type": { "type": "string", "enum": ["hotline", "pharmacy", "hospital", "blood"] },
+        "phone": { "type": "string", "maxLength": 32 },
+        "area": { "type": "string", "maxLength": 80 },
+        "address": { "type": "string", "maxLength": 220 },
+        "statusText": { "type": "string", "maxLength": 80 },
+        "is24h": { "type": "boolean" },
+        "priority": { "type": "number" }
+      },
+      "required": ["name", "type", "phone", "priority"]
+    },
+    "ClinicQueue": {
+      "title": "ClinicQueue",
+      "description": "Live clinic queue counter synced between secretary console and patients",
+      "type": "object",
+      "properties": {
+        "doctorId": { "type": "string", "maxLength": 64 },
+        "doctorName": { "type": "string", "maxLength": 120 },
+        "specialty": { "type": "string", "maxLength": 120 },
+        "clinicAddress": { "type": "string", "maxLength": 220 },
+        "currentNumber": { "type": "number" },
+        "lastTicketNumber": { "type": "number" },
+        "status": { "type": "string", "enum": ["open", "paused", "emergency", "closed"] },
+        "avgMinutesPerPatient": { "type": "number" },
+        "pausedReason": { "type": "string", "maxLength": 160 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["doctorId", "doctorName", "currentNumber", "lastTicketNumber", "status"]
+    },
+    "ClinicTicket": {
+      "title": "ClinicTicket",
+      "description": "Individual clinic queue ticket",
+      "type": "object",
+      "properties": {
+        "ticketCode": { "type": "string", "maxLength": 32 },
+        "ticketNumber": { "type": "number" },
+        "doctorId": { "type": "string", "maxLength": 64 },
+        "doctorName": { "type": "string", "maxLength": 120 },
+        "patientName": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "patientPhone": { "type": "string", "minLength": 8, "maxLength": 24 },
+        "visitType": { "type": "string", "maxLength": 60 },
+        "fee": { "type": "number" },
+        "status": { "type": "string", "enum": ["waiting", "called", "in_room", "completed", "cancelled", "emergency"] },
+        "notes": { "type": "string", "maxLength": 300 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ticketCode", "ticketNumber", "doctorId", "doctorName", "patientName", "patientPhone", "status"]
+    },
+    "RestaurantOrder": {
+      "title": "RestaurantOrder",
+      "description": "Live restaurant food order synced between customer, kitchen KDS, and captain",
+      "type": "object",
+      "properties": {
+        "orderCode": { "type": "string", "maxLength": 32 },
+        "restaurantId": { "type": "string", "maxLength": 64 },
+        "restaurantName": { "type": "string", "maxLength": 120 },
+        "customerName": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "customerPhone": { "type": "string", "minLength": 8, "maxLength": 24 },
+        "deliveryArea": { "type": "string", "maxLength": 80 },
+        "deliveryAddress": { "type": "string", "maxLength": 260 },
+        "locationShared": { "type": "boolean" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "deliveryFee": { "type": "number" },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["new", "preparing", "ready", "on_the_way", "delivered", "cancelled"] },
+        "captainName": { "type": "string", "maxLength": 80 },
+        "captainPhone": { "type": "string", "maxLength": 24 },
+        "notes": { "type": "string", "maxLength": 300 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["orderCode", "restaurantId", "restaurantName", "customerName", "customerPhone", "deliveryAddress", "items", "total", "status"]
+    },
+    "DeliveryRide": {
+      "title": "DeliveryRide",
+      "description": "Unified errand/delivery ride synced between citizen and delivery captain",
+      "type": "object",
+      "properties": {
+        "rideCode": { "type": "string", "maxLength": 32 },
+        "pickupArea": { "type": "string", "maxLength": 120 },
+        "pickupDetails": { "type": "string", "maxLength": 240 },
+        "dropoffArea": { "type": "string", "maxLength": 120 },
+        "dropoffDetails": { "type": "string", "maxLength": 240 },
+        "itemDescription": { "type": "string", "maxLength": 300 },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "customerPhone": { "type": "string", "maxLength": 24 },
+        "estimatedFee": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "picked_up", "on_the_way", "delivered", "cancelled"] },
+        "captainName": { "type": "string", "maxLength": 80 },
+        "captainPhone": { "type": "string", "maxLength": 24 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["rideCode", "pickupArea", "dropoffArea", "itemDescription", "customerName", "customerPhone", "status"]
+    },
+    "Submission": {
+      "title": "Submission",
+      "description": "Citizen place suggestion, correction report, ad inquiry, property listing, or inspection request with unique tracking token",
+      "type": "object",
+      "properties": {
+        "trackingToken": { "type": "string", "minLength": 6, "maxLength": 48, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "type": { "type": "string", "enum": ["suggest_place", "report_edit", "advertise", "add_property", "property_inspection", "join_hero", "hero_inquiry"] },
+        "targetPlaceId": { "type": "string", "maxLength": 64 },
+        "title": { "type": "string", "maxLength": 160 },
+        "submitterName": { "type": "string", "maxLength": 100 },
+        "submitterPhone": { "type": "string", "maxLength": 24 },
+        "payload": { "type": "object" },
+        "previousData": { "type": "object" },
+        "status": { "type": "string", "enum": ["received", "reviewing", "approved", "rejected", "expired"] },
+        "adminNote": { "type": "string", "maxLength": 400 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["trackingToken", "type", "title", "submitterName", "submitterPhone", "status"]
+    },
+    "WhatsappQueueItem": {
+      "title": "WhatsappQueueItem",
+      "description": "Manual WhatsApp follow-up queue item for field admin",
+      "type": "object",
+      "properties": {
+        "recipientName": { "type": "string", "maxLength": 120 },
+        "phone": { "type": "string", "maxLength": 24 },
+        "relatedType": { "type": "string", "maxLength": 48 },
+        "relatedTitle": { "type": "string", "maxLength": 160 },
+        "templateName": { "type": "string", "maxLength": 80 },
+        "messageBody": { "type": "string", "maxLength": 1000 },
+        "status": { "type": "string", "enum": ["pending", "sent", "failed"] },
+        "sentAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["recipientName", "phone", "messageBody", "status"]
+    },
+    "FinanceConfig": {
+      "title": "FinanceConfig",
+      "description": "Partner profit-split rules for Raed and Mohamed (starts unconfigured, strict 100% validation)",
+      "type": "object",
+      "properties": {
+        "isConfigured": { "type": "boolean" },
+        "raedPercent": { "type": "number" },
+        "mohamedPercent": { "type": "number" },
+        "updatedBy": { "type": "string", "maxLength": 120 },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "history": { "type": "array" }
+      },
+      "required": ["isConfigured"]
+    },
+    "FinanceSettlement": {
+      "title": "FinanceSettlement",
+      "description": "Immutable historical settlement locked at its period percentages",
+      "type": "object",
+      "properties": {
+        "periodLabel": { "type": "string", "maxLength": 80 },
+        "totalRevenue": { "type": "number" },
+        "expenses": { "type": "number" },
+        "netProfit": { "type": "number" },
+        "raedPercentLocked": { "type": "number" },
+        "mohamedPercentLocked": { "type": "number" },
+        "raedShare": { "type": "number" },
+        "mohamedShare": { "type": "number" },
+        "status": { "type": "string", "enum": ["closed", "open"] },
+        "closedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["periodLabel", "totalRevenue", "expenses", "netProfit", "raedPercentLocked", "mohamedPercentLocked", "status"]
+    },
+    "AnalyticsEvent": {
+      "title": "AnalyticsEvent",
+      "description": "Search queries (including zero-result tracking) and interaction events",
+      "type": "object",
+      "properties": {
+        "eventType": { "type": "string", "enum": ["visit", "call_click", "whatsapp_click", "search", "zero_search"] },
+        "query": { "type": "string", "maxLength": 120 },
+        "targetId": { "type": "string", "maxLength": 64 },
+        "targetName": { "type": "string", "maxLength": 120 },
+        "categorySlug": { "type": "string", "maxLength": 64 },
+        "resultCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["eventType"]
+    },
+    "PublicSettings": {
+      "title": "PublicSettings",
+      "description": "Global civic settings, areas list, and visit counter",
+      "type": "object",
+      "properties": {
+        "appName": { "type": "string", "maxLength": 80 },
+        "disclaimer": { "type": "string", "maxLength": 500 },
+        "supportPhone": { "type": "string", "maxLength": 24 },
+        "supportWhatsapp": { "type": "string", "maxLength": 24 },
+        "visitsCount": { "type": "number" },
+        "areas": { "type": "array" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["appName", "disclaimer", "visitsCount"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized admin record",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "maxLength": 160 },
+        "name": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "enum": ["super_admin", "partner", "moderator", "auditor"] },
+        "partnerKey": { "type": "string", "maxLength": 32 }
+      },
+      "required": ["email", "name", "role"]
+    }
+  },
+  "firestore": {
+    "/categories/{categoryId}": { "schema": { "$ref": "#/entities/Category" }, "description": "Dynamic directory categories" },
+    "/promo_filters/{filterId}": { "schema": { "$ref": "#/entities/PromoFilter" }, "description": "Dynamic promotional badges and filter chips" },
+    "/places/{placeId}": { "schema": { "$ref": "#/entities/Place" }, "description": "Directory listings" },
+    "/properties/{propertyId}": { "schema": { "$ref": "#/entities/Property" }, "description": "Real estate listings" },
+    "/agencies/{agencyId}": { "schema": { "$ref": "#/entities/Agency" }, "description": "Real estate agencies" },
+    "/offers/{offerId}": { "schema": { "$ref": "#/entities/Offer" }, "description": "Discounts and coupons" },
+    "/campaigns/{campaignId}": { "schema": { "$ref": "#/entities/Campaign" }, "description": "Homepage fair-rotation promo banners" },
+    "/emergency_contacts/{contactId}": { "schema": { "$ref": "#/entities/EmergencyContact" }, "description": "24h emergency contacts & night pharmacies" },
+    "/clinic_queues/{doctorId}": { "schema": { "$ref": "#/entities/ClinicQueue" }, "description": "Live clinic queue counters" },
+    "/clinic_tickets/{ticketId}": { "schema": { "$ref": "#/entities/ClinicTicket" }, "description": "Live clinic queue tickets" },
+    "/restaurant_orders/{orderId}": { "schema": { "$ref": "#/entities/RestaurantOrder" }, "description": "Live restaurant orders" },
+    "/delivery_rides/{rideId}": { "schema": { "$ref": "#/entities/DeliveryRide" }, "description": "Live unified delivery rides" },
+    "/submissions/{submissionId}": { "schema": { "$ref": "#/entities/Submission" }, "description": "Citizen suggestions, reports, ad requests, and inspections" },
+    "/whatsapp_queue/{itemId}": { "schema": { "$ref": "#/entities/WhatsappQueueItem" }, "description": "Admin manual WhatsApp follow-up queue" },
+    "/finance_config/{configId}": { "schema": { "$ref": "#/entities/FinanceConfig" }, "description": "Partner profit-split config" },
+    "/finance_settlements/{settlementId}": { "schema": { "$ref": "#/entities/FinanceSettlement" }, "description": "Historical locked settlements" },
+    "/analytics_events/{eventId}": { "schema": { "$ref": "#/entities/AnalyticsEvent" }, "description": "Visits, clicks, and zero-result searches" },
+    "/public_settings/{settingId}": { "schema": { "$ref": "#/entities/PublicSettings" }, "description": "Global civic settings" },
+    "/admins/{uid}": { "schema": { "$ref": "#/entities/AdminUser" }, "description": "Authorized admin accounts" }
+  }
+}

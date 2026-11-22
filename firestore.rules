@@ -1,0 +1,549 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedEmail() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrappedOwner() {
+      return isVerifiedEmail() && request.auth.token.email == 'mk2373982@gmail.com';
+    }
+
+    function hasAdminDoc() {
+      return isVerifiedEmail() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function getAdminRole() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role;
+    }
+
+    function isSuperAdmin() {
+      return isBootstrappedOwner() || (hasAdminDoc() && getAdminRole() == 'super_admin');
+    }
+
+    function isAdminWriter() {
+      return isSuperAdmin() || (hasAdminDoc() && getAdminRole() == 'moderator');
+    }
+
+    function isAdminPanelUser() {
+      return isAdminWriter() || (hasAdminDoc() && getAdminRole() == 'auditor');
+    }
+
+    function isPartnerOrAdmin() {
+      return isAdminPanelUser() || (hasAdminDoc() && getAdminRole() == 'partner');
+    }
+
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isOptionalString(data, key, maxLen) {
+      return !(key in data) || (data[key] is string && data[key].size() <= maxLen);
+    }
+
+    function isOptionalNumber(data, key, minVal, maxVal) {
+      return !(key in data) || (data[key] is number && data[key] >= minVal && data[key] <= maxVal);
+    }
+
+    function isOptionalBool(data, key) {
+      return !(key in data) || (data[key] is bool);
+    }
+
+    function isOptionalList(data, key, maxLen) {
+      return !(key in data) || (data[key] is list && data[key].size() <= maxLen);
+    }
+
+    function isOptionalMap(data, key, maxLen) {
+      return !(key in data) || (data[key] is map && data[key].size() <= maxLen);
+    }
+
+    // --- Validation Blueprints ---
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['name', 'slug', 'iconKey', 'bgColor', 'iconColor', 'templateType', 'order', 'active'])
+        && data.keys().hasOnly(['id', 'name', 'slug', 'iconKey', 'imageUrl', 'bgColor', 'iconColor', 'templateType', 'order', 'active', 'description', 'updatedAt'])
+        && isValidString(data.name, 2, 60)
+        && isValidString(data.slug, 2, 60)
+        && data.slug.matches('^[a-z0-9\\-]+$')
+        && isValidString(data.iconKey, 1, 48)
+        && isOptionalString(data, 'imageUrl', 500)
+        && isValidString(data.bgColor, 4, 24)
+        && isValidString(data.iconColor, 4, 24)
+        && data.templateType in ['medical', 'restaurants', 'real-estate', 'heroes', 'general']
+        && data.order is number && data.order >= 0 && data.order <= 999
+        && data.active is bool
+        && isOptionalString(data, 'description', 240);
+    }
+
+    function isValidPromoFilter(data) {
+      return data.keys().hasAll(['name', 'slug', 'iconKey', 'badgeBgColor', 'badgeTextColor', 'priorityWeight', 'order', 'active'])
+        && data.keys().hasOnly(['id', 'name', 'slug', 'iconKey', 'badgeBgColor', 'badgeTextColor', 'priorityWeight', 'order', 'active', 'description', 'updatedAt'])
+        && isValidString(data.name, 2, 48)
+        && isValidString(data.slug, 2, 48)
+        && data.slug.matches('^[a-z0-9\\-]+$')
+        && isValidString(data.iconKey, 1, 48)
+        && isValidString(data.badgeBgColor, 4, 24)
+        && isValidString(data.badgeTextColor, 4, 24)
+        && data.priorityWeight is number && data.priorityWeight >= 0 && data.priorityWeight <= 1000
+        && data.order is number && data.order >= 0 && data.order <= 999
+        && data.active is bool
+        && isOptionalString(data, 'description', 200);
+    }
+
+    function isValidPlace(data) {
+      return data.keys().hasAll(['name', 'categoryId', 'categorySlug', 'area', 'address', 'phone'])
+        && data.keys().hasOnly(['id', 'name', 'categoryId', 'categorySlug', 'specialty', 'area', 'address', 'phone', 'whatsapp', 'description', 'imageUrl', 'rating', 'reviewCount', 'verified', 'featured', 'openNow', 'hours', 'consultationFee', 'experienceYears', 'qrCode', 'tags', 'filterTags', 'filterExpirations', 'services', 'menuItems', 'gallery', 'createdAt', 'updatedAt'])
+        && isValidString(data.name, 2, 120)
+        && isValidString(data.categoryId, 1, 64)
+        && isValidString(data.categorySlug, 1, 64)
+        && isOptionalString(data, 'specialty', 120)
+        && isValidString(data.area, 2, 80)
+        && isValidString(data.address, 2, 240)
+        && isValidString(data.phone, 3, 32)
+        && isOptionalString(data, 'whatsapp', 32)
+        && isOptionalString(data, 'description', 1200)
+        && isOptionalString(data, 'imageUrl', 500)
+        && isOptionalNumber(data, 'rating', 0, 5)
+        && isOptionalNumber(data, 'reviewCount', 0, 100000)
+        && isOptionalBool(data, 'verified')
+        && isOptionalBool(data, 'featured')
+        && isOptionalBool(data, 'openNow')
+        && isOptionalString(data, 'hours', 180)
+        && isOptionalNumber(data, 'consultationFee', 0, 50000)
+        && isOptionalNumber(data, 'experienceYears', 0, 80)
+        && isOptionalString(data, 'qrCode', 64)
+        && isOptionalList(data, 'tags', 15)
+        && isOptionalList(data, 'filterTags', 15)
+        && isOptionalMap(data, 'filterExpirations', 15)
+        && isOptionalList(data, 'services', 30)
+        && isOptionalList(data, 'menuItems', 60)
+        && isOptionalList(data, 'gallery', 20);
+    }
+
+    function isValidProperty(data) {
+      return data.keys().hasAll(['title', 'listingType', 'propertyType', 'price', 'areaSqm', 'area', 'phone', 'status'])
+        && data.keys().hasOnly(['id', 'title', 'listingType', 'propertyType', 'price', 'areaSqm', 'rooms', 'baths', 'floor', 'finishing', 'area', 'address', 'agencyId', 'agencyName', 'phone', 'whatsapp', 'imageUrl', 'description', 'verified', 'featured', 'status', 'createdAt'])
+        && isValidString(data.title, 4, 140)
+        && data.listingType in ['sale', 'rent']
+        && data.propertyType in ['apartment', 'shop', 'land', 'warehouse']
+        && data.price is number && data.price >= 0 && data.price <= 500000000
+        && data.areaSqm is number && data.areaSqm > 0 && data.areaSqm <= 100000
+        && isValidString(data.area, 2, 80)
+        && isValidString(data.phone, 5, 32)
+        && data.status in ['approved', 'pending', 'sold']
+        && isOptionalString(data, 'address', 240)
+        && isOptionalString(data, 'description', 1200)
+        && isOptionalString(data, 'imageUrl', 500)
+        && isOptionalBool(data, 'verified')
+        && isOptionalBool(data, 'featured');
+    }
+
+    function isValidAgency(data) {
+      return data.keys().hasAll(['name', 'area', 'phone'])
+        && data.keys().hasOnly(['id', 'name', 'licenseNumber', 'area', 'address', 'phone', 'whatsapp', 'rating', 'reviewCount', 'dealsCount', 'yearsExperience', 'verified'])
+        && isValidString(data.name, 2, 120)
+        && isValidString(data.area, 2, 80)
+        && isValidString(data.phone, 5, 32)
+        && isOptionalString(data, 'licenseNumber', 60)
+        && isOptionalString(data, 'address', 240)
+        && isOptionalString(data, 'whatsapp', 32)
+        && isOptionalBool(data, 'verified');
+    }
+
+    function isValidOffer(data) {
+      return data.keys().hasAll(['title', 'placeName', 'discountPercent', 'salePrice', 'couponCode', 'active'])
+        && data.keys().hasOnly(['id', 'title', 'subtitle', 'placeId', 'placeName', 'categorySlug', 'discountPercent', 'originalPrice', 'salePrice', 'couponCode', 'expiresAt', 'terms', 'imageUrl', 'active', 'featured'])
+        && isValidString(data.title, 2, 140)
+        && isOptionalString(data, 'subtitle', 240)
+        && isOptionalString(data, 'placeId', 64)
+        && isValidString(data.placeName, 2, 120)
+        && isOptionalString(data, 'categorySlug', 64)
+        && data.discountPercent is number && data.discountPercent >= 0 && data.discountPercent <= 100
+        && isOptionalNumber(data, 'originalPrice', 0, 1000000)
+        && data.salePrice is number && data.salePrice >= 0 && data.salePrice <= 1000000
+        && isValidString(data.couponCode, 2, 32)
+        && isOptionalString(data, 'expiresAt', 64)
+        && isOptionalString(data, 'imageUrl', 500)
+        && data.active is bool
+        && isOptionalBool(data, 'featured')
+        && isOptionalList(data, 'terms', 15);
+    }
+
+    function isValidCampaign(data) {
+      return data.keys().hasAll(['slotNumber', 'title', 'targetRoute', 'active'])
+        && data.keys().hasOnly(['id', 'slotNumber', 'title', 'subtitle', 'badgeText', 'ctaText', 'targetRoute', 'impressions', 'clicks', 'active'])
+        && data.slotNumber is number && data.slotNumber >= 1 && data.slotNumber <= 5
+        && isValidString(data.title, 2, 120)
+        && isValidString(data.targetRoute, 1, 160)
+        && data.active is bool;
+    }
+
+    function isValidEmergencyContact(data) {
+      return data.keys().hasAll(['name', 'type', 'phone', 'priority'])
+        && data.keys().hasOnly(['id', 'name', 'type', 'phone', 'area', 'address', 'statusText', 'is24h', 'priority'])
+        && isValidString(data.name, 2, 120)
+        && data.type in ['hotline', 'pharmacy', 'hospital', 'blood']
+        && isValidString(data.phone, 2, 32)
+        && data.priority is number && data.priority >= 0 && data.priority <= 999;
+    }
+
+    function isValidClinicQueue(data) {
+      return data.keys().hasAll(['doctorId', 'doctorName', 'currentNumber', 'lastTicketNumber', 'status'])
+        && data.keys().hasOnly(['doctorId', 'doctorName', 'specialty', 'clinicAddress', 'currentNumber', 'lastTicketNumber', 'status', 'avgMinutesPerPatient', 'pausedReason', 'updatedAt'])
+        && isValidString(data.doctorId, 1, 64)
+        && isValidString(data.doctorName, 2, 120)
+        && data.currentNumber is number && data.currentNumber >= 0 && data.currentNumber <= 9999
+        && data.lastTicketNumber is number && data.lastTicketNumber >= 0 && data.lastTicketNumber <= 9999
+        && data.status in ['open', 'paused', 'emergency', 'closed']
+        && isOptionalString(data, 'pausedReason', 160);
+    }
+
+    function isValidClinicTicket(data) {
+      return data.keys().hasAll(['ticketCode', 'ticketNumber', 'doctorId', 'doctorName', 'patientName', 'patientPhone', 'status'])
+        && data.keys().hasOnly(['id', 'ticketCode', 'ticketNumber', 'doctorId', 'doctorName', 'patientName', 'patientPhone', 'visitType', 'fee', 'status', 'notes', 'createdAt', 'updatedAt'])
+        && isValidString(data.ticketCode, 3, 32)
+        && data.ticketNumber is number && data.ticketNumber >= 1 && data.ticketNumber <= 9999
+        && isValidString(data.doctorId, 1, 64)
+        && isValidString(data.doctorName, 2, 120)
+        && isValidString(data.patientName, 2, 100)
+        && isValidString(data.patientPhone, 8, 24)
+        && data.status in ['waiting', 'called', 'in_room', 'completed', 'cancelled', 'emergency']
+        && isOptionalString(data, 'visitType', 60)
+        && isOptionalNumber(data, 'fee', 0, 50000)
+        && isOptionalString(data, 'notes', 300);
+    }
+
+    function isValidRestaurantOrder(data) {
+      return data.keys().hasAll(['orderCode', 'restaurantId', 'restaurantName', 'customerName', 'customerPhone', 'deliveryAddress', 'items', 'total', 'status'])
+        && data.keys().hasOnly(['id', 'orderCode', 'restaurantId', 'restaurantName', 'customerName', 'customerPhone', 'deliveryArea', 'deliveryAddress', 'locationShared', 'items', 'subtotal', 'deliveryFee', 'total', 'status', 'captainName', 'captainPhone', 'notes', 'createdAt', 'updatedAt'])
+        && isValidString(data.orderCode, 3, 32)
+        && isValidString(data.restaurantId, 1, 64)
+        && isValidString(data.restaurantName, 2, 120)
+        && isValidString(data.customerName, 2, 100)
+        && isValidString(data.customerPhone, 8, 24)
+        && isOptionalString(data, 'deliveryArea', 120)
+        && isValidString(data.deliveryAddress, 3, 260)
+        && isOptionalBool(data, 'locationShared')
+        && data.items is list && data.items.size() >= 1 && data.items.size() <= 40
+        && isOptionalNumber(data, 'subtotal', 0, 100000)
+        && isOptionalNumber(data, 'deliveryFee', 0, 5000)
+        && data.total is number && data.total >= 0 && data.total <= 100000
+        && (!('subtotal' in data) || !('deliveryFee' in data) || (data.total >= data.subtotal + data.deliveryFee - 0.01 && data.total <= data.subtotal + data.deliveryFee + 0.01))
+        && data.status in ['new', 'preparing', 'ready', 'on_the_way', 'delivered', 'cancelled']
+        && isOptionalString(data, 'notes', 300)
+        && isOptionalString(data, 'captainName', 80)
+        && isOptionalString(data, 'captainPhone', 24);
+    }
+
+    function isValidDeliveryRide(data) {
+      return data.keys().hasAll(['rideCode', 'pickupArea', 'dropoffArea', 'itemDescription', 'customerName', 'customerPhone', 'status'])
+        && data.keys().hasOnly(['id', 'rideCode', 'pickupArea', 'pickupDetails', 'dropoffArea', 'dropoffDetails', 'itemDescription', 'customerName', 'customerPhone', 'estimatedFee', 'status', 'captainName', 'captainPhone', 'createdAt', 'updatedAt'])
+        && isValidString(data.rideCode, 3, 32)
+        && isValidString(data.pickupArea, 2, 120)
+        && isOptionalString(data, 'pickupDetails', 240)
+        && isValidString(data.dropoffArea, 2, 120)
+        && isOptionalString(data, 'dropoffDetails', 240)
+        && isValidString(data.itemDescription, 2, 300)
+        && isValidString(data.customerName, 2, 100)
+        && isValidString(data.customerPhone, 8, 24)
+        && data.status in ['pending', 'accepted', 'picked_up', 'on_the_way', 'delivered', 'cancelled']
+        && isOptionalNumber(data, 'estimatedFee', 0, 10000)
+        && isOptionalString(data, 'captainName', 80)
+        && isOptionalString(data, 'captainPhone', 24);
+    }
+
+    function isValidSubmission(data) {
+      return data.keys().hasAll(['trackingToken', 'type', 'title', 'submitterName', 'submitterPhone', 'status'])
+        && data.keys().hasOnly(['id', 'trackingToken', 'type', 'targetPlaceId', 'title', 'submitterName', 'submitterPhone', 'payload', 'previousData', 'status', 'adminNote', 'createdAt', 'updatedAt'])
+        && isValidId(data.trackingToken)
+        && data.type in ['suggest_place', 'report_edit', 'advertise', 'add_property', 'property_inspection', 'join_hero', 'hero_inquiry']
+        && isOptionalString(data, 'targetPlaceId', 64)
+        && isValidString(data.title, 2, 160)
+        && isValidString(data.submitterName, 2, 100)
+        && isValidString(data.submitterPhone, 8, 24)
+        && isOptionalMap(data, 'payload', 25)
+        && isOptionalMap(data, 'previousData', 20)
+        && data.status in ['received', 'reviewing', 'approved', 'rejected', 'expired']
+        && isOptionalString(data, 'adminNote', 400);
+    }
+
+    function isValidWhatsappQueue(data) {
+      return data.keys().hasAll(['recipientName', 'phone', 'messageBody', 'status'])
+        && data.keys().hasOnly(['id', 'recipientName', 'phone', 'relatedType', 'relatedTitle', 'templateName', 'messageBody', 'status', 'sentAt', 'createdAt'])
+        && isValidString(data.recipientName, 2, 120)
+        && isValidString(data.phone, 8, 24)
+        && isValidString(data.messageBody, 2, 1000)
+        && data.status in ['pending', 'sent', 'failed'];
+    }
+
+    function isValidFinanceConfig(data) {
+      return data.keys().hasAll(['isConfigured'])
+        && data.keys().hasOnly(['isConfigured', 'raedPercent', 'mohamedPercent', 'updatedBy', 'updatedAt', 'history'])
+        && data.isConfigured is bool
+        && (
+          data.isConfigured == false ||
+          (
+            data.raedPercent is number && data.mohamedPercent is number
+            && data.raedPercent >= 0 && data.raedPercent <= 100
+            && data.mohamedPercent >= 0 && data.mohamedPercent <= 100
+            && (data.raedPercent + data.mohamedPercent) >= 99.99
+            && (data.raedPercent + data.mohamedPercent) <= 100.01
+          )
+        )
+        && isOptionalList(data, 'history', 50);
+    }
+
+    function isValidFinanceSettlement(data) {
+      return data.keys().hasAll(['periodLabel', 'totalRevenue', 'expenses', 'netProfit', 'raedPercentLocked', 'mohamedPercentLocked', 'status'])
+        && data.keys().hasOnly(['id', 'periodLabel', 'totalRevenue', 'expenses', 'netProfit', 'raedPercentLocked', 'mohamedPercentLocked', 'raedShare', 'mohamedShare', 'status', 'closedAt'])
+        && isValidString(data.periodLabel, 2, 80)
+        && data.totalRevenue is number && data.totalRevenue >= 0 && data.totalRevenue <= 100000000
+        && data.expenses is number && data.expenses >= 0 && data.expenses <= 100000000
+        && data.netProfit is number && data.netProfit >= 0 && data.netProfit <= 100000000
+        && data.raedPercentLocked is number && data.raedPercentLocked >= 0 && data.raedPercentLocked <= 100
+        && data.mohamedPercentLocked is number && data.mohamedPercentLocked >= 0 && data.mohamedPercentLocked <= 100
+        && (data.raedPercentLocked + data.mohamedPercentLocked) >= 99.99
+        && (data.raedPercentLocked + data.mohamedPercentLocked) <= 100.01
+        && isOptionalNumber(data, 'raedShare', 0, 100000000)
+        && isOptionalNumber(data, 'mohamedShare', 0, 100000000)
+        && data.status in ['closed', 'open'];
+    }
+
+    function isValidAnalyticsEvent(data) {
+      return data.keys().hasAll(['eventType'])
+        && data.keys().hasOnly(['eventType', 'query', 'targetId', 'targetName', 'categorySlug', 'resultCount', 'createdAt'])
+        && data.eventType in ['visit', 'call_click', 'whatsapp_click', 'search', 'zero_search']
+        && isOptionalString(data, 'query', 120)
+        && isOptionalString(data, 'targetId', 64)
+        && isOptionalString(data, 'targetName', 120)
+        && isOptionalString(data, 'categorySlug', 64)
+        && isOptionalNumber(data, 'resultCount', 0, 10000);
+    }
+
+    function isValidPublicSettings(data) {
+      return data.keys().hasAll(['appName', 'disclaimer', 'visitsCount'])
+        && data.keys().hasOnly(['appName', 'disclaimer', 'supportPhone', 'supportWhatsapp', 'visitsCount', 'areas', 'updatedAt'])
+        && isValidString(data.appName, 2, 80)
+        && isValidString(data.disclaimer, 5, 500)
+        && data.visitsCount is number && data.visitsCount >= 0 && data.visitsCount <= 100000000
+        && isOptionalList(data, 'areas', 50);
+    }
+
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['email', 'name', 'role'])
+        && data.keys().hasOnly(['email', 'name', 'role', 'partnerKey', 'createdAt'])
+        && isValidString(data.email, 5, 160)
+        && isValidString(data.name, 2, 100)
+        && data.role in ['super_admin', 'partner', 'moderator', 'auditor'];
+    }
+
+    // --- Collection Rules ---
+
+    match /test/connection {
+      allow get: if true;
+    }
+
+    match /categories/{categoryId} {
+      allow get: if isValidId(categoryId);
+      allow list: if true;
+      allow create: if isAdminWriter() && isValidId(categoryId) && isValidCategory(incoming());
+      allow update: if isAdminWriter() && isValidId(categoryId) && isValidCategory(incoming());
+      allow delete: if isAdminWriter() && isValidId(categoryId);
+    }
+
+    match /promo_filters/{filterId} {
+      allow get: if isValidId(filterId);
+      allow list: if true;
+      allow create: if isAdminWriter() && isValidId(filterId) && isValidPromoFilter(incoming());
+      allow update: if isAdminWriter() && isValidId(filterId) && isValidPromoFilter(incoming());
+      allow delete: if isAdminWriter() && isValidId(filterId);
+    }
+
+    match /places/{placeId} {
+      allow get: if isValidId(placeId);
+      allow list: if true;
+      allow create: if isAdminWriter() && isValidId(placeId) && isValidPlace(incoming());
+      allow update: if isAdminWriter() && isValidId(placeId) && isValidPlace(incoming());
+      allow delete: if isAdminWriter() && isValidId(placeId);
+    }
+
+    match /properties/{propertyId} {
+      allow get: if isValidId(propertyId);
+      allow list: if true;
+      allow create: if isAdminWriter() && isValidId(propertyId) && isValidProperty(incoming());
+      allow update: if isAdminWriter() && isValidId(propertyId) && isValidProperty(incoming());
+      allow delete: if isAdminWriter() && isValidId(propertyId);
+    }
+
+    match /agencies/{agencyId} {
+      allow get: if isValidId(agencyId);
+      allow list: if true;
+      allow create: if isAdminWriter() && isValidId(agencyId) && isValidAgency(incoming());
+      allow update: if isAdminWriter() && isValidId(agencyId) && isValidAgency(incoming());
+      allow delete: if isAdminWriter() && isValidId(agencyId);
+    }
+
+    match /offers/{offerId} {
+      allow get: if isValidId(offerId);
+      allow list: if true;
+      allow create: if isAdminWriter() && isValidId(offerId) && isValidOffer(incoming());
+      allow update: if isAdminWriter() && isValidId(offerId) && isValidOffer(incoming());
+      allow delete: if isAdminWriter() && isValidId(offerId);
+    }
+
+    match /campaigns/{campaignId} {
+      allow get: if isValidId(campaignId);
+      allow list: if true;
+      allow create: if isAdminWriter() && isValidId(campaignId) && isValidCampaign(incoming());
+      allow update: if isAdminWriter() && isValidId(campaignId) && isValidCampaign(incoming());
+      allow delete: if isAdminWriter() && isValidId(campaignId);
+    }
+
+    match /emergency_contacts/{contactId} {
+      allow get: if isValidId(contactId);
+      allow list: if true;
+      allow create: if isAdminWriter() && isValidId(contactId) && isValidEmergencyContact(incoming());
+      allow update: if isAdminWriter() && isValidId(contactId) && isValidEmergencyContact(incoming());
+      allow delete: if isAdminWriter() && isValidId(contactId);
+    }
+
+    match /clinic_queues/{doctorId} {
+      allow get: if isValidId(doctorId);
+      allow list: if true;
+      allow create: if isAdminWriter() && isValidId(doctorId) && isValidClinicQueue(incoming());
+      allow update: if isValidId(doctorId) && isValidClinicQueue(incoming()) && (
+        isPartnerOrAdmin() ||
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['lastTicketNumber', 'updatedAt'])
+          && incoming().lastTicketNumber == existing().lastTicketNumber + 1
+          && incoming().doctorId == existing().doctorId
+        )
+      );
+      allow delete: if isAdminWriter() && isValidId(doctorId);
+    }
+
+    match /clinic_tickets/{ticketId} {
+      allow get: if isValidId(ticketId);
+      allow list: if isPartnerOrAdmin();
+      allow create: if isValidId(ticketId) && isValidClinicTicket(incoming()) && (
+        isPartnerOrAdmin() || incoming().status == 'waiting'
+      );
+      allow update: if isPartnerOrAdmin() && isValidId(ticketId) && isValidClinicTicket(incoming())
+        && incoming().ticketNumber == existing().ticketNumber
+        && incoming().doctorId == existing().doctorId;
+      allow delete: if isAdminWriter() && isValidId(ticketId);
+    }
+
+    match /restaurant_orders/{orderId} {
+      allow get: if isValidId(orderId);
+      allow list: if isPartnerOrAdmin();
+      allow create: if isValidId(orderId) && isValidRestaurantOrder(incoming()) && (
+        isPartnerOrAdmin() || incoming().status == 'new'
+      );
+      allow update: if isPartnerOrAdmin() && isValidId(orderId) && isValidRestaurantOrder(incoming())
+        && incoming().orderCode == existing().orderCode
+        && incoming().restaurantId == existing().restaurantId;
+      allow delete: if isAdminWriter() && isValidId(orderId);
+    }
+
+    match /delivery_rides/{rideId} {
+      allow get: if isValidId(rideId);
+      allow list: if isPartnerOrAdmin();
+      allow create: if isValidId(rideId) && isValidDeliveryRide(incoming()) && (
+        isPartnerOrAdmin() || incoming().status == 'pending'
+      );
+      allow update: if isPartnerOrAdmin() && isValidId(rideId) && isValidDeliveryRide(incoming())
+        && incoming().rideCode == existing().rideCode;
+      allow delete: if isAdminWriter() && isValidId(rideId);
+    }
+
+    match /submissions/{submissionId} {
+      allow get: if isValidId(submissionId);
+      allow list: if isAdminPanelUser();
+      allow create: if isValidId(submissionId) && isValidSubmission(incoming()) && (
+        isAdminWriter() || incoming().status == 'received'
+      );
+      allow update: if isAdminWriter() && isValidId(submissionId) && isValidSubmission(incoming())
+        && incoming().trackingToken == existing().trackingToken;
+      allow delete: if isAdminWriter() && isValidId(submissionId);
+    }
+
+    match /whatsapp_queue/{itemId} {
+      allow get: if isAdminPanelUser() && isValidId(itemId);
+      allow list: if isAdminPanelUser();
+      allow create: if isAdminWriter() && isValidId(itemId) && isValidWhatsappQueue(incoming());
+      allow update: if isAdminWriter() && isValidId(itemId) && isValidWhatsappQueue(incoming());
+      allow delete: if isAdminWriter() && isValidId(itemId);
+    }
+
+    match /finance_config/{configId} {
+      allow get: if (isSuperAdmin() || (hasAdminDoc() && getAdminRole() == 'auditor')) && isValidId(configId);
+      allow list: if isSuperAdmin() || (hasAdminDoc() && getAdminRole() == 'auditor');
+      allow create: if isSuperAdmin() && isValidId(configId) && isValidFinanceConfig(incoming());
+      allow update: if isSuperAdmin() && isValidId(configId) && isValidFinanceConfig(incoming());
+      allow delete: if false;
+    }
+
+    match /finance_settlements/{settlementId} {
+      allow get: if (isSuperAdmin() || (hasAdminDoc() && getAdminRole() == 'auditor')) && isValidId(settlementId);
+      allow list: if isSuperAdmin() || (hasAdminDoc() && getAdminRole() == 'auditor');
+      allow create: if isSuperAdmin() && isValidId(settlementId) && isValidFinanceSettlement(incoming());
+      allow update: if isSuperAdmin() && isValidId(settlementId) && isValidFinanceSettlement(incoming())
+        && existing().status != 'closed';
+      allow delete: if false;
+    }
+
+    match /analytics_events/{eventId} {
+      allow get: if isAdminPanelUser() && isValidId(eventId);
+      allow list: if isAdminPanelUser();
+      allow create: if isValidId(eventId) && isValidAnalyticsEvent(incoming());
+      allow update: if false;
+      allow delete: if isSuperAdmin() && isValidId(eventId);
+    }
+
+    match /public_settings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if true;
+      allow create: if isSuperAdmin() && isValidId(settingId) && isValidPublicSettings(incoming());
+      allow update: if isValidId(settingId) && isValidPublicSettings(incoming()) && (
+        isSuperAdmin() ||
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['visitsCount'])
+          && incoming().visitsCount == existing().visitsCount + 1
+        )
+      );
+      allow delete: if false;
+    }
+
+    match /admins/{uid} {
+      allow get: if isValidId(uid) && (isSuperAdmin() || (isVerifiedEmail() && request.auth.uid == uid));
+      allow list: if isSuperAdmin();
+      allow create: if isBootstrappedOwner() && isValidId(uid) && isValidAdminUser(incoming());
+      allow update: if isBootstrappedOwner() && isValidId(uid) && isValidAdminUser(incoming());
+      allow delete: if isBootstrappedOwner() && isValidId(uid);
+    }
+  }
+}

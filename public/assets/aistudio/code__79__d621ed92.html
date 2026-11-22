@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-variant": "#e0e3e1", "tertiary-container": "#cca730", "error": "#ba1a1a", "on-secondary-fixed": "#002110", "surface-tint": "#2d6a48", "inverse-on-surface": "#eef1ef", "on-error": "#ffffff", "on-primary-fixed": "#002111", "surface-bright": "#f7faf8", "surface-container-low": "#f1f4f2", "on-surface-variant": "#404942", "primary-fixed": "#b0f1c7", "on-surface": "#181c1c", "error-container": "#ffdad6", "on-tertiary-fixed-variant": "#574500", "outline-variant": "#c0c9c0", "secondary-fixed": "#a2f4c0", "on-primary-container": "#84c39b", "on-secondary-fixed-variant": "#005230", "tertiary-fixed": "#ffe088", "on-primary-fixed-variant": "#0f5132", "on-primary": "#ffffff", "on-tertiary": "#ffffff", "on-error-container": "#93000a", "surface-container": "#ebefed", "primary": "#003820", "inverse-primary": "#95d4ac", "background": "#f7faf8", "inverse-surface": "#2d3130", "tertiary": "#735c00", "outline": "#707971", "tertiary-fixed-dim": "#e9c349", "primary-fixed-dim": "#95d4ac", "on-tertiary-container": "#4f3d00", "on-secondary-container": "#1b7047", "surface-container-highest": "#e0e3e1", "surface": "#f7faf8", "secondary": "#146c43", "surface-container-lowest": "#ffffff", "secondary-fixed-dim": "#86d8a5", "on-tertiary-fixed": "#241a00", "surface-dim": "#d7dbd9", "surface-container-high": "#e6e9e7", "on-secondary": "#ffffff", "primary-container": "#0f5132", "secondary-container": "#9ff1bd", "on-background": "#181c1c" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter": "1rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "space-md": "0.75rem", "margin": "1rem", "space-xl": "1.5rem", "gutter-sm": "0.75rem", "space-lg": "1.125rem", "margin-lg": "1.25rem" }, "fontFamily": { "body-md": ["IBM Plex Sans Arabic", "IBM Plex Sans", "sans-serif"], "body-lg": ["IBM Plex Sans Arabic", "IBM Plex Sans", "sans-serif"], "headline-lg": ["IBM Plex Sans Arabic", "IBM Plex Sans", "sans-serif"], "title-md": ["IBM Plex Sans Arabic", "IBM Plex Sans", "sans-serif"], "headline-md": ["IBM Plex Sans Arabic", "IBM Plex Sans", "sans-serif"], "label-lg": ["IBM Plex Sans Arabic", "IBM Plex Sans", "sans-serif"], "display-lg": ["IBM Plex Sans Arabic", "IBM Plex Sans", "sans-serif"], "caption": ["IBM Plex Sans Arabic", "IBM Plex Sans", "sans-serif"], "display-lg-mobile": ["IBM Plex Sans Arabic", "IBM Plex Sans", "sans-serif"], "label-md": ["IBM Plex Sans Arabic", "IBM Plex Sans", "sans-serif"] }, "fontSize": { "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }], "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }], "headline-lg": ["22px", { "lineHeight": "32px", "fontWeight": "600" }], "title-md": ["17px", { "lineHeight": "24px", "fontWeight": "500" }], "headline-md": ["19px", { "lineHeight": "28px", "fontWeight": "600" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "display-lg": ["32px", { "lineHeight": "44px", "fontWeight": "700" }], "caption": ["11px", { "lineHeight": "16px", "fontWeight": "400" }], "display-lg-mobile": ["26px", { "lineHeight": "36px", "fontWeight": "700" }], "label-md": ["12px", { "lineHeight": "18px", "fontWeight": "500" }] } } } }</script><style>@layer base{html,body{width:100%;margin:0;padding:0;font-family:'IBM Plex Sans Arabic',sans-serif;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface/85 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(15,81,50,0.05)]"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary-container"><span class="material-symbols-outlined text-[22px]">account_balance</span></div><div class="flex flex-col text-right"><div class="flex items-center gap-space-xs"><span class="font-title-md text-title-md text-primary font-bold tracking-tight">دليل أبوحمص</span><span class="material-symbols-outlined text-tertiary text-[16px]" title="موثق">verified</span></div><span class="font-caption text-caption text-on-surface-variant leading-none">البوابة المدنية الرقمية</span></div></div><div class="flex items-center gap-space-sm"><button aria-label="التنبيهات المدنية" class="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface hover:bg-surface-container"><span class="material-symbols-outlined text-[20px]">notifications</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-28 bg-surface px-margin"><div class="flex flex-col w-full pb-10 space-y-space-xl">
+<!-- Agency Profile Header Card -->
+<section class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_16px_rgba(15,81,50,0.05)] p-space-lg flex flex-col space-y-space-md relative overflow-hidden">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="relative w-16 h-16 rounded-xl overflow-hidden bg-surface-container-low shrink-0 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Modern architectural agency corporate emblem on a soft emerald background, clean minimalist real estate insignia with golden accents representing Abu Homs municipality trusted builders and brokerages, professional photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLwNDCS28gELhTY9w3VHg9OtDSopJDNEm5BJMRbjYWUFvGcUBvH-8EwwDVbszrX9vh7vZoSYQyy1FW_ecumsbKQyqkHhoO3nBBGT1yJA6AUjsiVOgua6JOQzKmODkiXTjohIhJlhbenWxy47pWw2pF1EJPj7Xg0WemadWKh8L40ZJUpsh-9C5MoztsnT96khv4vE9VnPlBD2TbbfLmIPDeoHPQfM7d-I7Nel-Ha2O2"/>
+<div class="absolute bottom-0 right-0 bg-primary text-on-primary rounded-tl-lg p-0.5 flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<div class="flex flex-col min-w-0 text-right">
+<div class="flex items-center gap-space-xs flex-wrap">
+<h1 class="font-headline-md text-headline-md text-primary font-bold truncate">مكتب الدلتا للتسويق العقاري</h1>
+<span class="bg-secondary-container text-on-secondary-container font-label-md text-label-md px-space-xs py-0.5 rounded-full flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">gavel</span>
+              معتمد
+            </span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant mt-0.5">ترخيص نقابي ومدني مسجل برقم: #BH-9824</span>
+<div class="flex items-center gap-1 mt-1 text-tertiary">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">4.8</span>
+<span class="font-caption text-caption text-on-surface-variant">(112 مراجعة محلية موثقة)</span>
+</div>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors" id="toggle-bookmark">
+<span class="material-symbols-outlined text-[20px]">bookmark_add</span>
+</button>
+</div>
+<!-- Agency Metrics Bento -->
+<div class="grid grid-cols-3 gap-space-sm pt-space-xs">
+<div class="bg-surface-container-low rounded-xl p-space-sm flex flex-col items-center justify-center text-center">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">18</span>
+<span class="font-caption text-caption text-on-surface-variant">عقار معروض</span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-sm flex flex-col items-center justify-center text-center">
+<span class="font-headline-lg text-headline-lg text-secondary font-bold">42</span>
+<span class="font-caption text-caption text-on-surface-variant">صفقة ناجحة</span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-sm flex flex-col items-center justify-center text-center">
+<span class="font-headline-lg text-headline-lg text-tertiary font-bold">7+</span>
+<span class="font-caption text-caption text-on-surface-variant">سنوات خبرة</span>
+</div>
+</div>
+<!-- Address & Location Tag -->
+<div class="flex items-center gap-space-xs text-on-surface-variant bg-surface-container-low/70 px-space-md py-space-sm rounded-lg">
+<span class="material-symbols-outlined text-primary text-[18px]">location_on</span>
+<span class="font-body-md text-body-md truncate">أبوحمص - تقاطع شارع المدارس بجوار مجمع المحاكم</span>
+</div>
+<!-- Direct Action Triggers -->
+<div class="grid grid-cols-2 gap-space-sm pt-space-xs">
+<a class="h-12 bg-primary text-on-primary rounded-xl flex items-center justify-center gap-space-xs font-label-lg text-label-lg font-bold shadow-sm hover:bg-primary-container active:scale-[0.98] transition-all" href="tel:01000000000">
+<span class="material-symbols-outlined text-[20px]">call</span>
+        اتصال بالمبيعات
+      </a>
+<a class="h-12 bg-secondary-container text-on-secondary-container rounded-xl flex items-center justify-center gap-space-xs font-label-lg text-label-lg font-bold hover:bg-secondary-fixed active:scale-[0.98] transition-all" href="https://wa.me/" target="_blank">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+        واتساب المكتب
+      </a>
+</div>
+</section>
+<!-- Agency Properties Showcase -->
+<section class="flex flex-col space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-5 bg-primary rounded-full"></span>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">معرض العقارات المتاحة</h2>
+</div>
+<span class="font-label-md text-label-md text-primary font-medium">عرض الكل (18)</span>
+</div>
+<!-- Category Filter Strip -->
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1 no-scrollbar text-right">
+<button class="px-space-md py-1.5 rounded-full bg-primary text-on-primary font-label-md text-label-md font-bold whitespace-nowrap shadow-sm">الكل</button>
+<button class="px-space-md py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md whitespace-nowrap hover:bg-surface-variant">شقق تمليك</button>
+<button class="px-space-md py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md whitespace-nowrap hover:bg-surface-variant">إيجار مفروش</button>
+<button class="px-space-md py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md whitespace-nowrap hover:bg-surface-variant">محلات وأراضي</button>
+</div>
+<!-- Listings Carousel / Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<!-- Property Card 1 -->
+<article class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_16px_rgba(15,81,50,0.05)] overflow-hidden flex flex-col group">
+<div class="relative h-44 w-full bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Modern spacious Egyptian apartment living room in warm sunlight, contemporary finishes, pristine tiled floors, elegant ceiling moulding, Abu Homs residential area real estate showcase, bright and inviting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCiNr8t5tDil120UO2GSebmD7pEL_5yyE6q2A2bkXXV450hcH5TvY1RWD0xqMIBdrjuC4-NwwHORq3yV8aWYQaZ6rsD1XfD3UcJEPs9-IlcqBDm69FQdmCbKA0EsDY8RC7Af-WwisuUVQnfed95xyd5AbMoCfYMl6RtXpNievEYr_qVczeYeKyt7rOqFBOwm8ITFdCD1avhq6S4z11kx-NDceA0AMawo0CvOpy1ueOi"/>
+<div class="absolute top-2.5 right-2.5 bg-primary/90 backdrop-blur-md text-on-primary font-label-md text-label-md px-space-sm py-0.5 rounded-full">
+            شقة للبيع
+          </div>
+<div class="absolute bottom-2.5 left-2.5 bg-surface-container-lowest/90 backdrop-blur-md text-primary font-label-lg text-label-lg font-bold px-space-sm py-0.5 rounded-lg shadow-sm">
+            850,000 ج.م
+          </div>
+</div>
+<div class="p-space-md flex flex-col space-y-space-xs text-right">
+<h3 class="font-title-md text-title-md text-on-surface font-bold truncate">شقة 145م² تشطيب سوبر لوكس بفيو مفتوح</h3>
+<p class="font-caption text-caption text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">pin_drop</span>
+            أبوحمص - شارع بورسعيد الرئيسي، الدور الرابع
+          </p>
+<div class="flex items-center justify-between pt-space-xs text-on-surface-variant font-label-md text-label-md border-t-0 bg-surface-container-low/50 p-space-xs rounded-lg">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">bed</span> 3 غرف</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">bathtub</span> 2 حمام</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">square_foot</span> 145 م²</span>
+</div>
+</div>
+</article>
+<!-- Property Card 2 -->
+<article class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_16px_rgba(15,81,50,0.05)] overflow-hidden flex flex-col group">
+<div class="relative h-44 w-full bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Commercial retail store front on a vibrant paved street in a bustling Egyptian town, clear glass facade, prime commercial visibility in central Abu Homs, architectural commercial exterior." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAr06hPehAuqR3DKPQOtZk7PD6GmCUno3HbJ_VVIzF9QZQxbCS5Ojwn1-xJILXJ0-agQXfWXx5K41tuvqBWK1fNpn1Q0FGLQJewilw0BpVWTl9bSfcmrNRwhQElTxAmte5tsGEWz19V0VupC2TBl1rUSTAAABPxIuzcl8jsQPbUS-msjOXKrzTp9keQbM2ptGZMe6UVoUBeJtVRGtL-l-bmC0iPAVzgDBN3KjC5RdWT"/>
+<div class="absolute top-2.5 right-2.5 bg-secondary/90 backdrop-blur-md text-on-secondary font-label-md text-label-md px-space-sm py-0.5 rounded-full">
+            محل للإيجار
+          </div>
+<div class="absolute bottom-2.5 left-2.5 bg-surface-container-lowest/90 backdrop-blur-md text-secondary font-label-lg text-label-lg font-bold px-space-sm py-0.5 rounded-lg shadow-sm">
+            6,500 ج.م / شهر
+          </div>
+</div>
+<div class="p-space-md flex flex-col space-y-space-xs text-right">
+<h3 class="font-title-md text-title-md text-on-surface font-bold truncate">محل تجاري 55م² بواجهة زجاجية كاملة</h3>
+<p class="font-caption text-caption text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">pin_drop</span>
+            أبوحمص - شارع المدارس التجاري، موقع مميز
+          </p>
+<div class="flex items-center justify-between pt-space-xs text-on-surface-variant font-label-md text-label-md border-t-0 bg-surface-container-low/50 p-space-xs rounded-lg">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">storefront</span> تجاري</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">electric_bolt</span> عداد تجاري</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">square_foot</span> 55 م²</span>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- Interactive Submission Section (Part 2) -->
+<section class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_16px_rgba(15,81,50,0.06)] p-space-lg flex flex-col space-y-space-lg text-right">
+<div class="flex items-center gap-space-xs">
+<div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">add_home_work</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary font-bold">إضافة عقار جديد للمراجعة والاعتماد</h2>
+<p class="font-caption text-caption text-on-surface-variant">قدّم عقارك ليظهر لآلاف العائلات والمستثمرين في مركز أبوحمص</p>
+</div>
+</div>
+<!-- Trust & Verification Notice Banner -->
+<div class="bg-primary-fixed/30 text-on-primary-fixed-variant p-space-md rounded-xl flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px] shrink-0 mt-0.5">verified_user</span>
+<div class="flex flex-col space-y-0.5">
+<span class="font-label-lg text-label-lg font-bold text-primary">تنبيه رقابي وضمان مصداقية</span>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+          يتم فحص ومراجعة كافة البيانات بمعرفة الفريق الرقابي لدليل أبوحمص خلال 48 ساعة قبل النشر العام للتحقق من أوراق التكليف والملكية وحماية المواطنين من الإعلانات الوهمية.
+        </p>
+</div>
+</div>
+<form class="flex flex-col space-y-space-md" id="property-form" onsubmit="event.preventDefault(); submitListing();">
+<!-- Advertiser Identity Switcher -->
+<div class="flex flex-col space-y-space-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold">صفة المُعلِن</label>
+<div class="grid grid-cols-2 gap-space-xs bg-surface-container p-1 rounded-xl">
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" name="advertiser_type" type="radio" value="office"/>
+<div class="py-2.5 text-center font-label-md text-label-md rounded-lg text-on-surface-variant peer-checked:bg-surface-container-lowest peer-checked:text-primary peer-checked:font-bold peer-checked:shadow-sm transition-all flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">domain</span>
+              مكتب عقاري معتمد
+            </div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="advertiser_type" type="radio" value="owner"/>
+<div class="py-2.5 text-center font-label-md text-label-md rounded-lg text-on-surface-variant peer-checked:bg-surface-container-lowest peer-checked:text-primary peer-checked:font-bold peer-checked:shadow-sm transition-all flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">person</span>
+              مالك مباشر للعقار
+            </div>
+</label>
+</div>
+</div>
+<!-- Offer Type Switcher -->
+<div class="flex flex-col space-y-space-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold">نوع العرض</label>
+<div class="grid grid-cols-2 gap-space-xs bg-surface-container p-1 rounded-xl">
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" name="offer_type" type="radio" value="sale"/>
+<div class="py-2 text-center font-label-md text-label-md rounded-lg text-on-surface-variant peer-checked:bg-surface-container-lowest peer-checked:text-primary peer-checked:font-bold peer-checked:shadow-sm transition-all">
+              للبيع والتمليك
+            </div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="offer_type" type="radio" value="rent"/>
+<div class="py-2 text-center font-label-md text-label-md rounded-lg text-on-surface-variant peer-checked:bg-surface-container-lowest peer-checked:text-primary peer-checked:font-bold peer-checked:shadow-sm transition-all">
+              للإيجار الشهري
+            </div>
+</label>
+</div>
+</div>
+<!-- Property Category Selector -->
+<div class="flex flex-col space-y-space-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold">تصنيف العقار</label>
+<div class="grid grid-cols-4 gap-space-xs text-center">
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" name="property_type" type="radio" value="apartment"/>
+<div class="py-2.5 px-1 rounded-xl bg-surface-container-low peer-checked:bg-primary peer-checked:text-on-primary text-on-surface transition-all flex flex-col items-center">
+<span class="material-symbols-outlined text-[20px] mb-0.5">apartment</span>
+<span class="font-caption text-caption font-semibold">شقة سكنية</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="property_type" type="radio" value="shop"/>
+<div class="py-2.5 px-1 rounded-xl bg-surface-container-low peer-checked:bg-primary peer-checked:text-on-primary text-on-surface transition-all flex flex-col items-center">
+<span class="material-symbols-outlined text-[20px] mb-0.5">store</span>
+<span class="font-caption text-caption font-semibold">محل تجاري</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="property_type" type="radio" value="land"/>
+<div class="py-2.5 px-1 rounded-xl bg-surface-container-low peer-checked:bg-primary peer-checked:text-on-primary text-on-surface transition-all flex flex-col items-center">
+<span class="material-symbols-outlined text-[20px] mb-0.5">terrain</span>
+<span class="font-caption text-caption font-semibold">أرض للبناء</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="property_type" type="radio" value="warehouse"/>
+<div class="py-2.5 px-1 rounded-xl bg-surface-container-low peer-checked:bg-primary peer-checked:text-on-primary text-on-surface transition-all flex flex-col items-center">
+<span class="material-symbols-outlined text-[20px] mb-0.5">warehouse</span>
+<span class="font-caption text-caption font-semibold">مخزن / ورشة</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Pricing & Area Metrics -->
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="flex flex-col space-y-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">السعر المطلوب (ج.م)</label>
+<div class="relative flex items-center">
+<input class="w-full h-12 bg-surface-container-low rounded-xl px-space-md text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:shadow-[0_0_0_2px_rgba(15,81,50,0.15)] text-right" placeholder="مثال: 750000" required="" type="number"/>
+<span class="absolute left-3 font-caption text-caption text-on-surface-variant pointer-events-none">ج.م</span>
+</div>
+</div>
+<div class="flex flex-col space-y-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">المساحة الإجمالية</label>
+<div class="relative flex items-center">
+<input class="w-full h-12 bg-surface-container-low rounded-xl px-space-md text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:shadow-[0_0_0_2px_rgba(15,81,50,0.15)] text-right" placeholder="مثال: 120" required="" type="number"/>
+<span class="absolute left-3 font-caption text-caption text-on-surface-variant pointer-events-none">م²</span>
+</div>
+</div>
+</div>
+<!-- Rooms, Bathrooms, Floor & Finishing -->
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="flex flex-col space-y-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">عدد الغرف والحمامات</label>
+<div class="flex items-center gap-space-xs">
+<select class="w-1/2 h-12 bg-surface-container-low rounded-xl px-space-xs text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none text-right">
+<option>1 غرفة</option>
+<option>2 غرف</option>
+<option selected="">3 غرف</option>
+<option>4+ غرف</option>
+</select>
+<select class="w-1/2 h-12 bg-surface-container-low rounded-xl px-space-xs text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none text-right">
+<option>1 حمام</option>
+<option selected="">2 حمام</option>
+<option>3 حمام</option>
+</select>
+</div>
+</div>
+<div class="flex flex-col space-y-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">الدور وحالة التشطيب</label>
+<div class="flex items-center gap-space-xs">
+<select class="w-1/2 h-12 bg-surface-container-low rounded-xl px-space-xs text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none text-right">
+<option>الأرضي</option>
+<option>الأول</option>
+<option>الثاني</option>
+<option selected="">الثالث</option>
+<option>متكرر</option>
+</select>
+<select class="w-1/2 h-12 bg-surface-container-low rounded-xl px-space-xs text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none text-right">
+<option>سوبر لوكس</option>
+<option>لوكس</option>
+<option>نصف تشطيب</option>
+<option>على المحارة</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Location within Abu Homs -->
+<div class="flex flex-col space-y-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">المنطقة والحي بأبوحمص</label>
+<select class="w-full h-12 bg-surface-container-low rounded-xl px-space-md text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none text-right" required="">
+<option value="">اختر المنطقة أو الحي...</option>
+<option selected="">شارع المدارس والمحكمة</option>
+<option>شارع بورسعيد ووسط البلد</option>
+<option>منطقة المحطة والسكة الحديد</option>
+<option>حي النصر والزهور</option>
+<option>طريق إسكندرية - القاهرة الزراعي (زمام أبوحمص)</option>
+<option>قرى وتوابع مركز أبوحمص</option>
+</select>
+</div>
+<div class="flex flex-col space-y-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">العنوان التفصيلي وأقرب علامة مميزة</label>
+<input class="w-full h-12 bg-surface-container-low rounded-xl px-space-md text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:shadow-[0_0_0_2px_rgba(15,81,50,0.15)] text-right" placeholder="مثال: متفرع من شارع المدارس خلف صيدلية السلام" required="" type="text"/>
+</div>
+<!-- Image Upload Component with Live Slots -->
+<div class="flex flex-col space-y-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold">صور العقار (3 صور على الأقل)</label>
+<span class="font-caption text-caption text-on-surface-variant" id="photo-count">تم اختيار 2 من 5</span>
+</div>
+<div class="grid grid-cols-3 gap-space-xs">
+<!-- Upload Slot 1 (Uploaded) -->
+<div class="relative h-24 rounded-xl overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Bright modern interior master bedroom with expansive aluminum windows, natural sunlight highlighting tiled floors in an Abu Homs apartment for sale." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZnytFo8Gctk5cm0SYBwA6ioXBjdfqNrt00lTRAcofHlrQmfGNHhsZHNi7Xa0xo9YDEDJS8lndYF38HWH_5L6wp61fsZ2sxjfNb2x_fZgfGAcbbir9M_pqGHqwHcZfnKgaHNFWOM7JlvKzsTp8G0xsWuhc-5IWin-VUORRETrkesa9lvk4z7mGsGJuEEwKgV_SDoKHHyvMsACF7GT0E7d0ZhvOAw5JE5HWkrRWjMk6"/>
+<span class="absolute top-1 right-1 bg-primary text-on-primary rounded-full w-5 h-5 flex items-center justify-center text-[12px]">
+<span class="material-symbols-outlined text-[14px]">done</span>
+</span>
+</div>
+<!-- Upload Slot 2 (Uploaded) -->
+<div class="relative h-24 rounded-xl overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Tiled modern kitchen interior with wooden cabinetry, clean countertops, prepared for listing in Egyptian residential building directory." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0v0XfBio7sbV_DRnih783PbLiCRQcQWH3lOXnN9avECbaQoeVOobusacMaU4geS22T-17osEDU3Nf-BdYgcuIWiwqIFNzWni2-UrmnvZgPmsKAbuWO6AQb5RPm4c7f2ckKDAqnZSosuFZBXYbOss8qprtohSamFoEsLYzrxgm6U7vLhBulKmnsnysMjCzW9Rqq2p2YGpO7epbVdP1Z5ROk_PzPcFQkBxIUuS9Ci_I"/>
+<span class="absolute top-1 right-1 bg-primary text-on-primary rounded-full w-5 h-5 flex items-center justify-center text-[12px]">
+<span class="material-symbols-outlined text-[14px]">done</span>
+</span>
+</div>
+<!-- Upload Slot 3 (Interactive Picker) -->
+<button class="h-24 rounded-xl bg-surface-container-low hover:bg-surface-container flex flex-col items-center justify-center text-on-surface-variant transition-colors group" type="button">
+<span class="material-symbols-outlined text-[28px] text-primary group-hover:scale-110 transition-transform">add_photo_alternate</span>
+<span class="font-caption text-caption mt-1 font-medium">إضافة صورة</span>
+</button>
+</div>
+</div>
+<!-- Contact Details -->
+<div class="pt-space-xs flex flex-col space-y-space-sm bg-surface-container-low/50 p-space-md rounded-xl">
+<span class="font-label-md text-label-md text-primary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">contact_phone</span>
+          بيانات الاتصال والتواصل المعتمدة
+        </span>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-xs">
+<div class="flex flex-col space-y-1">
+<label class="font-caption text-caption text-on-surface-variant">اسم المسؤول / المعلن</label>
+<input class="w-full h-11 bg-surface-container-lowest rounded-lg px-space-sm text-on-surface font-body-md text-body-md focus:outline-none text-right" required="" type="text" value="أحمد عبد العزيز (إدارة الدلتا)"/>
+</div>
+<div class="flex flex-col space-y-1">
+<label class="font-caption text-caption text-on-surface-variant">رقم الاتصال المباشر</label>
+<input class="w-full h-11 bg-surface-container-lowest rounded-lg px-space-sm text-on-surface font-body-md text-body-md focus:outline-none text-right" required="" type="tel" value="01098765432"/>
+</div>
+<div class="flex flex-col space-y-1">
+<label class="font-caption text-caption text-on-surface-variant">رقم الواتساب الرسمي</label>
+<input class="w-full h-11 bg-surface-container-lowest rounded-lg px-space-sm text-on-surface font-body-md text-body-md focus:outline-none text-right" required="" type="tel" value="01098765432"/>
+</div>
+</div>
+</div>
+<!-- Submission Button & Safeguard Disclaimer -->
+<div class="pt-space-xs flex flex-col space-y-space-xs">
+<button class="w-full h-14 bg-primary text-on-primary rounded-xl font-headline-md text-headline-md font-bold shadow-[0_4px_16px_rgba(15,81,50,0.2)] hover:bg-primary-container active:scale-[0.99] transition-all flex items-center justify-center gap-space-xs" id="submit-btn" type="submit">
+<span class="material-symbols-outlined text-[22px]">verified</span>
+          إرسال الإعلان للمراجعة والاعتماد
+        </button>
+<p class="font-caption text-caption text-on-surface-variant text-center leading-normal pt-1">
+          بالضغط على الإرسال، تقر بصحة البيانات وتحملك المسؤولية القانونية كاملة عن ملكية أو وكالة العقار المعروض وفق اشتراطات دليل أبوحمص الرقمي.
+        </p>
+</div>
+</form>
+</section>
+<!-- Interactive Feedback Dialog (Hidden by Default) -->
+<div class="hidden fixed inset-0 z-50 bg-on-surface/40 backdrop-blur-sm flex items-center justify-center p-margin" id="success-modal">
+<div class="bg-surface-container-lowest rounded-xl max-w-sm w-full p-space-lg shadow-2xl flex flex-col items-center text-center space-y-space-md animate-in fade-in zoom-in-95 duration-200">
+<div class="w-16 h-16 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[36px]" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+</div>
+<div class="flex flex-col space-y-1">
+<h3 class="font-headline-md text-headline-md text-primary font-bold">تم استلام طلب الإدراج بنجاح!</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          تم إرسال عقارك إلى مكاتب التدقيق المعتمدة بدليل أبوحمص. كود المراجعة الخاص بك: <span class="font-bold text-on-surface">#BH-7729</span>. سيصلك إشعار بالنتيجة خلال 48 ساعة.
+        </p>
+</div>
+<button class="w-full h-12 bg-primary text-on-primary rounded-xl font-label-lg text-label-lg font-bold" onclick="dismissModal()">
+        تم، العودة للعقارات
+      </button>
+</div>
+</div>
+</div>
+<script>
+  // Dynamic Tab highlight setup for Bottom Navigation
+  (function() {
+    const aqaratTab = document.querySelector('nav a[data-path="al-aqarat"]');
+    if (aqaratTab) {
+      aqaratTab.classList.remove('text-on-surface-variant');
+      aqaratTab.classList.add('bg-primary', 'text-on-primary', 'font-bold', 'shadow-[0_4px_16px_rgba(15,81,50,0.25)]');
+    }
+  })();
+
+  // Bookmark micro-interaction
+  const bookmarkBtn = document.getElementById('toggle-bookmark');
+  if (bookmarkBtn) {
+    let bookmarked = false;
+    bookmarkBtn.addEventListener('click', () => {
+      bookmarked = !bookmarked;
+      bookmarkBtn.innerHTML = bookmarked 
+        ? '<span class="material-symbols-outlined text-[20px] text-tertiary" style="font-variation-settings: \'FILL\' 1;">bookmark</span>'
+        : '<span class="material-symbols-outlined text-[20px]">bookmark_add</span>';
+    });
+  }
+
+  // Submission Handling
+  function submitListing() {
+    const modal = document.getElementById('success-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+  }
+
+  function dismissModal() {
+    const modal = document.getElementById('success-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe pointer-events-none px-margin mb-3" data-active-classes="bg-primary text-on-primary font-bold shadow-[0_4px_16px_rgba(15,81,50,0.25)]"><div class="pointer-events-auto max-w-md mx-auto h-16 bg-surface-container-lowest/90 backdrop-blur-xl rounded-full shadow-[0_8px_24px_rgba(15,81,50,0.12)] p-space-xs flex items-center justify-between"><a class="flex-1 h-full rounded-full flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-200" data-path="al-raisiya" href="#"><span class="material-symbols-outlined text-[20px]">cottage</span><span class="font-caption text-caption mt-0.5">الرئيسية</span></a><a aria-current="page" class="flex-1 h-full rounded-full flex flex-col items-center justify-center transition-all duration-200 bg-primary text-on-primary font-bold shadow-[0_4px_16px_rgba(15,81,50,0.25)]" data-path="al-aqarat" href="#"><span class="material-symbols-outlined text-[20px]">real_estate_agent</span><span class="font-caption text-caption mt-0.5">العقارات</span></a><a class="flex-1 h-full rounded-full flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-200" data-path="al-oroud" href="#"><span class="material-symbols-outlined text-[20px]">local_offer</span><span class="font-caption text-caption mt-0.5">العروض</span></a><a class="flex-1 h-full rounded-full flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-200" data-path="al-mazeed" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-caption text-caption mt-0.5">المزيد</span></a></div></nav></body></html>

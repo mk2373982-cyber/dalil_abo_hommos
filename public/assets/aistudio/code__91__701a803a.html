@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;font-family:'IBM Plex Sans Arabic',sans-serif;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-tertiary-fixed-variant":"#574500","primary-container":"#0f5132","surface-container-lowest":"#ffffff","surface-container":"#ebefed","on-secondary":"#ffffff","on-primary-fixed-variant":"#0f5132","on-error":"#ffffff","background":"#f7faf8","on-tertiary":"#ffffff","surface-container-low":"#f1f4f2","on-tertiary-fixed":"#241a00","tertiary-fixed-dim":"#e9c349","surface-container-high":"#e6e9e7","on-background":"#181c1c","inverse-surface":"#2d3130","on-surface":"#181c1c","on-secondary-container":"#1b7047","secondary":"#146c43","surface-dim":"#d7dbd9","outline-variant":"#c0c9c0","tertiary-container":"#cca730","secondary-fixed":"#a2f4c0","error-container":"#ffdad6","primary":"#003820","primary-fixed":"#b0f1c7","surface-tint":"#2d6a48","inverse-primary":"#95d4ac","on-error-container":"#93000a","secondary-fixed-dim":"#86d8a5","error":"#ba1a1a","secondary-container":"#9ff1bd","surface-bright":"#f7faf8","outline":"#707971","on-surface-variant":"#404942","on-tertiary-container":"#4f3d00","tertiary":"#735c00","tertiary-fixed":"#ffe088","surface-container-highest":"#e0e3e1","surface-variant":"#e0e3e1","on-primary-container":"#84c39b","surface":"#f7faf8","primary-fixed-dim":"#95d4ac","on-secondary-fixed-variant":"#005230","on-secondary-fixed":"#002110","on-primary":"#ffffff","inverse-on-surface":"#eef1ef","on-primary-fixed":"#002111"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"gutter-sm":"0.75rem","gutter":"1rem","space-sm":"0.5rem","space-md":"0.75rem","margin":"1rem","space-lg":"1.125rem","space-xl":"1.5rem","space-xs":"0.25rem","margin-lg":"1.25rem"},"fontFamily":{"title-md":["IBM Plex Sans"],"display-lg-mobile":["IBM Plex Sans"],"label-md":["IBM Plex Sans"],"caption":["IBM Plex Sans"],"body-lg":["IBM Plex Sans"],"body-md":["IBM Plex Sans"],"headline-lg":["IBM Plex Sans"],"label-lg":["IBM Plex Sans"],"headline-md":["IBM Plex Sans"],"display-lg":["IBM Plex Sans"]},"fontSize":{"title-md":["17px",{"lineHeight":"24px","fontWeight":"500"}],"display-lg-mobile":["26px",{"lineHeight":"36px","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"18px","fontWeight":"500"}],"caption":["11px",{"lineHeight":"16px","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"26px","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["22px",{"lineHeight":"32px","fontWeight":"600"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"600"}],"headline-md":["19px",{"lineHeight":"28px","fontWeight":"600"}],"display-lg":["32px",{"lineHeight":"44px","fontWeight":"700"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface min-h-screen selection:bg-secondary-container selection:text-on-secondary-container"><aside class="fixed right-0 top-0 h-full w-72 bg-surface-container-low z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center gap-space-md bg-surface-container-low"><div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary flex items-center justify-center shadow-[0_2px_8px_rgba(15,81,50,0.18)]"><span class="material-symbols-outlined text-[24px]">account_balance</span></div><div class="flex flex-col"><span class="font-headline-md text-headline-md text-primary font-bold leading-tight">دليل أبوحمص</span><span class="font-caption text-caption text-on-surface-variant font-medium">لوحة الإدارة المركزية والتشغيل</span></div></div><div class="px-space-lg py-space-sm"><div class="p-space-sm rounded-xl bg-surface-container flex items-center justify-between gap-space-xs"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-md text-label-md text-on-surface-variant">حالة النظام:</span></div><span class="font-label-md text-label-md text-secondary font-bold">99.98% متصل</span></div></div><nav class="flex flex-col gap-space-xs px-space-md mt-space-sm" data-active-classes="bg-primary-container text-on-primary font-bold shadow-[0_2px_8px_rgba(15,81,50,0.12)]"><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="overview" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">dashboard</span><span class="font-label-lg text-label-lg">لوحة الملخص والمؤشرات</span></div></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="places-management" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">storefront</span><span class="font-label-lg text-label-lg">إدارة وتدقيق الأماكن</span></div></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="requests-and-reports" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">mark_email_unread</span><span class="font-label-lg text-label-lg">مراجعة الطلبات والبلاغات</span></div><span class="bg-error text-on-error font-label-md text-caption px-space-xs py-0.5 rounded-full font-bold">14</span></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="promotions-and-banners" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">campaign</span><span class="font-label-lg text-label-lg">الإعلانات والعروض المميزة</span></div></a><a aria-current="page" class="group flex items-center justify-between px-space-md py-space-sm rounded-xl transition-all duration-150 bg-primary-container text-on-primary font-bold shadow-[0_2px_8px_rgba(15,81,50,0.12)]" data-path="accounts-and-profit-split" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">payments</span><span class="font-label-lg text-label-lg">الحسابات وأرباح الشريكين</span></div></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="data-import" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">upload_file</span><span class="font-label-lg text-label-lg">استيراد CSV والبيانات</span></div></a></nav></div><div class="p-space-lg"><div class="bg-surface-container-lowest p-space-md rounded-xl shadow-[0_1px_4px_rgba(15,81,50,0.06)]"><div class="flex items-center gap-space-sm mb-space-xs"><span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span><span class="font-label-md text-label-md text-on-surface font-semibold">نظام الإدارة البلدية</span></div><p class="font-caption text-caption text-on-surface-variant">مركز إدارة المحتوى التجاري والحكومي لمجلس مدينة أبوحمص، البحيرة.</p></div></div></aside><div class="pr-72"><header class="fixed top-0 left-0 right-72 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-space-xs rounded-xl shadow-[0_1px_4px_rgba(15,81,50,0.04)]"><span class="material-symbols-outlined text-secondary text-[20px]">handshake</span><div class="flex items-center gap-space-xs font-label-md text-label-md"><span class="text-on-surface-variant">حساب الشراكة:</span><span class="text-primary font-bold">رائد محمد (60% تشغيل ومبيعات)</span><span class="text-outline-variant">|</span><span class="text-secondary font-medium">محمد عبد الوهاب (40% تطوير واستضافة)</span></div><span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span></div></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-xs"><button class="relative p-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 left-1.5 w-2 h-2 rounded-full bg-error"></span></button><button class="p-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">help_outline</span></button></div><div class="h-6 w-px bg-surface-container-high"></div><div class="flex items-center gap-space-md"><div class="flex flex-col text-left"><span class="font-label-lg text-label-lg text-on-surface font-bold">مدير النظام التنفيذي</span><span class="font-caption text-caption text-secondary font-medium">سلطة تشغيل كاملة</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<div class="px-space-xl py-space-lg flex flex-col gap-space-xl">
+<!-- Sub-header & Action Bar -->
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-caption text-caption">
+<span>دليل أبوحمص</span>
+<span class="material-symbols-outlined text-[14px]">chevron_left</span>
+<span>الإدارة المالية والمحاسبة</span>
+<span class="material-symbols-outlined text-[14px]">chevron_left</span>
+<span class="text-primary font-bold">دفتر الأستاذ وتوزيع الأرباح</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary font-bold mt-space-xs">
+          نظام الحسابات وتوزيع أرباح الشريكين
+        </h1>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          عقد الشراكة المعتمد: حصة 60% للمبيعات والتشغيل الميداني، وحصة 40% للتطوير التقني والبنية التحتية.
+        </p>
+</div>
+<!-- Quick Action Buttons -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<button class="flex items-center gap-space-xs px-space-md py-space-sm rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg shadow-sm hover:bg-secondary transition-all" onclick="openWithdrawalModal('رائد محمد', 10780)" type="button">
+<span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+<span>صرف أرباح فورية</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-space-sm rounded-xl bg-surface-container-high text-primary font-label-lg text-label-lg hover:bg-surface-container-highest transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+<span>تسجيل إيراد جديد</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-space-sm rounded-xl bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">receipt_long</span>
+<span class="font-label-lg text-label-lg">إدراج مصروف</span>
+</button>
+<button class="p-space-sm rounded-xl bg-surface-container-high text-on-surface-variant hover:text-primary transition-all" title="تصدير التقرير" type="button">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+</div>
+<!-- Executive Financial KPIs (Level 1 Elevation) -->
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-space-md">
+<!-- Total Revenue -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.05)] relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant font-medium">إجمالي الإيرادات المحصلة</span>
+<div class="w-10 h-10 rounded-xl bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">trending_up</span>
+</div>
+</div>
+<div class="mt-space-md">
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display-lg text-display-lg font-bold text-primary">32,500</span>
+<span class="font-label-md text-label-md text-on-surface-variant">ج.م</span>
+</div>
+<div class="flex items-center gap-space-xs mt-space-xs text-secondary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+<span>+18.4% نمو إيرادات الاشتراكات الشهرية</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full mt-space-md overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 82%"></div>
+</div>
+</div>
+<!-- Approved Operating Expenses -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.05)] relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant font-medium">المصروفات التشغيلية المعتمدة</span>
+<div class="w-10 h-10 rounded-xl bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">payments</span>
+</div>
+</div>
+<div class="mt-space-md">
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display-lg text-display-lg font-bold text-on-surface">6,200</span>
+<span class="font-label-md text-label-md text-on-surface-variant">ج.م</span>
+</div>
+<div class="flex items-center gap-space-xs mt-space-xs text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">receipt</span>
+<span>19.07% نسبة التكاليف من الإيراد</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full mt-space-md overflow-hidden">
+<div class="bg-error h-full rounded-full" style="width: 19.07%"></div>
+</div>
+</div>
+<!-- Net Distributable Profit -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.05)] relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant font-medium">صافي الأرباح القابلة للتوزيع</span>
+<div class="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">calculate</span>
+</div>
+</div>
+<div class="mt-space-md">
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display-lg text-display-lg font-bold text-primary">26,300</span>
+<span class="font-label-md text-label-md text-on-surface-variant">ج.م</span>
+</div>
+<div class="flex items-center gap-space-xs mt-space-xs text-secondary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+<span>صافي محرر جاهز للتسوية الفورية</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full mt-space-md overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 100%"></div>
+</div>
+</div>
+<!-- Active Payout Status -->
+<div class="bg-surface-container-low p-space-lg rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.05)] flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant font-medium">حالة الخزينة والسيولة</span>
+<span class="px-space-xs py-0.5 rounded-md bg-secondary-container text-on-secondary-container font-caption text-caption font-bold">متطابقة ومقيدة</span>
+</div>
+<div class="flex flex-col gap-space-xs my-space-sm">
+<div class="flex items-center justify-between font-label-md text-label-md">
+<span class="text-on-surface-variant">المسحوبات السابقة:</span>
+<span class="text-on-surface font-bold">8,500 ج.م</span>
+</div>
+<div class="flex items-center justify-between font-label-md text-label-md">
+<span class="text-on-surface-variant">الرصيد المتبقي للصرف:</span>
+<span class="text-secondary font-bold">17,800 ج.م</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface-variant font-caption text-caption pt-space-xs">
+<span class="material-symbols-outlined text-[16px] text-tertiary-container">verified</span>
+<span>حساب بنكي تجاري + محافظ إلكترونية</span>
+</div>
+</div>
+</div>
+<!-- Partner Profit Split Cards (Core Contractual Division) -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-xl">
+<!-- Partner 1: رائد محمد (60%) -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.05)] flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-secondary-container/30 blur-2xl pointer-events-none"></div>
+<div>
+<!-- Top badge and Identity -->
+<div class="flex items-start justify-between gap-space-md mb-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-14 h-14 rounded-2xl bg-primary text-on-primary flex items-center justify-center font-headline-lg text-headline-lg font-bold shadow-md">
+                ر
+              </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface">رائد محمد</h3>
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span>
+</div>
+<span class="font-label-md text-label-md text-secondary font-semibold">شريك مؤسس ومدير تشغيل</span>
+<span class="font-caption text-caption text-on-surface-variant">إدارة البيانات والمبيعات والتشغيل الميداني لمدينة أبوحمص</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="px-space-md py-1 rounded-full bg-primary-container text-on-primary font-headline-md text-headline-md font-bold shadow-sm">
+                60%
+              </span>
+<span class="font-caption text-caption text-on-surface-variant mt-1">حصة الملكية والأرباح</span>
+</div>
+</div>
+<!-- Financial Breakdown Metric Box -->
+<div class="grid grid-cols-3 gap-space-sm p-space-md rounded-xl bg-surface-container-low mb-space-lg">
+<div class="flex flex-col">
+<span class="font-caption text-caption text-on-surface-variant">المستحق الشهري (60%)</span>
+<span class="font-title-md text-title-md font-bold text-on-surface mt-0.5">15,780 <span class="text-caption font-normal">ج.م</span></span>
+</div>
+<div class="flex flex-col">
+<span class="font-caption text-caption text-on-surface-variant">المسحوبات السابقة</span>
+<span class="font-title-md text-title-md font-bold text-error mt-0.5">-5,000 <span class="text-caption font-normal">ج.م</span></span>
+</div>
+<div class="flex flex-col">
+<span class="font-caption text-caption text-on-surface-variant">الرصيد المتاح للسحب</span>
+<span class="font-title-md text-title-md font-bold text-secondary mt-0.5" id="balance-raed">10,780 <span class="text-caption font-normal">ج.م</span></span>
+</div>
+</div>
+<!-- Live Contract & Activity Status -->
+<div class="flex flex-col gap-space-xs font-body-md text-body-md text-on-surface-variant mb-space-lg">
+<div class="flex items-center justify-between text-caption font-caption">
+<span>نسبة صرف المستحقات للشهر الحالي</span>
+<span class="font-bold text-on-surface">31.6% تم صرفه</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 31.6%"></div>
+</div>
+<div class="flex items-center justify-between pt-space-xs font-caption text-caption">
+<span>آخر دفعة مسحوبة: 2,500 ج.م عبر فودافون كاش</span>
+<span class="text-on-surface-variant">12 أكتوبر 2024</span>
+</div>
+</div>
+</div>
+<!-- Card Buttons -->
+<div class="flex items-center gap-space-sm pt-space-md border-t-0">
+<button class="flex-1 py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-space-xs hover:bg-secondary transition-colors" onclick="openWithdrawalModal('رائد محمد', 10780)" type="button">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+<span>طلب وتسجيل سحب أرباح</span>
+</button>
+<button class="py-space-sm px-space-md rounded-xl bg-surface-container-high text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-space-xs hover:bg-surface-container-highest transition-colors" onclick="filterTransactionsByPartner('رائد')" type="button">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+<span>كشف حساب تفصيلي</span>
+</button>
+</div>
+</div>
+<!-- Partner 2: محمد عبد الوهاب (40%) -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.05)] flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-tertiary-fixed/30 blur-2xl pointer-events-none"></div>
+<div>
+<!-- Top badge and Identity -->
+<div class="flex items-start justify-between gap-space-md mb-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-14 h-14 rounded-2xl bg-secondary text-on-secondary flex items-center justify-center font-headline-lg text-headline-lg font-bold shadow-md">
+                م
+              </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface">محمد عبد الوهاب</h3>
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span>
+</div>
+<span class="font-label-md text-label-md text-secondary font-semibold">شريك تقني ومسؤول النظم</span>
+<span class="font-caption text-caption text-on-surface-variant">البرمجة والتطوير التقني والاستضافة السحابية وقواعد البيانات</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="px-space-md py-1 rounded-full bg-secondary-container text-on-secondary-container font-headline-md text-headline-md font-bold shadow-sm">
+                40%
+              </span>
+<span class="font-caption text-caption text-on-surface-variant mt-1">حصة الملكية والأرباح</span>
+</div>
+</div>
+<!-- Financial Breakdown Metric Box -->
+<div class="grid grid-cols-3 gap-space-sm p-space-md rounded-xl bg-surface-container-low mb-space-lg">
+<div class="flex flex-col">
+<span class="font-caption text-caption text-on-surface-variant">المستحق الشهري (40%)</span>
+<span class="font-title-md text-title-md font-bold text-on-surface mt-0.5">10,520 <span class="text-caption font-normal">ج.م</span></span>
+</div>
+<div class="flex flex-col">
+<span class="font-caption text-caption text-on-surface-variant">المسحوبات السابقة</span>
+<span class="font-title-md text-title-md font-bold text-error mt-0.5">-3,500 <span class="text-caption font-normal">ج.م</span></span>
+</div>
+<div class="flex flex-col">
+<span class="font-caption text-caption text-on-surface-variant">الرصيد المتاح للسحب</span>
+<span class="font-title-md text-title-md font-bold text-secondary mt-0.5" id="balance-mohamed">7,020 <span class="text-caption font-normal">ج.م</span></span>
+</div>
+</div>
+<!-- Live Contract & Activity Status -->
+<div class="flex flex-col gap-space-xs font-body-md text-body-md text-on-surface-variant mb-space-lg">
+<div class="flex items-center justify-between text-caption font-caption">
+<span>نسبة صرف المستحقات للشهر الحالي</span>
+<span class="font-bold text-on-surface">33.2% تم صرفه</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 33.2%"></div>
+</div>
+<div class="flex items-center justify-between pt-space-xs font-caption text-caption">
+<span>آخر دفعة مسحوبة: 3,500 ج.م عبر InstaPay (حساب CIB)</span>
+<span class="text-on-surface-variant">08 أكتوبر 2024</span>
+</div>
+</div>
+</div>
+<!-- Card Buttons -->
+<div class="flex items-center gap-space-sm pt-space-md">
+<button class="flex-1 py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-space-xs hover:bg-secondary transition-colors" onclick="openWithdrawalModal('محمد عبد الوهاب', 7020)" type="button">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+<span>طلب وتسجيل سحب أرباح</span>
+</button>
+<button class="py-space-sm px-space-md rounded-xl bg-surface-container-high text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-space-xs hover:bg-surface-container-highest transition-colors" onclick="filterTransactionsByPartner('محمد')" type="button">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+<span>كشف حساب تفصيلي</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Interactive Profit Withdrawal Section & Visual Cashflow Overview -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+<!-- Withdrawal Execution Slip (In-page Live Controller) -->
+<div class="lg:col-span-5 bg-surface-container-lowest p-space-xl rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.05)] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">credit_card</span>
+</div>
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface">إيصال سحب وصرف أرباح الشريكين</h2>
+</div>
+<span class="font-caption text-caption px-space-xs py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-semibold">تنفيذ فوري</span>
+</div>
+<form class="flex flex-col gap-space-md" id="withdrawalForm" onsubmit="handleWithdrawalSubmit(event)">
+<!-- Partner Choice -->
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface font-medium">الشريك المستفيد:</label>
+<div class="grid grid-cols-2 gap-space-xs">
+<button class="py-space-sm px-space-xs rounded-xl bg-primary-container text-on-primary text-center font-label-md text-label-md font-bold flex flex-col items-center justify-center" id="btn-partner-raed" onclick="selectPartner('رائد محمد', 10780)" type="button">
+<span>رائد محمد (60%)</span>
+<span class="text-caption font-normal text-secondary-fixed">متاح: 10,780 ج.م</span>
+</button>
+<button class="py-space-sm px-space-xs rounded-xl bg-surface-container-high text-on-surface text-center font-label-md text-label-md flex flex-col items-center justify-center" id="btn-partner-mohamed" onclick="selectPartner('محمد عبد الوهاب', 7020)" type="button">
+<span>محمد عبد الوهاب (40%)</span>
+<span class="text-caption font-normal text-on-surface-variant">متاح: 7,020 ج.م</span>
+</button>
+</div>
+</div>
+<!-- Amount to Withdraw -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface font-medium">مبلغ السحب (ج.م):</label>
+<span class="font-caption text-caption text-secondary font-bold" id="selectedPartnerLabel">الحد الأقصى: 10,780 ج.م</span>
+</div>
+<div class="relative">
+<input class="w-full h-12 px-space-md rounded-xl bg-surface-container-low text-on-surface font-headline-md text-headline-md font-bold focus:outline-none focus:ring-2 focus:ring-secondary pl-12" id="withdrawAmount" max="10780" min="100" required="" type="number" value="5000"/>
+<span class="absolute left-4 top-3 font-label-md text-label-md text-on-surface-variant font-bold">ج.م</span>
+</div>
+<!-- Percentage Quick Selectors -->
+<div class="flex items-center gap-space-xs mt-1">
+<button class="flex-1 py-1 rounded-lg bg-surface-container text-caption font-caption text-on-surface hover:bg-surface-container-high" onclick="setWithdrawPercentage(0.25)" type="button">25% ربع الحصة</button>
+<button class="flex-1 py-1 rounded-lg bg-surface-container text-caption font-caption text-on-surface hover:bg-surface-container-high" onclick="setWithdrawPercentage(0.50)" type="button">50% نصف الحصة</button>
+<button class="flex-1 py-1 rounded-lg bg-surface-container text-caption font-caption text-on-surface hover:bg-surface-container-high" onclick="setWithdrawPercentage(1.0)" type="button">100% كامل الرصيد</button>
+</div>
+</div>
+<!-- Payout Method -->
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface font-medium">طريقة الصرف والتحويل:</label>
+<div class="grid grid-cols-2 gap-space-xs font-label-md text-label-md">
+<label class="flex items-center gap-space-xs p-space-xs rounded-xl bg-surface-container-low cursor-pointer">
+<input checked="" class="accent-primary" name="payoutMethod" type="radio" value="InstaPay"/>
+<span class="font-label-md text-label-md text-on-surface font-medium">InstaPay (فوري)</span>
+</label>
+<label class="flex items-center gap-space-xs p-space-xs rounded-xl bg-surface-container-low cursor-pointer">
+<input class="accent-primary" name="payoutMethod" type="radio" value="Vodafone Cash"/>
+<span class="font-label-md text-label-md text-on-surface font-medium">فودافون كاش</span>
+</label>
+<label class="flex items-center gap-space-xs p-space-xs rounded-xl bg-surface-container-low cursor-pointer">
+<input class="accent-primary" name="payoutMethod" type="radio" value="Bank Transfer"/>
+<span class="font-label-md text-label-md text-on-surface font-medium">تحويل بنكي (CIB/الأهلي)</span>
+</label>
+<label class="flex items-center gap-space-xs p-space-xs rounded-xl bg-surface-container-low cursor-pointer">
+<input class="accent-primary" name="payoutMethod" type="radio" value="Cash Handover"/>
+<span class="font-label-md text-label-md text-on-surface font-medium">تسليم نقدي مباشر</span>
+</label>
+</div>
+</div>
+<!-- Notes & Receipt Ref -->
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface font-medium">البيان ورقم المرجع البنكي:</label>
+<input class="w-full h-11 px-space-md rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-secondary" id="transactionRef" placeholder="مثال: رقم تحويل InstaPay #783921 أو محضر الصرف" type="text"/>
+</div>
+<!-- Dual Authorization Toggle -->
+<div class="p-space-sm rounded-xl bg-surface-container flex items-start gap-space-sm">
+<input checked="" class="mt-1 accent-primary w-4 h-4 rounded" id="dualAuthConfirm" required="" type="checkbox"/>
+<label class="font-caption text-caption text-on-surface cursor-pointer select-none" for="dualAuthConfirm">
+<strong>مصادقة الحساب المشترك:</strong> أقر بصفتي مديراً للنظام بتسجيل هذه المعاملة رسمياً في سجل الشركة وإشعار الشريكين فور إتمام العملية.
+              </label>
+</div>
+<!-- Submit CTA -->
+<button class="w-full h-12 rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-space-xs hover:bg-secondary transition-all shadow-md" type="submit">
+<span class="material-symbols-outlined text-[20px]">task_alt</span>
+<span>تأكيد وصرف السحب وتحديث الرصيد فوراً</span>
+</button>
+</form>
+</div>
+</div>
+<!-- Financial Distribution Analytics & Visual Ratio -->
+<div class="lg:col-span-7 bg-surface-container-lowest p-space-xl rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.05)] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex flex-col">
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface">تحليل التدفق النقدي وعوائد الشراكة</h2>
+<span class="font-caption text-caption text-on-surface-variant">توزيع العوائد لشهر أكتوبر 2024 وفق عقد تأسيس "دليل أبوحمص"</span>
+</div>
+<span class="px-space-sm py-1 rounded-full bg-surface-container-high font-label-md text-label-md text-on-surface">إقفال منتصف الشهر</span>
+</div>
+<!-- Ratio Visual Bar -->
+<div class="p-space-md rounded-xl bg-surface-container-low mb-space-lg">
+<div class="flex items-center justify-between font-label-md text-label-md mb-2">
+<span class="text-primary font-bold">رائد محمد (60%): 15,780 ج.م</span>
+<span class="text-secondary font-bold">محمد عبد الوهاب (40%): 10,520 ج.م</span>
+</div>
+<div class="w-full h-4 rounded-full flex overflow-hidden shadow-inner">
+<div class="bg-primary h-full transition-all" style="width: 60%" title="رائد محمد - 60%"></div>
+<div class="bg-secondary-container h-full transition-all" style="width: 40%" title="محمد عبد الوهاب - 40%"></div>
+</div>
+<div class="flex items-center justify-between font-caption text-caption text-on-surface-variant mt-2">
+<span>مسؤولية: المبيعات، المحتوى، التشغيل المحلي، رعاية المحال</span>
+<span>مسؤولية: السيرفر، تطبيق الويب، واجهات الـ API وقاعدة البيانات</span>
+</div>
+</div>
+<!-- Embedded SVG Chart: Breakdown of Revenue Sources and Operational Cost -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold mb-space-xs">مصادر الإيرادات المحصلة (32,500 ج.م)</span>
+<!-- SVG Donut Chart Minimal -->
+<div class="flex items-center justify-center my-space-sm relative">
+<svg class="w-28 h-28 transform -rotate-90" viewbox="0 0 36 36">
+<!-- Background circle -->
+<path class="text-surface-container-high" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4"></path>
+<!-- Subscriptions (65%) -->
+<path class="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="65, 100" stroke-width="4"></path>
+<!-- Sponsored Banners (25%) -->
+<path class="text-secondary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="25, 100" stroke-dashoffset="-65" stroke-width="4"></path>
+<!-- Featured verification (10%) -->
+<path class="text-tertiary-container" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="10, 100" stroke-dashoffset="-90" stroke-width="4"></path>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-headline-md text-headline-md font-bold text-primary">100%</span>
+<span class="font-caption text-caption text-on-surface-variant">تحصيل</span>
+</div>
+</div>
+<div class="flex flex-col gap-1 font-caption text-caption text-on-surface-variant">
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span> اشتراكات المتاجر (باقة سنوية)</span>
+<span class="font-bold text-on-surface">21,125 ج.م (65%)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-secondary"></span> بنرات وإعلانات مميزة بالرئيسية</span>
+<span class="font-bold text-on-surface">8,125 ج.م (25%)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary-container"></span> رسوم توثيق وتصوير تجاري</span>
+<span class="font-bold text-on-surface">3,250 ج.م (10%)</span>
+</div>
+</div>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold mb-space-xs">توزيع المصاريف التشغيلية (6,200 ج.م)</span>
+<div class="flex flex-col gap-space-sm my-space-xs">
+<!-- Bar item 1 -->
+<div>
+<div class="flex items-center justify-between font-caption text-caption mb-1">
+<span>خادم سحابي وقواعد بيانات (Managed DB + CDN)</span>
+<span class="font-bold text-on-surface">2,400 ج.م (38.7%)</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 38.7%"></div>
+</div>
+</div>
+<!-- Bar item 2 -->
+<div>
+<div class="flex items-center justify-between font-caption text-caption mb-1">
+<span>حزم رسائل WhatsApp API وتأكيد الهوية (OTP)</span>
+<span class="font-bold text-on-surface">1,800 ج.م (29.0%)</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-secondary-container h-full rounded-full" style="width: 29%"></div>
+</div>
+</div>
+<!-- Bar item 3 -->
+<div>
+<div class="flex items-center justify-between font-caption text-caption mb-1">
+<span>مطبوعات QR وستيكرات المتاجر المعتمدة بأبوحمص</span>
+<span class="font-bold text-on-surface">1,200 ج.م (19.3%)</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-outline h-full rounded-full" style="width: 19.3%"></div>
+</div>
+</div>
+<!-- Bar item 4 -->
+<div>
+<div class="flex items-center justify-between font-caption text-caption mb-1">
+<span>عمولات تحصيل ومحافظ إلكترونية وبنكية</span>
+<span class="font-bold text-on-surface">800 ج.م (12.9%)</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-tertiary-container h-full rounded-full" style="width: 12.9%"></div>
+</div>
+</div>
+</div>
+<div class="mt-space-xs p-space-xs rounded-lg bg-surface-container flex items-center justify-between text-caption font-caption">
+<span>تاريخ التدقيق المحاسبي: اليوم 10:30 ص</span>
+<span class="text-secondary font-bold">معتمد بالفواتير</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between text-caption font-caption text-on-surface-variant">
+<span>* يتم إقفال الدفتر واحتساب نسب التوزيع في اليوم الأخير من كل شهر ميلادي تلقائياً.</span>
+<button class="text-primary font-bold hover:underline flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">history_edu</span>
+<span>عرض بنود العقد المالي الموثق</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Detailed Ledger & Transactions Audit Table -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.05)]">
+<!-- Table Header Bar -->
+<div class="flex flex-wrap items-center justify-between gap-space-md mb-space-lg">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-xl bg-surface-container-high text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">list_alt</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface">سجل العمليات المالية ودفتر الأستاذ الميداني</h3>
+<span class="font-caption text-caption text-on-surface-variant">تسجيل رقمي موثق لكافة الإيرادات والمصروفات ومسحوبات الأرباح للشريكين</span>
+</div>
+</div>
+<!-- Filter Pills -->
+<div class="flex items-center gap-space-xs">
+<button class="ledger-filter-btn px-space-md py-1 rounded-full bg-primary-container text-on-primary font-label-md text-label-md font-bold" onclick="filterLedger('all')" type="button">الكل (12)</button>
+<button class="ledger-filter-btn px-space-md py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:text-on-surface" onclick="filterLedger('income')" type="button">الإيرادات (+)</button>
+<button class="ledger-filter-btn px-space-md py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:text-on-surface" onclick="filterLedger('expense')" type="button">المصروفات (-)</button>
+<button class="ledger-filter-btn px-space-md py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:text-on-surface" onclick="filterLedger('withdrawal')" type="button">مسحوبات الشريكين</button>
+</div>
+</div>
+<!-- Live Ledger Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-right" id="ledgerTable">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md">
+<th class="py-space-sm px-space-md rounded-r-xl">رقم الحركة والتاريخ</th>
+<th class="py-space-sm px-space-md">نوع المعاملة</th>
+<th class="py-space-sm px-space-md">البيان والجهة المعنية</th>
+<th class="py-space-sm px-space-md">المبلغ المحتسب</th>
+<th class="py-space-sm px-space-md">الطرف المستفيد / المسؤول</th>
+<th class="py-space-sm px-space-md">وسيلة الدفع والتوثيق</th>
+<th class="py-space-sm px-space-md rounded-l-xl">الحالة والمصادقة</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md divide-y-0">
+<!-- Row 1: Partner Withdrawal -->
+<tr class="ledger-row hover:bg-surface-container-low transition-colors" data-partner="رائد" data-type="withdrawal">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface">#TRX-9482</span>
+<span class="font-caption text-caption text-on-surface-variant">اليوم، 11:20 ص</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="px-space-xs py-0.5 rounded-full bg-error-container text-on-error-container font-caption text-caption font-bold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[14px]">arrow_outward</span>
+                  سحب أرباح
+                </span>
+</td>
+<td class="py-space-md px-space-md font-medium text-on-surface">
+                دفعة أرباح نقدية مرحلية - رائد محمد
+                <span class="block font-caption text-caption text-on-surface-variant">خصم من الرصيد المتراكم لحصة 60%</span>
+</td>
+<td class="py-space-md px-space-md font-bold text-error">
+                -2,500 ج.م
+              </td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-xs">
+<div class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-[11px] font-bold">ر</div>
+<span class="font-label-md text-label-md text-on-surface">رائد محمد (تشغيل)</span>
+</div>
+</td>
+<td class="py-space-md px-space-md font-caption text-caption text-on-surface-variant">
+                فودافون كاش (محفظة رقم 010...44)
+              </td>
+<td class="py-space-md px-space-md">
+<span class="px-space-xs py-0.5 rounded-md bg-secondary-container text-on-secondary-container font-caption text-caption font-bold">
+                  تم الصرف ومطابق
+                </span>
+</td>
+</tr>
+<!-- Row 2: Subscriptions Income -->
+<tr class="ledger-row hover:bg-surface-container-low transition-colors" data-partner="all" data-type="income">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface">#TRX-9480</span>
+<span class="font-caption text-caption text-on-surface-variant">أمس، 05:40 م</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="px-space-xs py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-caption text-caption font-bold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[14px]">south_west</span>
+                  إيراد اشتراك
+                </span>
+</td>
+<td class="py-space-md px-space-md font-medium text-on-surface">
+                اشتراك سنوي - صيدلية الشفاء (شارع المعهد الديني)
+                <span class="block font-caption text-caption text-on-surface-variant">باقة التميز الذهبي + شارة التوثيق الرسمي</span>
+</td>
+<td class="py-space-md px-space-md font-bold text-secondary">
+                +1,800 ج.م
+              </td>
+<td class="py-space-md px-space-md">
+<span class="font-label-md text-label-md text-on-surface">خزينة المنصة (مشترك)</span>
+</td>
+<td class="py-space-md px-space-md font-caption text-caption text-on-surface-variant">
+                InstaPay رقم مرجع #91024
+              </td>
+<td class="py-space-md px-space-md">
+<span class="px-space-xs py-0.5 rounded-md bg-secondary-container text-on-secondary-container font-caption text-caption font-bold">
+                  محصل وموزع
+                </span>
+</td>
+</tr>
+<!-- Row 3: Technical Expense (محمد عبد الوهاب) -->
+<tr class="ledger-row hover:bg-surface-container-low transition-colors" data-partner="محمد" data-type="expense">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface">#TRX-9478</span>
+<span class="font-caption text-caption text-on-surface-variant">14 أكتوبر، 02:15 م</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="px-space-xs py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-caption text-caption font-bold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+                  مصروف استضافة
+                </span>
+</td>
+<td class="py-space-md px-space-md font-medium text-on-surface">
+                تجديد خوادم التطبيق وقاعدة البيانات السحابية (DigitalOcean + S3)
+                <span class="block font-caption text-caption text-on-surface-variant">فاتورة رقم #INV-4921 معتمدة ومرفقة</span>
+</td>
+<td class="py-space-md px-space-md font-bold text-error">
+                -2,400 ج.م
+              </td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-xs">
+<div class="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center text-[11px] font-bold">م</div>
+<span class="font-label-md text-label-md text-on-surface">محمد عبد الوهاب (تقني)</span>
+</div>
+</td>
+<td class="py-space-md px-space-md font-caption text-caption text-on-surface-variant">
+                بطاقة فيزا ائتمانية بنك CIB
+              </td>
+<td class="py-space-md px-space-md">
+<span class="px-space-xs py-0.5 rounded-md bg-surface-container-high text-on-surface-variant font-caption text-caption font-bold">
+                  معتمد ومخصوم
+                </span>
+</td>
+</tr>
+<!-- Row 4: Partner Withdrawal (محمد عبد الوهاب) -->
+<tr class="ledger-row hover:bg-surface-container-low transition-colors" data-partner="محمد" data-type="withdrawal">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface">#TRX-9472</span>
+<span class="font-caption text-caption text-on-surface-variant">08 أكتوبر، 04:30 م</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="px-space-xs py-0.5 rounded-full bg-error-container text-on-error-container font-caption text-caption font-bold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[14px]">arrow_outward</span>
+                  سحب أرباح
+                </span>
+</td>
+<td class="py-space-md px-space-md font-medium text-on-surface">
+                دفعة أرباح بنكية - محمد عبد الوهاب
+                <span class="block font-caption text-caption text-on-surface-variant">خصم من الرصيد المتراكم لحصة 40%</span>
+</td>
+<td class="py-space-md px-space-md font-bold text-error">
+                -3,500 ج.م
+              </td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-xs">
+<div class="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center text-[11px] font-bold">م</div>
+<span class="font-label-md text-label-md text-on-surface">محمد عبد الوهاب (تقني)</span>
+</div>
+</td>
+<td class="py-space-md px-space-md font-caption text-caption text-on-surface-variant">
+                InstaPay تحويل فوري (حساب 1000...)
+              </td>
+<td class="py-space-md px-space-md">
+<span class="px-space-xs py-0.5 rounded-md bg-secondary-container text-on-secondary-container font-caption text-caption font-bold">
+                  تم الصرف ومطابق
+                </span>
+</td>
+</tr>
+<!-- Row 5: Operational Field Expense -->
+<tr class="ledger-row hover:bg-surface-container-low transition-colors" data-partner="رائد" data-type="expense">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface">#TRX-9469</span>
+<span class="font-caption text-caption text-on-surface-variant">05 أكتوبر، 01:10 م</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="px-space-xs py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-caption text-caption font-bold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[14px]">print</span>
+                  مصروف تسويق ميداني
+                </span>
+</td>
+<td class="py-space-md px-space-md font-medium text-on-surface">
+                طباعة 500 ستيكر QR وبوسترات للمحلات والمطاعم بوسط أبوحمص
+                <span class="block font-caption text-caption text-on-surface-variant">مطبعة الأهرام بالبحيرة - إيصال استلام</span>
+</td>
+<td class="py-space-md px-space-md font-bold text-error">
+                -1,200 ج.م
+              </td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-xs">
+<div class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-[11px] font-bold">ر</div>
+<span class="font-label-md text-label-md text-on-surface">رائد محمد (تشغيل)</span>
+</div>
+</td>
+<td class="py-space-md px-space-md font-caption text-caption text-on-surface-variant">
+                نقداً بموجب إيصال الصرف
+              </td>
+<td class="py-space-md px-space-md">
+<span class="px-space-xs py-0.5 rounded-md bg-surface-container-high text-on-surface-variant font-caption text-caption font-bold">
+                  معتمد ومخصوم
+                </span>
+</td>
+</tr>
+<!-- Row 6: Sponsored Ad Income -->
+<tr class="ledger-row hover:bg-surface-container-low transition-colors" data-partner="all" data-type="income">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface">#TRX-9460</span>
+<span class="font-caption text-caption text-on-surface-variant">02 أكتوبر، 07:00 م</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="px-space-xs py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-caption text-caption font-bold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[14px]">campaign</span>
+                  إيراد إعلاني
+                </span>
+</td>
+<td class="py-space-md px-space-md font-medium text-on-surface">
+                حملة إعلان رئيسية - هايبر ماركت المدينة (أبوحمص)
+                <span class="block font-caption text-caption text-on-surface-variant">بانر مثبت في واجهة الدليل لمدة شهر</span>
+</td>
+<td class="py-space-md px-space-md font-bold text-secondary">
+                +4,500 ج.م
+              </td>
+<td class="py-space-md px-space-md">
+<span class="font-label-md text-label-md text-on-surface">خزينة المنصة (مشترك)</span>
+</td>
+<td class="py-space-md px-space-md font-caption text-caption text-on-surface-variant">
+                تحويل بنك مصر #3301
+              </td>
+<td class="py-space-md px-space-md">
+<span class="px-space-xs py-0.5 rounded-md bg-secondary-container text-on-secondary-container font-caption text-caption font-bold">
+                  محصل وموزع
+                </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination / Footer Info -->
+<div class="flex flex-wrap items-center justify-between gap-space-md pt-space-md mt-space-md text-on-surface-variant font-caption text-caption">
+<div class="flex items-center gap-space-xs">
+<span>عرض 6 من أصل 12 حركة مقيدة في هذا الشهر</span>
+<span class="text-outline-variant">•</span>
+<span class="text-secondary font-bold">كافة السجلات موقعة إلكترونياً ومشفرة</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-md py-1 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container font-label-md text-label-md disabled:opacity-50" type="button">السابق</button>
+<span class="px-space-sm font-bold text-primary font-label-md text-label-md">صفحة 1 من 2</span>
+<button class="px-space-md py-1 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container font-label-md text-label-md" type="button">التالي</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Notification Toast for interactive withdrawals -->
+<div class="fixed bottom-6 left-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none" id="toastNotification">
+<div class="p-space-md rounded-xl bg-primary text-on-primary shadow-2xl flex items-center gap-space-md">
+<span class="material-symbols-outlined text-[24px] text-secondary-fixed">check_circle</span>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg font-bold" id="toastTitle">تم تسجيل العملية بنجاح</span>
+<span class="font-caption text-caption text-surface-variant" id="toastMessage">تم خصم المبلغ من الرصيد وتحديث دفتر الأستاذ فوراً.</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+  let activePartner = 'رائد محمد';
+  let activeMaxAmount = 10780;
+
+  function selectPartner(name, max) {
+    activePartner = name;
+    activeMaxAmount = max;
+
+    const btnRaed = document.getElementById('btn-partner-raed');
+    const btnMohamed = document.getElementById('btn-partner-mohamed');
+    const amountInput = document.getElementById('withdrawAmount');
+    const maxLabel = document.getElementById('selectedPartnerLabel');
+
+    if (name === 'رائد محمد') {
+      btnRaed.className = "py-space-sm px-space-xs rounded-xl bg-primary-container text-on-primary text-center font-label-md text-label-md font-bold flex flex-col items-center justify-center";
+      btnRaed.querySelector('span:last-child').className = "text-caption font-normal text-secondary-fixed";
+      btnMohamed.className = "py-space-sm px-space-xs rounded-xl bg-surface-container-high text-on-surface text-center font-label-md text-label-md flex flex-col items-center justify-center";
+      btnMohamed.querySelector('span:last-child').className = "text-caption font-normal text-on-surface-variant";
+    } else {
+      btnMohamed.className = "py-space-sm px-space-xs rounded-xl bg-secondary text-on-secondary text-center font-label-md text-label-md font-bold flex flex-col items-center justify-center";
+      btnMohamed.querySelector('span:last-child').className = "text-caption font-normal text-secondary-fixed";
+      btnRaed.className = "py-space-sm px-space-xs rounded-xl bg-surface-container-high text-on-surface text-center font-label-md text-label-md flex flex-col items-center justify-center";
+      btnRaed.querySelector('span:last-child').className = "text-caption font-normal text-on-surface-variant";
+    }
+
+    amountInput.max = max;
+    if (parseFloat(amountInput.value) > max) {
+      amountInput.value = max;
+    }
+    maxLabel.innerText = "الحد الأقصى: " + max.toLocaleString('ar-EG') + " ج.م";
+  }
+
+  function setWithdrawPercentage(ratio) {
+    const amountInput = document.getElementById('withdrawAmount');
+    const calculated = Math.round(activeMaxAmount * ratio);
+    amountInput.value = calculated;
+  }
+
+  function openWithdrawalModal(partnerName, balance) {
+    selectPartner(partnerName, balance);
+    const formElement = document.getElementById('withdrawalForm');
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('withdrawAmount').focus();
+    }
+  }
+
+  function handleWithdrawalSubmit(e) {
+    e.preventDefault();
+    const amountVal = parseFloat(document.getElementById('withdrawAmount').value);
+    const method = document.querySelector('input[name="payoutMethod"]:checked').value;
+    const ref = document.getElementById('transactionRef').value || 'تسجيل يدوي فوري';
+
+    if (amountVal > activeMaxAmount) {
+      showToast('خطأ في العملية', 'المبلغ المطلوب يتجاوز الرصيد المتاح لهذا الشريك');
+      return;
+    }
+
+    // Update partner balances on screen
+    if (activePartner === 'رائد محمد') {
+      const current = 10780;
+      const updated = current - amountVal;
+      document.getElementById('balance-raed').innerHTML = updated.toLocaleString('ar-EG') + ' <span class="text-caption font-normal">ج.م</span>';
+      selectPartner('رائد محمد', updated);
+    } else {
+      const current = 7020;
+      const updated = current - amountVal;
+      document.getElementById('balance-mohamed').innerHTML = updated.toLocaleString('ar-EG') + ' <span class="text-caption font-normal">ج.م</span>';
+      selectPartner('محمد عبد الوهاب', updated);
+    }
+
+    // Prepend row to table
+    const tableBody = document.querySelector('#ledgerTable tbody');
+    const newTr = document.createElement('tr');
+    newTr.className = "ledger-row hover:bg-surface-container-low transition-colors bg-secondary-container/20";
+    newTr.setAttribute('data-type', 'withdrawal');
+    newTr.setAttribute('data-partner', activePartner.includes('رائد') ? 'رائد' : 'محمد');
+
+    const partnerInitial = activePartner.includes('رائد') ? 'ر' : 'م';
+    const partnerRole = activePartner.includes('رائد') ? 'تشغيل' : 'تقني';
+    const partnerBg = activePartner.includes('رائد') ? 'bg-primary' : 'bg-secondary';
+
+    newTr.innerHTML = `
+      <td class="py-space-md px-space-md">
+        <div class="flex flex-col">
+          <span class="font-bold text-on-surface">#TRX-${Math.floor(1000 + Math.random() * 9000)}</span>
+          <span class="font-caption text-caption text-secondary font-bold">الآن (مباشر)</span>
+        </div>
+      </td>
+      <td class="py-space-md px-space-md">
+        <span class="px-space-xs py-0.5 rounded-full bg-error-container text-on-error-container font-caption text-caption font-bold flex items-center gap-1 w-max">
+          <span class="material-symbols-outlined text-[14px]">arrow_outward</span>
+          سحب أرباح
+        </span>
+      </td>
+      <td class="py-space-md px-space-md font-medium text-on-surface">
+        صرف أرباح معتمد - ${activePartner}
+        <span class="block font-caption text-caption text-on-surface-variant">${ref}</span>
+      </td>
+      <td class="py-space-md px-space-md font-bold text-error">
+        -${amountVal.toLocaleString('ar-EG')} ج.م
+      </td>
+      <td class="py-space-md px-space-md">
+        <div class="flex items-center gap-space-xs">
+          <div class="w-6 h-6 rounded-full ${partnerBg} text-on-primary flex items-center justify-center text-[11px] font-bold">${partnerInitial}</div>
+          <span class="font-label-md text-label-md text-on-surface">${activePartner} (${partnerRole})</span>
+        </div>
+      </td>
+      <td class="py-space-md px-space-md font-caption text-caption text-on-surface-variant">
+        ${method}
+      </td>
+      <td class="py-space-md px-space-md">
+        <span class="px-space-xs py-0.5 rounded-md bg-secondary-container text-on-secondary-container font-caption text-caption font-bold">
+          تم الخصم والمزامنة
+        </span>
+      </td>
+    `;
+    tableBody.insertBefore(newTr, tableBody.firstChild);
+
+    showToast('تم صرف وسحب الأرباح', `تم تسجيل صرف ${amountVal.toLocaleString('ar-EG')} ج.م للشريك ${activePartner} بنجاح.`);
+    document.getElementById('transactionRef').value = '';
+  }
+
+  function filterLedger(type) {
+    const buttons = document.querySelectorAll('.ledger-filter-btn');
+    buttons.forEach(b => {
+      b.className = "ledger-filter-btn px-space-md py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:text-on-surface";
+    });
+    event.currentTarget.className = "ledger-filter-btn px-space-md py-1 rounded-full bg-primary-container text-on-primary font-label-md text-label-md font-bold";
+
+    const rows = document.querySelectorAll('.ledger-row');
+    rows.forEach(r => {
+      if (type === 'all' || r.getAttribute('data-type') === type) {
+        r.style.display = '';
+      } else {
+        r.style.display = 'none';
+      }
+    });
+  }
+
+  function filterTransactionsByPartner(partnerKeyword) {
+    const rows = document.querySelectorAll('.ledger-row');
+    rows.forEach(r => {
+      const p = r.getAttribute('data-partner');
+      if (p === partnerKeyword || p === 'all') {
+        r.style.display = '';
+      } else {
+        r.style.display = 'none';
+      }
+    });
+
+    const tableEl = document.getElementById('ledgerTable');
+    if (tableEl) {
+      tableEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    showToast('تصفية الكشف', `عرض الحركات المقيدة للشريك: ${partnerKeyword === 'رائد' ? 'رائد محمد (60%)' : 'محمد عبد الوهاب (40%)'}`);
+  }
+
+  function showToast(title, message) {
+    const toast = document.getElementById('toastNotification');
+    document.getElementById('toastTitle').innerText = title;
+    document.getElementById('toastMessage').innerText = message;
+    toast.classList.remove('translate-y-24', 'opacity-0');
+    toast.classList.add('translate-y-0', 'opacity-100');
+    setTimeout(() => {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-24', 'opacity-0');
+    }, 4500);
+  }
+</script></main></div></body></html>

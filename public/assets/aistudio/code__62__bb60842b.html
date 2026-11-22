@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;font-family:'IBM Plex Sans Arabic',sans-serif;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-secondary-container": "#1b7047", "surface-container-lowest": "#ffffff", "tertiary-container": "#cca730", "primary-container": "#0f5132", "secondary-fixed-dim": "#86d8a5", "on-secondary-fixed-variant": "#005230", "surface-dim": "#d7dbd9", "secondary-container": "#9ff1bd", "surface-tint": "#2d6a48", "surface": "#f7faf8", "on-secondary-fixed": "#002110", "surface-bright": "#f7faf8", "on-primary-fixed": "#002111", "secondary-fixed": "#a2f4c0", "on-primary-container": "#84c39b", "on-surface-variant": "#404942", "on-secondary": "#ffffff", "background": "#f7faf8", "inverse-primary": "#95d4ac", "on-primary-fixed-variant": "#0f5132", "on-tertiary-fixed": "#241a00", "surface-container-high": "#e6e9e7", "on-primary": "#ffffff", "primary-fixed": "#b0f1c7", "tertiary": "#735c00", "outline-variant": "#c0c9c0", "secondary": "#146c43", "surface-variant": "#e0e3e1", "surface-container": "#ebefed", "surface-container-highest": "#e0e3e1", "primary": "#003820", "error-container": "#ffdad6", "inverse-on-surface": "#eef1ef", "tertiary-fixed-dim": "#e9c349", "outline": "#707971", "on-error-container": "#93000a", "on-tertiary-fixed-variant": "#574500", "primary-fixed-dim": "#95d4ac", "on-tertiary-container": "#4f3d00", "tertiary-fixed": "#ffe088", "surface-container-low": "#f1f4f2", "on-error": "#ffffff", "on-background": "#181c1c", "inverse-surface": "#2d3130", "on-tertiary": "#ffffff", "on-surface": "#181c1c", "error": "#ba1a1a" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-lg": "1.125rem", "space-xl": "1.5rem", "margin": "1rem", "space-md": "0.75rem", "gutter": "1rem", "space-xs": "0.25rem", "margin-lg": "1.25rem", "space-sm": "0.5rem", "gutter-sm": "0.75rem" }, fontFamily: { "caption": ["IBM Plex Sans Arabic"], "display-lg-mobile": ["IBM Plex Sans Arabic"], "body-md": ["IBM Plex Sans Arabic"], "label-lg": ["IBM Plex Sans Arabic"], "label-md": ["IBM Plex Sans Arabic"], "headline-md": ["IBM Plex Sans Arabic"], "headline-lg": ["IBM Plex Sans Arabic"], "display-lg": ["IBM Plex Sans Arabic"], "body-lg": ["IBM Plex Sans Arabic"], "title-md": ["IBM Plex Sans Arabic"] }, fontSize: { "caption": ["11px", { "lineHeight": "16px", "fontWeight": "400" }], "display-lg-mobile": ["26px", { "lineHeight": "36px", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "18px", "fontWeight": "500" }], "headline-md": ["19px", { "lineHeight": "28px", "fontWeight": "600" }], "headline-lg": ["22px", { "lineHeight": "32px", "fontWeight": "600" }], "display-lg": ["32px", { "lineHeight": "44px", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }], "title-md": ["17px", { "lineHeight": "24px", "fontWeight": "500" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="bg-surface font-body-md text-on-surface antialiased flex flex-col min-h-screen selection:bg-secondary-container selection:text-on-secondary-fixed"><header class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(15,81,50,0.05)] pt-safe"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><button aria-label="البحث والتصفية" class="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-transform active:scale-95" type="button"><span class="material-symbols-outlined text-[22px]">search</span></button></div><div class="flex items-center gap-space-xs bg-surface-container-lowest/90 px-space-md py-1.5 rounded-full shadow-[0_2px_12px_rgba(15,81,50,0.06)]"><span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span><span class="font-label-lg text-label-lg text-primary tracking-tight">قسم المكافحين والمكافحات </span></div><button aria-label="مشاركة" class="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-transform active:scale-95" type="button"><span class="material-symbols-outlined text-[22px]">share</span></button></div></header><main class="flex flex-col relative w-full px-margin pt-16 pb-28 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Sub-Header Navigation & Breadcrumb -->
+<div class="flex items-center justify-between py-space-sm mb-space-md">
+<button class="flex items-center gap-space-xs text-primary font-label-md text-label-md bg-surface-container-low px-space-md py-1.5 rounded-full hover:bg-surface-container transition-all active:scale-95 shadow-sm" onclick="history.back()" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+<span>قسم المكافحين والمشاريع</span>
+</button>
+<div class="flex items-center gap-space-xs">
+<button aria-label="بطاقة الاعتماد الرقمية" class="w-9 h-9 rounded-full bg-surface-container-lowest text-on-surface flex items-center justify-center shadow-sm hover:bg-surface-container active:scale-95 transition-all" id="qrBtn" type="button">
+<span class="material-symbols-outlined text-[19px]">qr_code_2</span>
+</button>
+<button aria-label="حفظ الملف" class="w-9 h-9 rounded-full bg-surface-container-lowest text-tertiary flex items-center justify-center shadow-sm hover:bg-surface-container active:scale-95 transition-all" id="bookmarkBtn" type="button">
+<span class="material-symbols-outlined text-[19px]">bookmark_border</span>
+</button>
+</div>
+</div>
+<!-- Profile Hero Card -->
+<div class="relative bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-xl overflow-hidden">
+<!-- Decorative Ambient Glow -->
+<div class="absolute -top-12 -left-12 w-40 h-40 bg-secondary-container/30 rounded-full blur-2xl pointer-events-none"></div>
+<div class="absolute -bottom-10 -right-10 w-32 h-32 bg-tertiary-fixed/30 rounded-full blur-2xl pointer-events-none"></div>
+<div class="relative flex flex-col gap-space-md">
+<!-- Portrait & Badges Row -->
+<div class="flex items-start gap-space-md">
+<div class="relative shrink-0">
+<div class="w-24 h-28 rounded-xl overflow-hidden shadow-sm bg-surface-container">
+<img alt="أمينة الشريف - خبيرة تجميل وزفاف بأبوحمص" class="w-full h-full object-cover object-top" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA879QHJ4P_A3_1vIzofY5AcpfLybr5nYPLzmevrlhzsx3zYmwmnCr4z2M87x4Skk8uzdxXIWyZVmGcTqL8MCroQPZkgLYPdY1zXSgdbUUmSiUzZAPWFGbORK5ROKipTc2xrbpJmWojLDOZauaoL0nZVvZo9tAxYN1mgAa8txs7HhBiwU_OJQR-Zo21roezHW6Cvzj_ussMxBlt1bYJ9Fx8wi-RMoRLEGuCWONfn7vo"/>
+</div>
+<div class="absolute -bottom-2 -left-2 bg-tertiary-container text-on-tertiary w-6 h-6 rounded-full flex items-center justify-center shadow-sm" title="موثقة ومعتمدة">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+</div>
+</div>
+<div class="flex flex-col min-w-0 flex-1">
+<div class="flex flex-wrap items-center gap-1.5 mb-1">
+<span class="bg-secondary-container text-on-secondary-fixed-variant font-label-md text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1">
+<span>حرفيات وبنات البلد</span>
+<span class="text-[12px]">🌸</span>
+</span>
+<span class="bg-surface-container-high text-on-surface font-label-md text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-tertiary text-[13px]">shield</span>
+<span>موثقة بدليل أبوحمص</span>
+</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary truncate leading-tight">أمينة الشريف</h1>
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">ميكب آرتست وخبيرة لفات طرح وزفاف</p>
+<div class="flex items-center gap-1 text-tertiary">
+<span class="material-symbols-outlined text-[16px] text-tertiary-container" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">4.95</span>
+<span class="font-caption text-caption text-on-surface-variant">(184 عروسة سواريه وزفاف)</span>
+</div>
+</div>
+</div>
+<!-- Experience & Location Specs -->
+<div class="bg-surface-container-low rounded-lg p-space-sm flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">verified_user</span>
+<span class="font-body-md text-body-md text-on-surface">خبرة 6 سنوات • لمسة راقية تبرز الملامح بدون تصنّع</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">location_on</span>
+<span class="font-body-md text-body-md text-on-surface-variant">
+            أبوحمص - شارع المحطة الرئيسي (متاح استضافة بالأتليه، أو زيارات منزلية وقاعات الأفراح بمركز أبوحمص وكفر الدوار ودمنهور)
+          </span>
+</div>
+</div>
+<!-- Live Availability Banner -->
+<div class="flex items-center justify-between bg-surface-container px-space-md py-2 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary"></span>
+</span>
+<span class="font-label-md text-label-md text-on-surface">متاحة لحجوزات موسمي الصيف والشتاء</span>
+</div>
+<span class="font-caption text-caption text-secondary font-semibold bg-secondary-container/60 px-2 py-0.5 rounded-full">جدول نشط</span>
+</div>
+</div>
+</div>
+<!-- Primary Tactile Action Buttons -->
+<div class="grid grid-cols-3 gap-space-sm mb-space-xl">
+<a class="flex flex-col items-center justify-center bg-primary text-on-primary py-space-sm px-2 rounded-xl shadow-sm hover:bg-secondary active:scale-95 transition-all" href="tel:+201099887766">
+<span class="material-symbols-outlined text-[22px] mb-1">call</span>
+<span class="font-label-md text-label-md font-semibold">اتصال مباشر</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-fixed-variant py-space-sm px-2 rounded-xl shadow-sm hover:bg-secondary-fixed active:scale-95 transition-all" href="https://wa.me/201099887766?text=مرحباً%20أمينة،%20أنا%20من%20دليل%20أبوحمص%20وحابة%20استفسر%20عن%20حجز%20موعد" target="_blank">
+<span class="material-symbols-outlined text-[22px] mb-1">chat</span>
+<span class="font-label-md text-label-md font-semibold">واتساب العرايس</span>
+</a>
+<button class="flex flex-col items-center justify-center bg-tertiary-container text-on-tertiary-container py-space-sm px-2 rounded-xl shadow-sm hover:opacity-90 active:scale-95 transition-all" id="openBookingModal" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1">calendar_month</span>
+<span class="font-label-md text-label-md font-semibold">طلب حجز</span>
+</button>
+</div>
+<!-- About & Philosophy Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-xl">
+<div class="flex items-center gap-space-xs mb-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">auto_awesome</span>
+<h2 class="font-title-md text-title-md text-primary font-semibold">نبذة عن اللمسة والخامات</h2>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-space-md">
+      نهتم بإبراز ملامح العروسة الطبيعية بدون تصنّع أو طبقات ثقيلة؛ نعتمد تحضيراً عميقاً للبشرة بمنتجات طبية مرطبة، مع استخدام خامات أصلية 100% (Huda Beauty, NARS, Dior, Fenty Beauty) تضمن ثباتاً سينمائياً يدوم لساعات السهرة والدموع والرطوبة.
+    </p>
+<!-- Key Highlights Grid -->
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="flex items-center gap-2 bg-surface-container-low p-2 rounded-lg">
+<span class="material-symbols-outlined text-secondary text-[20px]">sanitizer</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">تعقيم كامل للأدوات</span>
+<span class="font-caption text-caption text-on-surface-variant">سبونجات وفرش معقمة لكل عروس</span>
+</div>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-low p-2 rounded-lg">
+<span class="material-symbols-outlined text-tertiary text-[20px]">face_3</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">تنسيق لفة الطرحة</span>
+<span class="font-caption text-caption text-on-surface-variant">وفق شكل الوجه وستايل الفستان</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Portfolio Gallery Section -->
+<div class="flex flex-col mb-space-xl">
+<div class="flex items-center justify-between mb-space-sm">
+<div>
+<h2 class="font-title-md text-title-md text-primary font-semibold">معرض إطلالات العرايس الحية</h2>
+<p class="font-caption text-caption text-on-surface-variant">صور حقيقية بكاميرا الموبايل وإضاءة الصالون دون فلترة مضللة</p>
+</div>
+<span class="bg-surface-container-high text-on-surface-variant font-label-md text-[11px] px-2 py-0.5 rounded-full">34 إطلالة</span>
+</div>
+<!-- Gallery Filters -->
+<div class="flex items-center gap-2 overflow-x-auto pb-2 mb-space-sm no-scrollbar">
+<button class="px-space-md py-1 rounded-full bg-primary text-on-primary font-label-md text-label-md whitespace-nowrap active:scale-95 transition-all shadow-sm" type="button">الكل (34)</button>
+<button class="px-space-md py-1 rounded-full bg-surface-container-lowest text-on-surface-variant font-label-md text-label-md whitespace-nowrap active:scale-95 transition-all" type="button">ميكب زفاف ملكي</button>
+<button class="px-space-md py-1 rounded-full bg-surface-container-lowest text-on-surface-variant font-label-md text-label-md whitespace-nowrap active:scale-95 transition-all" type="button">خطوبة وسواريه</button>
+<button class="px-space-md py-1 rounded-full bg-surface-container-lowest text-on-surface-variant font-label-md text-label-md whitespace-nowrap active:scale-95 transition-all" type="button">لفات طرح وتيجان</button>
+</div>
+<!-- Gallery Cards Grid -->
+<div class="grid grid-cols-1 gap-space-md">
+<!-- Look 1 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm flex flex-col">
+<div class="relative w-full h-72 bg-surface-container">
+<img alt="إطلالة عروسة زفاف كلاسيك بطرحة تل ملكية مطرزة" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1N4Cw2hqCd4aDq1QZTf8D9j6fnrRp7KmWqnQXCwBuLeKVctoorTJqk98i88nlFozkP1ZLds1lYO9znlxKfonUfiFqxbkrP1zCGZRN_EsC3QOFcJnjFgMXaNye60YEZ0x7sHhQQmNSDhcthtbmDpAg8Gx2PT0QuksCqKfphyvPEM0VHjvFsg0iBmd6o-milHqvoSWc7F_CXvhxxaM9tGKe4RDgCWlWlc_34aF2p3U6"/>
+<div class="absolute top-3 right-3 bg-primary/80 backdrop-blur-md text-on-primary font-label-md text-[11px] px-2.5 py-1 rounded-full">
+            عروس زفاف ملكي
+          </div>
+<button class="absolute top-3 left-3 w-9 h-9 rounded-full bg-surface-container-lowest/80 backdrop-blur-md text-error flex items-center justify-center active:scale-90 transition-transform" onclick="toggleLike(this)" type="button">
+<span class="material-symbols-outlined text-[19px]">favorite_border</span>
+</button>
+<div class="absolute bottom-2 left-2 bg-inverse-surface/70 text-inverse-on-surface font-caption text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">location_on</span>
+<span>قاعة الماسة - أبوحمص</span>
+</div>
+</div>
+<div class="p-space-md flex flex-col gap-1">
+<h3 class="font-label-lg text-label-lg text-primary font-semibold">إطلالة عروسة زفاف كلاسيك بطرحة تل ملكية</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">مكياج عيون سموكي ناعم مع رسمة آيلاينر كلاسيكية، ولفة حجاب حريرية مطرزة مع تاج كريستالي فاخر.</p>
+</div>
+</div>
+<!-- Look 2 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm flex flex-col">
+<div class="relative w-full h-72 bg-surface-container">
+<img alt="سوفت جلام سواريه سهرة بلمعان ديوي راقي" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcNjw0II59NBRb4MYzHR1fIV7iXVHr3efD0Qix3YV3eSgKJS451Wk27kmCNNZvoJREBdv596PQNZgvKVLwvqERY00uCNDJFRF4WwX-5XHcLjGfWwkZK3YJfe7N-2DwnQ4Z3KHFDY4xgzYGshz74X9Z0vyXSmktRhXzjYdZNzhk4142hZ5wgpoM2wrtwBDx2AEnAGOHitA8dd2rTWY8ae3SiFsKRM19lZrxlFNvm6zX"/>
+<div class="absolute top-3 right-3 bg-secondary-container text-on-secondary-fixed-variant font-label-md text-[11px] px-2.5 py-1 rounded-full">
+            سوفت جلام سواريه
+          </div>
+<button class="absolute top-3 left-3 w-9 h-9 rounded-full bg-surface-container-lowest/80 backdrop-blur-md text-error flex items-center justify-center active:scale-90 transition-transform" onclick="toggleLike(this)" type="button">
+<span class="material-symbols-outlined text-[19px]">favorite_border</span>
+</button>
+<div class="absolute bottom-2 left-2 bg-inverse-surface/70 text-inverse-on-surface font-caption text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">location_on</span>
+<span>مناسبة عائلية - بركة غطاس</span>
+</div>
+</div>
+<div class="p-space-md flex flex-col gap-1">
+<h3 class="font-label-lg text-label-lg text-primary font-semibold">مكياج سواريه برونزي مع إضاءة بشرة نضرة</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">اعتماد التدرجات الترابية الدافئة مع كونتورينغ متناغم وروج جلوسي نيود يعكس الأناقة في الإضاءة الليلية.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Packages & Price Estimates -->
+<div class="flex flex-col mb-space-xl">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[22px]">loyalty</span>
+<h2 class="font-title-md text-title-md text-primary font-semibold">باقات العروسة والمناسبات</h2>
+</div>
+<span class="font-caption text-caption text-secondary font-medium">أسعار واضحة ومحددة</span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Royal Bridal Package -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden">
+<div class="flex items-start justify-between mb-2">
+<div>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-md text-[11px] px-2 py-0.5 rounded-full font-semibold">الأكثر طلباً للزفاف 👑</span>
+<h3 class="font-headline-md text-headline-md text-primary mt-1 font-bold">بكج زفاف ملكي كامل (Royal Bridal)</h3>
+</div>
+<div class="text-left">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">2,500</span>
+<span class="font-caption text-caption text-on-surface-variant">ج.م</span>
+</div>
+</div>
+<ul class="flex flex-col gap-1.5 font-body-md text-body-md text-on-surface-variant mb-space-md">
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+<span>جلسة عناية وترطيب عميق للبشرة قبل الميكب</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+<span>مكياج زفاف سينمائي فائق الثبات مضاد للدموع والرطوبة</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+<span>لفة طرحة ملكية متقنة وتثبيت التاج أو الهيدبيس</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+<span>رموش مريحة خفيفة الوزن تناسب شكل العين</span>
+</li>
+</ul>
+<div class="flex items-center justify-between pt-2 bg-surface-container-low px-space-md py-2 rounded-lg">
+<span class="font-caption text-caption text-on-surface-variant">متاح خدمة الانتقال للقاعة أو المنزل بمركز أبوحمص</span>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-space-md py-1 rounded-full active:scale-95 transition-all" onclick="selectPackage('بكج زفاف ملكي كامل')" type="button">اختيار الباقة</button>
+</div>
+</div>
+<!-- Engagement Package -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-start justify-between mb-2">
+<div>
+<h3 class="font-title-md text-title-md text-primary font-semibold">بكج خطوبة وكتب كتاب (Engagement Glam)</h3>
+<p class="font-caption text-caption text-on-surface-variant">إطلالة أنثوية ناعمة ومشرقة تدوم طوال الحفل</p>
+</div>
+<div class="text-left">
+<span class="font-title-md text-title-md text-primary font-bold">1,400</span>
+<span class="font-caption text-caption text-on-surface-variant">ج.م</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-space-sm">
+          يشمل: سوفت جلام راقي، إبراز الملامح بدون تغيير الشكل، لفة شيفون أو ستان سواريه أنيقة مع رموش طبيعية.
+        </p>
+<div class="flex items-center justify-end">
+<button class="bg-surface-container-high text-on-surface font-label-md text-label-md px-space-md py-1 rounded-full active:scale-95 transition-all hover:bg-surface-container-highest" onclick="selectPackage('بكج خطوبة وكتب كتاب')" type="button">اختيار الباقة</button>
+</div>
+</div>
+<!-- Individual Services Row -->
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="bg-surface-container-lowest rounded-xl p-space-sm shadow-sm flex flex-col justify-between">
+<div>
+<h4 class="font-label-lg text-label-lg text-primary font-semibold">ميكب سواريه مميز</h4>
+<p class="font-caption text-caption text-on-surface-variant">لأهل العروسة والضيوف</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="font-label-lg text-label-lg text-secondary font-bold">650 ج.م</span>
+<button class="text-primary text-[18px]" onclick="selectPackage('ميكب سواريه مميز')" type="button"><span class="material-symbols-outlined">add_circle</span></button>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-sm shadow-sm flex flex-col justify-between">
+<div>
+<h4 class="font-label-lg text-label-lg text-primary font-semibold">لفة طرحة منفصلة</h4>
+<p class="font-caption text-caption text-on-surface-variant">إسبنش، تركي، أو كلاسيك</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="font-label-lg text-label-lg text-secondary font-bold">250 ج.م</span>
+<button class="text-primary text-[18px]" onclick="selectPackage('لفة طرحة منفصلة')" type="button"><span class="material-symbols-outlined">add_circle</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Testimonials & Real Bride Reviews -->
+<div class="flex flex-col mb-space-xl">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[22px]">rate_review</span>
+<h2 class="font-title-md text-title-md text-primary font-semibold">ريفيوهات وتجارب بنات أبوحمص</h2>
+</div>
+<span class="font-label-md text-label-md text-secondary font-semibold">تجارب حقيقية</span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Testimonial 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-fixed-variant flex items-center justify-center font-label-md font-bold">
+              م
+            </div>
+<div>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold block leading-tight">مريم خليل</span>
+<span class="font-caption text-caption text-on-surface-variant">عروسة شهر 10 (عزبة كفر الحمام)</span>
+</div>
+</div>
+<div class="flex text-tertiary-container">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface italic bg-surface-container-low p-2 rounded-lg">
+          "أجمل ميكب اتعملي في حياتي! فضل ثابت لآخر الفرح ومن غير ما يغير شكلي، ولفة الطرحة كانت ثابتة ومريحة جداً تسلم إيدك يا قمر."
+        </p>
+</div>
+<!-- Testimonial 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed-variant flex items-center justify-center font-label-md font-bold">
+              آ
+            </div>
+<div>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold block leading-tight">د. آية النجار</span>
+<span class="font-caption text-caption text-on-surface-variant">صيدلانية بأبوحمص</span>
+</div>
+</div>
+<div class="flex text-tertiary-container">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface italic bg-surface-container-low p-2 rounded-lg">
+          "ذوق وأمانة متناهية في المواعيد، وخامات أصلية 100% ما سببتليش أي تحسس في بشرتي الحساسة، فخورة إن عندنا في أبوحمص شطارة بالمستوى ده!"
+        </p>
+</div>
+</div>
+</div>
+<!-- Booking Policy & Advisory Card -->
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-sm mb-space-xl">
+<div class="flex items-center gap-space-xs mb-2">
+<span class="material-symbols-outlined text-primary text-[20px]">info</span>
+<h3 class="font-label-lg text-label-lg text-primary font-semibold">شروط الحجز والتنسيق</h3>
+</div>
+<ul class="flex flex-col gap-1.5 font-caption text-caption text-on-surface-variant">
+<li class="flex items-start gap-1.5">
+<span class="text-primary font-bold">•</span>
+<span>تأكيد الموعد يتم بإيداع عربون رمزي لضمان حجز التاريخ والوقت المخصص لكِ.</span>
+</li>
+<li class="flex items-start gap-1.5">
+<span class="text-primary font-bold">•</span>
+<span>متاح عمل بروفة مسبقة للفات الطرح والتنسيق مع ستايل الفستان قبل المناسبة بأسبوع.</span>
+</li>
+<li class="flex items-start gap-1.5">
+<span class="text-primary font-bold">•</span>
+<span>في حال الزيارات الخارجية يتم تحديد مصاريف الانتقال حسب بُعد القاعة عن مركز أبوحمص.</span>
+</li>
+</ul>
+</div>
+<!-- Digital Verification & Civic Badge Section -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-xl flex flex-col items-center text-center">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-fixed-variant mb-2">
+<span class="material-symbols-outlined text-[28px]">verified</span>
+</div>
+<span class="font-label-md text-label-md text-secondary font-semibold">عضو موثق ببرنامج الدعم الحرفي المحلي</span>
+<h4 class="font-headline-md text-headline-md text-primary font-bold my-1">دليل أبوحمص الرقمي الموحد</h4>
+<p class="font-caption text-caption text-on-surface-variant max-w-xs mb-space-sm">
+      تمت مراجعة الهوية ومطابقة جودة الخدمات وخامات التجميل طبقاً لمعايير الثقة والشفافية.
+    </p>
+<div class="bg-surface-container px-space-md py-1.5 rounded-lg font-mono text-[12px] text-primary tracking-wider font-semibold mb-space-sm">
+      رمز الاعتماد: ABH-GLAM-019
+    </div>
+<button class="flex items-center gap-2 text-primary font-label-md text-label-md bg-surface-container-low hover:bg-surface-container px-space-md py-1.5 rounded-full transition-all active:scale-95" onclick="shareProfile()" type="button">
+<span class="material-symbols-outlined text-[18px]">share</span>
+<span>مشاركة رابط الملف مع الصديقات</span>
+</button>
+</div>
+<!-- Quick Booking Drawer / Modal (Hidden by Default) -->
+<div class="fixed inset-0 z-50 bg-primary/40 backdrop-blur-sm hidden flex items-end justify-center transition-all" id="bookingModal">
+<div class="bg-surface-container-lowest w-full max-w-md rounded-t-2xl p-space-lg shadow-xl flex flex-col gap-space-md animate-slide-up">
+<div class="flex items-center justify-between pb-2 border-b border-surface-container-high">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[24px]">event_available</span>
+<h3 class="font-headline-md text-headline-md text-primary font-bold">طلب حجز موعد مبدئي</h3>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container-low text-on-surface flex items-center justify-center" id="closeBookingModal" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-space-sm">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">اسم العروسة الكريمة</label>
+<input class="w-full bg-surface-container-low text-on-surface px-space-md py-2.5 rounded-xl font-body-md text-body-md outline-none focus:bg-surface-container-lowest focus:ring-1 focus:ring-primary" id="brideName" placeholder="مثال: ياسمين أحمد" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">تاريخ المناسبة</label>
+<input class="w-full bg-surface-container-low text-on-surface px-space-md py-2.5 rounded-xl font-body-md text-body-md outline-none focus:bg-surface-container-lowest focus:ring-1 focus:ring-primary" id="eventDate" type="date"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">نوع المناسبة والخدمة</label>
+<select class="w-full bg-surface-container-low text-on-surface px-space-md py-2.5 rounded-xl font-body-md text-body-md outline-none focus:bg-surface-container-lowest focus:ring-1 focus:ring-primary" id="packageSelect">
+<option value="بكج زفاف ملكي كامل">بكج زفاف ملكي كامل (2,500 ج.م)</option>
+<option value="بكج خطوبة وكتب كتاب">بكج خطوبة وكتب كتاب (1,400 ج.م)</option>
+<option value="ميكب سواريه مميز">ميكب سواريه مميز (650 ج.م)</option>
+<option value="لفة طرحة منفصلة">لفة طرحة منفصلة (250 ج.م)</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">مكان التجهيز المفضل</label>
+<div class="grid grid-cols-2 gap-2">
+<label class="flex items-center gap-2 bg-surface-container-low p-2 rounded-lg cursor-pointer">
+<input checked="" class="accent-primary" name="locType" type="radio" value="أتيليه أبوحمص"/>
+<span class="font-label-md text-label-md text-on-surface">أتيليه أبوحمص</span>
+</label>
+<label class="flex items-center gap-2 bg-surface-container-low p-2 rounded-lg cursor-pointer">
+<input class="accent-primary" name="locType" type="radio" value="زيارة منزلية / قاعة"/>
+<span class="font-label-md text-label-md text-on-surface">زيارة منزلية / قاعة</span>
+</label>
+</div>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary py-space-sm rounded-xl font-label-lg text-label-lg font-semibold flex items-center justify-center gap-2 shadow-sm hover:bg-secondary active:scale-95 transition-all" onclick="sendBookingViaWhatsApp()" type="button">
+<span class="material-symbols-outlined text-[20px]">send</span>
+<span>إرسال تفاصيل الحجز للمراجعة الفورية</span>
+</button>
+</div>
+</div>
+<!-- QR Code Modal Sheet -->
+<div class="fixed inset-0 z-50 bg-primary/40 backdrop-blur-sm hidden flex items-center justify-center p-space-md" id="qrModal">
+<div class="bg-surface-container-lowest max-w-xs w-full rounded-2xl p-space-lg shadow-xl flex flex-col items-center text-center">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-primary mb-space-sm">
+<span class="material-symbols-outlined text-[28px]">qr_code_2</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary font-bold mb-1">بطاقة الثقة والاعتماد</h3>
+<p class="font-caption text-caption text-on-surface-variant mb-space-md">امسحي الكود للوصول السريع لملف أمينة الشريف في دليل أبوحمص ومشاركته</p>
+<!-- Simulated High-Res QR Matrix -->
+<div class="bg-surface-container-lowest p-3 rounded-xl shadow-inner mb-space-md border border-surface-container-high">
+<svg class="w-44 h-44 text-primary" fill="currentColor" viewbox="0 0 100 100">
+<path d="M0,0 h30 v30 h-30 z M6,6 v18 h18 v-18 z M10,10 h10 v10 h-10 z"></path>
+<path d="M70,0 h30 v30 h-30 z M76,6 v18 h18 v-18 z M80,10 h10 v10 h-10 z"></path>
+<path d="M0,70 h30 v30 h-30 z M6,76 v18 h18 v-18 z M10,80 h10 v10 h-10 z"></path>
+<circle cx="45" cy="15" r="3"></circle>
+<circle cx="55" cy="15" r="3"></circle>
+<circle cx="45" cy="25" r="3"></circle>
+<circle cx="40" cy="45" r="4"></circle>
+<circle cx="50" cy="50" r="4"></circle>
+<circle cx="60" cy="45" r="4"></circle>
+<circle cx="45" cy="75" r="3"></circle>
+<circle cx="55" cy="75" r="3"></circle>
+<circle cx="85" cy="55" r="4"></circle>
+<circle cx="75" cy="85" r="3"></circle>
+<circle cx="85" cy="85" r="4"></circle>
+</svg>
+</div>
+<span class="font-label-md text-label-md text-primary font-mono font-bold mb-space-md">ABH-GLAM-019</span>
+<button class="w-full bg-surface-container-low text-on-surface py-2 rounded-xl font-label-md hover:bg-surface-container active:scale-95 transition-all" id="closeQrModal" type="button">إغلاق</button>
+</div>
+</div>
+<!-- Toast Notification Container -->
+<div class="fixed bottom-24 inset-x-4 max-w-sm mx-auto z-50 bg-inverse-surface text-inverse-on-surface px-space-md py-2.5 rounded-xl shadow-lg flex items-center justify-between opacity-0 pointer-events-none transition-opacity duration-300" id="toast">
+<span class="font-label-md text-label-md" id="toastMsg">تم الحفظ بنجاح</span>
+<span class="material-symbols-outlined text-[18px] text-secondary-container">check_circle</span>
+</div>
+</div>
+<script>
+  // Quick Booking Modal Trigger
+  const bookingModal = document.getElementById('bookingModal');
+  const openBookingBtn = document.getElementById('openBookingModal');
+  const closeBookingBtn = document.getElementById('closeBookingModal');
+
+  if (openBookingBtn && bookingModal) {
+    openBookingBtn.addEventListener('click', () => {
+      bookingModal.classList.remove('hidden');
+    });
+  }
+
+  if (closeBookingBtn && bookingModal) {
+    closeBookingBtn.addEventListener('click', () => {
+      bookingModal.classList.add('hidden');
+    });
+  }
+
+  // QR Code Modal
+  const qrModal = document.getElementById('qrModal');
+  const qrBtn = document.getElementById('qrBtn');
+  const closeQrBtn = document.getElementById('closeQrModal');
+
+  if (qrBtn && qrModal) {
+    qrBtn.addEventListener('click', () => {
+      qrModal.classList.remove('hidden');
+    });
+  }
+
+  if (closeQrBtn && qrModal) {
+    closeQrBtn.addEventListener('click', () => {
+      qrModal.classList.add('hidden');
+    });
+  }
+
+  // Toast Functionality
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    const msg = document.getElementById('toastMsg');
+    if (!toast || !msg) return;
+    msg.textContent = message;
+    toast.classList.remove('opacity-0', 'pointer-events-none');
+    setTimeout(() => {
+      toast.classList.add('opacity-0', 'pointer-events-none');
+    }, 2400);
+  }
+
+  // Bookmark Toggle
+  const bookmarkBtn = document.getElementById('bookmarkBtn');
+  let isBookmarked = false;
+  if (bookmarkBtn) {
+    bookmarkBtn.addEventListener('click', () => {
+      isBookmarked = !isBookmarked;
+      const icon = bookmarkBtn.querySelector('.material-symbols-outlined');
+      if (isBookmarked) {
+        icon.textContent = 'bookmark';
+        bookmarkBtn.classList.add('text-primary');
+        showToast('تم حفظ صفحة أمينة الشريف بالمفضلة');
+      } else {
+        icon.textContent = 'bookmark_border';
+        bookmarkBtn.classList.remove('text-primary');
+        showToast('تمت الإزالة من المفضلة');
+      }
+    });
+  }
+
+  // Favorite Heart for Gallery Items
+  function toggleLike(btn) {
+    const icon = btn.querySelector('.material-symbols-outlined');
+    if (icon.textContent === 'favorite') {
+      icon.textContent = 'favorite_border';
+      icon.style.fontVariationSettings = "'FILL' 0";
+      showToast('تمت الإزالة من الإطلالات المعجب بها');
+    } else {
+      icon.textContent = 'favorite';
+      icon.style.fontVariationSettings = "'FILL' 1";
+      showToast('تمت إضافة الإطلالة إلى ملهماتك 🤍');
+    }
+  }
+
+  // Package Selection shortcut
+  function selectPackage(packageName) {
+    const select = document.getElementById('packageSelect');
+    if (select) {
+      select.value = packageName;
+    }
+    if (bookingModal) {
+      bookingModal.classList.remove('hidden');
+    }
+  }
+
+  // WhatsApp Booking Redirection
+  function sendBookingViaWhatsApp() {
+    const name = document.getElementById('brideName')?.value.trim() || 'عروسة كريمة';
+    const date = document.getElementById('eventDate')?.value || 'قريباً';
+    const pkg = document.getElementById('packageSelect')?.value || 'بكج زفاف';
+    const locRadio = document.querySelector('input[name="locType"]:checked');
+    const location = locRadio ? locRadio.value : 'الأتيليه';
+
+    const text = encodeURIComponent(`مرحباً أستاذة أمينة، أنا ${name} من دليل أبوحمص.\nحابة أحجز موعد مبدئي لـ:\n• الباقة: ${pkg}\n• التاريخ: ${date}\n• المكان المفضل: ${location}\nفي انتظار تأكيد الموعد والتفاصيل.`);
+    window.open(`https://wa.me/201099887766?text=${text}`, '_blank');
+    if (bookingModal) bookingModal.classList.add('hidden');
+  }
+
+  // Profile Sharing
+  function shareProfile() {
+    if (navigator.share) {
+      navigator.share({
+        title: 'أمينة الشريف - ميكب آرتست أبوحمص',
+        text: 'شوفي شغل ولفات طرح أمينة الشريف على دليل أبوحمص المعتمد!',
+        url: window.location.href,
+      }).catch(() => {});
+    } else {
+      showToast('تم نسخ رابط الملف بنجاح!');
+    }
+  }
+</script></main><div class="fixed bottom-4 inset-x-0 z-50 flex justify-center px-margin pointer-events-none pb-safe"><nav class="pointer-events-auto flex items-center justify-between w-full max-w-sm h-16 px-space-md bg-surface-container-lowest/90 backdrop-blur-xl rounded-full shadow-[0_8px_24px_rgba(15,81,50,0.12)]" data-active-classes="bg-primary text-on-primary shadow-sm"><a class="flex items-center gap-space-xs py-2 px-space-md rounded-full text-on-surface-variant font-label-md text-label-md transition-all duration-200 active:scale-90" data-path="home" href="#"><span class="material-symbols-outlined text-[20px]">home</span><span>الرئيسية</span></a><a class="flex items-center gap-space-xs py-2 px-space-md rounded-full text-on-surface-variant font-label-md text-label-md transition-all duration-200 active:scale-90" data-path="real-estate" href="#"><span class="material-symbols-outlined text-[20px]">apartment</span><span>العقارات</span></a><a class="flex items-center gap-space-xs py-2 px-space-md rounded-full text-on-surface-variant font-label-md text-label-md transition-all duration-200 active:scale-90" data-path="offers" href="#"><span class="material-symbols-outlined text-[20px]">sell</span><span>العروض</span></a><a class="flex items-center gap-space-xs py-2 px-space-md rounded-full text-on-surface-variant font-label-md text-label-md transition-all duration-200 active:scale-90" data-path="more" href="#"><span class="material-symbols-outlined text-[20px]">more_horiz</span><span>المزيد</span></a></nav></div>
+</body></html>

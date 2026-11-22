@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;font-family:'IBM Plex Sans Arabic',sans-serif;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-tertiary-fixed-variant":"#574500","primary-container":"#0f5132","surface-container-lowest":"#ffffff","surface-container":"#ebefed","on-secondary":"#ffffff","on-primary-fixed-variant":"#0f5132","on-error":"#ffffff","background":"#f7faf8","on-tertiary":"#ffffff","surface-container-low":"#f1f4f2","on-tertiary-fixed":"#241a00","tertiary-fixed-dim":"#e9c349","surface-container-high":"#e6e9e7","on-background":"#181c1c","inverse-surface":"#2d3130","on-surface":"#181c1c","on-secondary-container":"#1b7047","secondary":"#146c43","surface-dim":"#d7dbd9","outline-variant":"#c0c9c0","tertiary-container":"#cca730","secondary-fixed":"#a2f4c0","error-container":"#ffdad6","primary":"#003820","primary-fixed":"#b0f1c7","surface-tint":"#2d6a48","inverse-primary":"#95d4ac","on-error-container":"#93000a","secondary-fixed-dim":"#86d8a5","error":"#ba1a1a","secondary-container":"#9ff1bd","surface-bright":"#f7faf8","outline":"#707971","on-surface-variant":"#404942","on-tertiary-container":"#4f3d00","tertiary":"#735c00","tertiary-fixed":"#ffe088","surface-container-highest":"#e0e3e1","surface-variant":"#e0e3e1","on-primary-container":"#84c39b","surface":"#f7faf8","primary-fixed-dim":"#95d4ac","on-secondary-fixed-variant":"#005230","on-secondary-fixed":"#002110","on-primary":"#ffffff","inverse-on-surface":"#eef1ef","on-primary-fixed":"#002111"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"gutter-sm":"0.75rem","gutter":"1rem","space-sm":"0.5rem","space-md":"0.75rem","margin":"1rem","space-lg":"1.125rem","space-xl":"1.5rem","space-xs":"0.25rem","margin-lg":"1.25rem"},"fontFamily":{"title-md":["IBM Plex Sans"],"display-lg-mobile":["IBM Plex Sans"],"label-md":["IBM Plex Sans"],"caption":["IBM Plex Sans"],"body-lg":["IBM Plex Sans"],"body-md":["IBM Plex Sans"],"headline-lg":["IBM Plex Sans"],"label-lg":["IBM Plex Sans"],"headline-md":["IBM Plex Sans"],"display-lg":["IBM Plex Sans"]},"fontSize":{"title-md":["17px",{"lineHeight":"24px","fontWeight":"500"}],"display-lg-mobile":["26px",{"lineHeight":"36px","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"18px","fontWeight":"500"}],"caption":["11px",{"lineHeight":"16px","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"26px","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["22px",{"lineHeight":"32px","fontWeight":"600"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"600"}],"headline-md":["19px",{"lineHeight":"28px","fontWeight":"600"}],"display-lg":["32px",{"lineHeight":"44px","fontWeight":"700"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface min-h-screen selection:bg-secondary-container selection:text-on-secondary-container"><aside class="fixed right-0 top-0 h-full w-72 bg-surface-container-low z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center gap-space-md bg-surface-container-low"><div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary flex items-center justify-center shadow-[0_2px_8px_rgba(15,81,50,0.18)]"><span class="material-symbols-outlined text-[24px]">account_balance</span></div><div class="flex flex-col"><span class="font-headline-md text-headline-md text-primary font-bold leading-tight">دليل أبوحمص</span><span class="font-caption text-caption text-on-surface-variant font-medium">لوحة الإدارة المركزية والتشغيل</span></div></div><div class="px-space-lg py-space-sm"><div class="p-space-sm rounded-xl bg-surface-container flex items-center justify-between gap-space-xs"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-md text-label-md text-on-surface-variant">حالة النظام:</span></div><span class="font-label-md text-label-md text-secondary font-bold">99.98% متصل</span></div></div><nav class="flex flex-col gap-space-xs px-space-md mt-space-sm" data-active-classes="bg-primary-container text-on-primary font-bold shadow-[0_2px_8px_rgba(15,81,50,0.12)]"><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="overview" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">dashboard</span><span class="font-label-lg text-label-lg">لوحة الملخص والمؤشرات</span></div></a><a aria-current="page" class="group flex items-center justify-between px-space-md py-space-sm rounded-xl transition-all duration-150 bg-primary-container text-on-primary font-bold shadow-[0_2px_8px_rgba(15,81,50,0.12)]" data-path="places-management" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">storefront</span><span class="font-label-lg text-label-lg">إدارة وتدقيق الأماكن</span></div></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="requests-and-reports" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">mark_email_unread</span><span class="font-label-lg text-label-lg">مراجعة الطلبات والبلاغات</span></div><span class="bg-error text-on-error font-label-md text-caption px-space-xs py-0.5 rounded-full font-bold">14</span></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="promotions-and-banners" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">campaign</span><span class="font-label-lg text-label-lg">الإعلانات والعروض المميزة</span></div></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="accounts-and-profit-split" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">payments</span><span class="font-label-lg text-label-lg">الحسابات وأرباح الشريكين</span></div></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="data-import" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">upload_file</span><span class="font-label-lg text-label-lg">استيراد CSV والبيانات</span></div></a></nav></div><div class="p-space-lg"><div class="bg-surface-container-lowest p-space-md rounded-xl shadow-[0_1px_4px_rgba(15,81,50,0.06)]"><div class="flex items-center gap-space-sm mb-space-xs"><span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span><span class="font-label-md text-label-md text-on-surface font-semibold">نظام الإدارة البلدية</span></div><p class="font-caption text-caption text-on-surface-variant">مركز إدارة المحتوى التجاري والحكومي لمجلس مدينة أبوحمص، البحيرة.</p></div></div></aside><div class="pr-72"><header class="fixed top-0 left-0 right-72 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-space-xs rounded-xl shadow-[0_1px_4px_rgba(15,81,50,0.04)]"><span class="material-symbols-outlined text-secondary text-[20px]">handshake</span><div class="flex items-center gap-space-xs font-label-md text-label-md"><span class="text-on-surface-variant">حساب الشراكة:</span><span class="text-primary font-bold">رائد محمد (60% تشغيل ومبيعات)</span><span class="text-outline-variant">|</span><span class="text-secondary font-medium">محمد عبد الوهاب (40% تطوير واستضافة)</span></div><span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span></div></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-xs"><button class="relative p-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 left-1.5 w-2 h-2 rounded-full bg-error"></span></button><button class="p-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">help_outline</span></button></div><div class="h-6 w-px bg-surface-container-high"></div><div class="flex items-center gap-space-md"><div class="flex flex-col text-left"><span class="font-label-lg text-label-lg text-on-surface font-bold">مدير النظام التنفيذي</span><span class="font-caption text-caption text-secondary font-medium">سلطة تشغيل كاملة</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full p-gutter md:p-space-xl gap-space-xl">
+<!-- Top Command & Breadcrumb Strip -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-[0_2px_12px_rgba(15,81,50,0.05)]">
+<div class="flex flex-col gap-space-xs">
+<nav class="flex items-center gap-space-xs font-caption text-caption text-on-surface-variant">
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[16px]">storefront</span>
+          إدارة الأماكن
+        </a>
+<span class="material-symbols-outlined text-[14px]">chevron_left</span>
+<span class="text-primary font-bold">بندر أبوحمص</span>
+<span class="material-symbols-outlined text-[14px]">chevron_left</span>
+<span class="text-on-surface font-mono">PLC-104</span>
+</nav>
+<div class="flex flex-wrap items-center gap-space-md mt-space-xs">
+<h1 class="font-headline-lg text-headline-lg text-primary font-bold tracking-tight">صيدلية الأمل الحديثة</h1>
+<div class="inline-flex items-center gap-space-xs px-space-sm py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md font-bold">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>معتمد ميدانياً • مفعّل للعامة</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant font-mono">آخر تحديث: اليوم، 02:45 م (بواسطة: رائد محمد)</span>
+</div>
+</div>
+<!-- Quick Workflow Toolbar -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<button class="px-space-md py-space-sm rounded-xl bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-label-lg text-label-lg flex items-center gap-space-xs shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+<span>معاينة حية</span>
+</button>
+<button class="px-space-md py-space-sm rounded-xl bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors font-label-lg text-label-lg flex items-center gap-space-xs" type="button">
+<span class="material-symbols-outlined text-[18px]">drafts</span>
+<span>حفظ كمسودة</span>
+</button>
+<button class="px-space-lg py-space-sm rounded-xl bg-primary-container text-on-primary hover:bg-secondary transition-all font-label-lg text-label-lg font-bold flex items-center gap-space-xs shadow-[0_4px_14px_rgba(15,81,50,0.22)] active:scale-95" type="button">
+<span class="material-symbols-outlined text-[18px]">send</span>
+<span>نشر وتحديث فوري</span>
+</button>
+<button class="px-space-md py-space-sm rounded-xl bg-tertiary-fixed text-on-tertiary-fixed hover:bg-tertiary-fixed-dim transition-colors font-label-lg text-label-lg font-bold flex items-center gap-space-xs shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">skip_next</span>
+<span>حفظ والتالي (تدقيق سريع)</span>
+</button>
+</div>
+</div>
+<!-- Workspace Grid: 65% Form vs 35% Live Context & Verification -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start">
+<!-- Left Column: Form Editor (lg:col-span-8 / ~67%) -->
+<div class="lg:col-span-8 flex flex-col gap-space-xl">
+<!-- Section 1: General Identity -->
+<section class="bg-surface-container-lowest p-space-xl rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.04)] flex flex-col gap-space-lg">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</span>
+<div class="flex flex-col">
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">الهوية والبيانات العامة</h2>
+<span class="font-caption text-caption text-on-surface-variant">الاسم التجاري المعتمد لدى مجلس مدينة أبوحمص</span>
+</div>
+</div>
+<span class="font-mono font-label-md text-label-md text-secondary font-bold bg-secondary-container/50 px-space-sm py-0.5 rounded-full">حقل إلزامي</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1">
+              اسم النشاط / المنشأة بالعربية
+              <span class="text-error">*</span>
+</label>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest text-on-surface font-body-md text-body-md px-space-md py-space-sm rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-primary transition-all" id="placeNameInput" type="text" value="صيدلية الأمل الحديثة"/>
+<span class="absolute left-3 top-2.5 text-secondary material-symbols-outlined text-[20px]">verified</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant">كما هو موثق على اليافطة الخارجية وتصريح مزاولة المهنة.</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1">
+              التصنيف الأساسي
+              <span class="text-error">*</span>
+</label>
+<div class="relative">
+<select class="w-full bg-surface-container-lowest text-on-surface font-body-md text-body-md px-space-md py-space-sm rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-primary transition-all appearance-none">
+<option selected="" value="pharma">صيدليات ورعاية طبية وعلاجية</option>
+<option value="clinics">عيادات ومراكز تخصصية</option>
+<option value="groceries">سوبرماركت وأغذية وتموين</option>
+<option value="services">خدمات حكومية وبلدية</option>
+<option value="agriculture">مستلزمات زراعية وبيطرية</option>
+</select>
+<span class="absolute left-3 top-2.5 pointer-events-none text-on-surface-variant material-symbols-outlined text-[20px]">unfold_more</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant">يحدد أيقونة الخريطة وتوزيع فلاتر البحث السريع للمواطنين.</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold">الوسوم التخصصية والكلمات المفتاحية</label>
+<div class="flex flex-wrap items-center gap-space-xs p-space-sm bg-surface-container-low rounded-xl">
+<span class="inline-flex items-center gap-1 px-space-sm py-1 bg-surface-container-lowest text-primary rounded-lg font-label-md text-label-md shadow-sm">
+              أدوية مستوردة
+              <button class="text-outline hover:text-error" type="button"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</span>
+<span class="inline-flex items-center gap-1 px-space-sm py-1 bg-surface-container-lowest text-primary rounded-lg font-label-md text-label-md shadow-sm">
+              خدمة نوبتجية ليلية
+              <button class="text-outline hover:text-error" type="button"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</span>
+<span class="inline-flex items-center gap-1 px-space-sm py-1 bg-surface-container-lowest text-primary rounded-lg font-label-md text-label-md shadow-sm">
+              توصيل مجاني للمنازل
+              <button class="text-outline hover:text-error" type="button"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</span>
+<span class="inline-flex items-center gap-1 px-space-sm py-1 bg-surface-container-lowest text-primary rounded-lg font-label-md text-label-md shadow-sm">
+              قياس سكر وضغط
+              <button class="text-outline hover:text-error" type="button"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</span>
+<input class="bg-transparent font-body-md text-body-md text-on-surface px-space-sm py-1 focus:outline-none placeholder:text-on-surface-variant/60 flex-1 min-w-[140px]" placeholder="+ أضف وسم جديد واضغط Enter" type="text"/>
+</div>
+</div>
+</section>
+<!-- Section 2: Geographic & Location Pinning -->
+<section class="bg-surface-container-lowest p-space-xl rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.04)] flex flex-col gap-space-lg">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-secondary-fixed flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">share_location</span>
+</span>
+<div class="flex flex-col">
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">العنوان والموقع الجغرافي</h2>
+<span class="font-caption text-caption text-on-surface-variant">الإحداثيات الدقيقة لربط ملاحة GPS وتطبيق الخرائط</span>
+</div>
+</div>
+<button class="font-label-md text-label-md text-secondary hover:text-primary font-bold flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[18px]">my_location</span>
+            التقاط موقع الجهاز المكتبي
+          </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold">المنطقة / القرية التابعة</label>
+<div class="relative">
+<select class="w-full bg-surface-container-lowest text-on-surface font-body-md text-body-md px-space-md py-space-sm rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-primary appearance-none">
+<option selected="">بندر أبوحمص (المدينة المركزية)</option>
+<option>قرية دمشلي</option>
+<option>قرية بركة غطاس</option>
+<option>قرية جواد حسني</option>
+<option>قرية بطورس</option>
+<option>قرية النخلة البحرية</option>
+<option>قرية بسنتواي</option>
+</select>
+<span class="absolute left-3 top-2.5 pointer-events-none text-on-surface-variant material-symbols-outlined text-[20px]">unfold_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold">الشارع وأقرب علامة مميزة</label>
+<input class="w-full bg-surface-container-lowest text-on-surface font-body-md text-body-md px-space-md py-space-sm rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-primary" type="text" value="شارع المحطة العمومي، متفرع من ميدان المحطة - بجوار بنك مصر"/>
+</div>
+</div>
+<!-- Static Location Preview Canvas -->
+<div class="relative w-full h-56 rounded-xl overflow-hidden shadow-inner group">
+<div class="w-full h-full bg-cover bg-center" data-location="Abu Hummus Train Station, El Beheira, Egypt" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKGopbhGX-Z9WYSUkGOw9VqDzIoGPzx2ztzipe9Q5ENTBqwbPYmE90fWK0_4_m5dblEG-nXaCD1wM0snGsCEw41N-fGxD0wDVL-F7Cqk_9Qj6UPLd9PBk4oprXk4kym_5ulF_HRDtnybHGm20RYlhd670YSQ59I4GKpZ0Z83BtXQ5gtAI_0_87Sf57Cfgqa5LNAQ_gMMQxDoi2sEkqWJk9RDLXubnmFiTYuxdIpX-S')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent flex items-end p-space-md justify-between">
+<div class="text-on-primary">
+<div class="font-label-lg text-label-lg font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">pin_drop</span>
+                31.0984° N, 30.3129° E (شارع المحطة، أبوحمص)
+              </div>
+<div class="font-caption text-caption text-primary-fixed">دقة الالتقاط: 1.2 متر - تم التحقق بواسطة مسّاح الدليل</div>
+</div>
+<button class="bg-surface-container-lowest text-primary px-space-md py-1.5 rounded-xl font-label-md text-label-md font-bold shadow-md hover:bg-surface-container transition-all flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">edit_location</span>
+              إعادة تحديد الدبوس
+            </button>
+</div>
+</div>
+<div class="flex items-center gap-space-sm p-space-sm bg-surface-container-low rounded-xl">
+<input class="w-5 h-5 rounded accent-primary-container cursor-pointer" id="mobileVendor" type="checkbox"/>
+<label class="font-label-md text-label-md text-on-surface cursor-pointer select-none" for="mobileVendor">
+<strong class="font-semibold text-primary">النشاط متنقل / منزلي / بدون مقر استقبال مباشر:</strong> إخفاء الدبوس الجغرافي الدقيق والاكتفاء بإظهار نطاق خدمة المدينة العام للمواطنين.
+          </label>
+</div>
+</section>
+<!-- Section 3: Contact & Direct Channels -->
+<section class="bg-surface-container-lowest p-space-xl rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.04)] flex flex-col gap-space-lg">
+<div class="flex items-center gap-space-sm pb-space-sm">
+<span class="w-8 h-8 rounded-lg bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</span>
+<div class="flex flex-col">
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">وسائل الاتصال والتواصل المباشر</h2>
+<span class="font-caption text-caption text-on-surface-variant">تأكد من عمل الأرقام لتفادي الإبلاغات السلبية</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1">
+              رقم الهاتف الأرضي / المحمول
+              <span class="text-error">*</span>
+</label>
+<div class="relative">
+<input class="w-full text-right bg-surface-container-lowest text-on-surface font-body-md text-body-md px-space-md py-space-sm rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-primary" dir="ltr" type="tel" value="0452561988"/>
+<span class="absolute left-3 top-2.5 text-secondary material-symbols-outlined text-[20px]">phone</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1">
+              رقم واتساب الطلبات
+              <span class="text-secondary font-bold text-caption">(زر سريع)</span>
+</label>
+<div class="relative">
+<input class="w-full text-right bg-surface-container-lowest text-on-surface font-body-md text-body-md px-space-md py-space-sm rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-primary" dir="ltr" type="tel" value="01098765432"/>
+<span class="absolute left-3 top-2.5 text-secondary material-symbols-outlined text-[20px]">chat</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold">هاتف الطوارئ البديل</label>
+<div class="relative">
+<input class="w-full text-right bg-surface-container-lowest text-on-surface font-body-md text-body-md px-space-md py-space-sm rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-primary" dir="ltr" type="tel" value="01234567890"/>
+<span class="absolute left-3 top-2.5 text-on-surface-variant material-symbols-outlined text-[20px]">emergency</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 4: Operational Working Hours -->
+<section class="bg-surface-container-lowest p-space-xl rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.04)] flex flex-col gap-space-lg">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">schedule</span>
+</span>
+<div class="flex flex-col">
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">ساعات العمل ومواعيد النوبتجية</h2>
+<span class="font-caption text-caption text-on-surface-variant">تظهر حالة المنشأة الآن (مفتوح / مغلق) في التطبيق مباشرة</span>
+</div>
+</div>
+<label class="flex items-center gap-space-xs cursor-pointer bg-secondary-container/60 px-space-md py-1 rounded-full">
+<input checked="" class="w-4 h-4 accent-primary rounded cursor-pointer" type="checkbox"/>
+<span class="font-label-md text-label-md font-bold text-on-secondary-container">خدمة متواصلة 24 ساعة يومياً</span>
+</label>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-space-md p-space-md bg-surface-container-low rounded-xl">
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-on-surface-variant">فترة الوردية الصباحية:</span>
+<span class="font-body-md text-body-md font-bold text-on-surface">من 08:30 ص إلى 04:00 م</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-on-surface-variant">فترة الوردية المسائية:</span>
+<span class="font-body-md text-body-md font-bold text-on-surface">من 04:00 م إلى 12:00 منتصف الليل</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-on-surface-variant">النوبتجية الليلية والطوارئ:</span>
+<span class="font-body-md text-body-md font-bold text-secondary">من 12:00 ص إلى 08:30 ص (طوال الأسبوع)</span>
+</div>
+</div>
+</section>
+<!-- Section 5: Visual Assets & Storefront Photos -->
+<section class="bg-surface-container-lowest p-space-xl rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.04)] flex flex-col gap-space-lg">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">photo_library</span>
+</span>
+<div class="flex flex-col">
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">الصور الرسمية والواجهة</h2>
+<span class="font-caption text-caption text-on-surface-variant">صور حقيقية تدعم قرار المواطن وتزيد الثقة بالمكان</span>
+</div>
+</div>
+<button class="px-space-md py-1.5 rounded-xl bg-primary text-on-primary hover:bg-secondary transition-colors font-label-md text-label-md font-bold flex items-center gap-1 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+            رفع صورة جديدة
+          </button>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-md">
+<!-- Main Storefront photo -->
+<div class="relative group rounded-xl overflow-hidden aspect-[4/3] bg-surface-container-high shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A modern well-lit Egyptian pharmacy storefront in Abu Homs with a clear Arabic green neon signage showing Al Amal Modern Pharmacy, glass facade with clean medicine shelves visible, bright sunny daytime exterior, clean street view" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGXVvLNAZ6bvEXSqsoXYsMDXhIKC5VAxz-zlir6Ar-efuBGs37yOzZ50IZRKDrZ3HxJIowsfTvfnH1gYiebSW-6LKwnrQ2fRcDo9Xt3YJ--coR0hZzEOp8MIOtjIOTnDXWCggDlw6Sr8xmJL0qINZtDQN3WPpZLaBnu0bwghpRLkwFMuk34a-Txz4t5QoXhNLehUssyZCdD-OgOQLIlh0iOjtsM8T1W-aJzen-mLCZ"/>
+<div class="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-space-xs text-on-primary">
+<button class="p-1.5 rounded-lg bg-surface/80 text-primary hover:bg-surface"><span class="material-symbols-outlined text-[18px]">zoom_in</span></button>
+<button class="p-1.5 rounded-lg bg-surface/80 text-error hover:bg-surface"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+<span class="absolute bottom-2 right-2 px-space-xs py-0.5 rounded bg-primary text-on-primary font-caption text-caption font-bold">الواجهة الرئيسية</span>
+</div>
+<!-- Interior Photo 1 -->
+<div class="relative group rounded-xl overflow-hidden aspect-[4/3] bg-surface-container-high shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Interior of an organized modern pharmacy in Egypt with polite pharmacist in a white coat consulting, neatly organized shelves with pharmaceuticals, soft emerald green brand colors, warm lighting, tidy counter with computer POS system" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwV_9gFtHAJe9FFCYaZJGHRu9avG1NrXNvEm0BBLnS63ju-wkrOqExjLlxPtGgCYx8lYVa4FEaFJCuuOt5n321ReNLcEcrSl4cL1hy-eUBkezgkmGbUtnfFl2rWlVy3R99AxJgtWsTEvqHAZaOul-DPqYaMFk9QCCsLSSvVXQIQSipshX4iI3tSHp1LSDJp1wMa8h4O2Iq6CGDtBLzZVZrww0m955uYskQo2Ci5tXf"/>
+<div class="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-space-xs text-on-primary">
+<button class="p-1.5 rounded-lg bg-surface/80 text-primary hover:bg-surface"><span class="material-symbols-outlined text-[18px]">zoom_in</span></button>
+<button class="p-1.5 rounded-lg bg-surface/80 text-error hover:bg-surface"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+<span class="absolute bottom-2 right-2 px-space-xs py-0.5 rounded bg-surface-container-lowest text-on-surface font-caption text-caption font-medium">الداخل والاستقبال</span>
+</div>
+<!-- Medical Equipment / Lab Photo -->
+<div class="relative group rounded-xl overflow-hidden aspect-[4/3] bg-surface-container-high shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Digital blood pressure monitor and glucose testing equipment on clean white medical counter, branded healthcare background, Abu Homs medical clinic style, crisp professional focus" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBC7JToMh7lahKY-9JRQ5QQOX4f1savLRFmTgZflq34TSaa5xlVgjjtaF8CI1HUbwsr_ZYLeQ_hFwMSSxCQjH6C_FecU5qEUfejf9o7-gbizdF0eaUwKtt8dyJcQ1Ab0NnoHq3BXiFNNYQl8y4AJycOnqSNUvgwMjx7KXRyKnXeOHP5v2UYPxkZQbg_T2ydZvh6ifmH82dj7AHyX_W9agw65zSWm9R5V6sr69UIm5Rh"/>
+<div class="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-space-xs text-on-primary">
+<button class="p-1.5 rounded-lg bg-surface/80 text-primary hover:bg-surface"><span class="material-symbols-outlined text-[18px]">zoom_in</span></button>
+<button class="p-1.5 rounded-lg bg-surface/80 text-error hover:bg-surface"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+<span class="absolute bottom-2 right-2 px-space-xs py-0.5 rounded bg-surface-container-lowest text-on-surface font-caption text-caption font-medium">أجهزة القياس</span>
+</div>
+<!-- Upload Dropzone Slot -->
+<div class="rounded-xl border-2 border-dashed border-outline-variant hover:border-secondary transition-colors aspect-[4/3] flex flex-col items-center justify-center gap-1 text-center p-space-sm cursor-pointer bg-surface-container-low hover:bg-surface-container">
+<span class="material-symbols-outlined text-secondary text-[28px]">cloud_upload</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">إفلات صورة هنا</span>
+<span class="font-caption text-caption text-on-surface-variant">PNG / JPG حتى 5MB</span>
+</div>
+</div>
+</section>
+<!-- Section 6: Commercial Tier & Monetization Badges -->
+<section class="bg-surface-container-lowest p-space-xl rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.04)] flex flex-col gap-space-lg">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-tertiary-fixed-dim flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined text-[20px]">military_tech</span>
+</span>
+<div class="flex flex-col">
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">باقة الاشتراك وشارات التمييز التجارية</h2>
+<span class="font-caption text-caption text-on-surface-variant">تخضع لتقسيم الإيرادات (60% لرائد محمد تشغيلياً / 40% لمحمد عبد الوهاب تقنياً)</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Standard -->
+<label class="p-space-lg rounded-xl bg-surface-container-low cursor-pointer flex flex-col justify-between gap-space-md transition-all hover:bg-surface-container">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-headline-md text-headline-md font-bold text-on-surface">عادي (مجاني)</span>
+<p class="font-caption text-caption text-on-surface-variant mt-1">إدراج أساسي بدون مميزات الترويج</p>
+</div>
+<input class="w-5 h-5 accent-primary cursor-pointer" name="tier" type="radio"/>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">0 ج.م / سنوياً</span>
+</label>
+<!-- Verified Partner -->
+<label class="p-space-lg rounded-xl bg-surface-container-low cursor-pointer flex flex-col justify-between gap-space-md transition-all hover:bg-surface-container">
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1">
+<span class="font-headline-md text-headline-md font-bold text-secondary">شريك معتمد</span>
+<span class="material-symbols-outlined text-secondary text-[18px]">verified</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant mt-1">علامة التحقق الخضراء + ظهور أعلى نتائج البحث</p>
+</div>
+<input class="w-5 h-5 accent-primary cursor-pointer" name="tier" type="radio"/>
+</div>
+<span class="font-label-md text-label-md text-secondary font-bold">350 ج.م / نصف سنوي</span>
+</label>
+<!-- Gold Featured (Selected) -->
+<label class="p-space-lg rounded-xl bg-tertiary-fixed/30 cursor-pointer flex flex-col justify-between gap-space-md shadow-sm">
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1">
+<span class="font-headline-md text-headline-md font-bold text-tertiary">راعي ذهبي مميز</span>
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">hotel_class</span>
+</div>
+<p class="font-caption text-caption text-on-tertiary-container mt-1">تثبيت بالصفحة الرئيسية للتطبيق + إشعار مدينتي</p>
+</div>
+<input checked="" class="w-5 h-5 accent-tertiary cursor-pointer" name="tier" type="radio"/>
+</div>
+<div class="flex items-center justify-between font-label-md text-label-md text-tertiary font-bold">
+<span>850 ج.م / سنوي</span>
+<span class="px-space-xs py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-caption text-caption">مفعّل حالياً</span>
+</div>
+</label>
+</div>
+<div class="flex flex-wrap items-center gap-space-lg p-space-md bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[20px]">event_upcoming</span>
+<span>تاريخ انتهاء التمييز الحالي:</span>
+<strong class="font-mono text-primary font-bold">14 ديسمبر 2025</strong>
+</div>
+<button class="text-secondary hover:text-primary font-label-md text-label-md font-bold underline mr-auto" type="button">
+            تجديد وتمديد الاشتراك التجاري
+          </button>
+</div>
+</section>
+<!-- Section 7: Services & Pricing Catalog -->
+<section class="bg-surface-container-lowest p-space-xl rounded-xl shadow-[0_4px_16px_rgba(15,81,50,0.04)] flex flex-col gap-space-lg">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">list_alt</span>
+</span>
+<div class="flex flex-col">
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">الخدمات وقائمة الأسعار المعلنة</h2>
+<span class="font-caption text-caption text-on-surface-variant">خدمات إضافية تظهر للجمهور لتقليل الاستفسارات الهاتفية</span>
+</div>
+</div>
+<button class="px-space-md py-1.5 rounded-xl bg-surface-container text-primary hover:bg-surface-container-high font-label-md text-label-md font-bold flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+            إضافة خدمة جديدة
+          </button>
+</div>
+<div class="flex flex-col gap-space-xs">
+<!-- Item 1 -->
+<div class="flex items-center justify-between p-space-md bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-secondary text-[22px]">health_and_safety</span>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">قياس ضغط الدم والوزن ومستوى السكر العشوائي</span>
+<span class="font-caption text-caption text-on-surface-variant">متوفر على مدار 24 ساعة بدون انتظار مسبق</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="font-label-lg text-label-lg font-bold text-primary font-mono">10 ج.م</span>
+<button class="text-on-surface-variant hover:text-error p-1"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between p-space-md bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-secondary text-[22px]">local_shipping</span>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">توصيل دواء سريع لجميع مناطق وقرى بندر أبوحمص</span>
+<span class="font-caption text-caption text-on-surface-variant">خلال 20 إلى 40 دقيقة مع إمكانية الدفع كاش أو فوري</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="font-label-lg text-label-lg font-bold text-secondary font-mono">مجاني (للطلبات فوق 100 ج)</span>
+<button class="text-on-surface-variant hover:text-error p-1"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center justify-between p-space-md bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-secondary text-[22px]">medication</span>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">صرف وتوفير أدوية التأمين الصحي والأمراض المزمنة</span>
+<span class="font-caption text-caption text-on-surface-variant">توفير أصناف بديلة مرخصة من هيئة الدواء المصرية</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="font-label-lg text-label-lg font-bold text-on-surface-variant font-mono">حسب سعر الجبر</span>
+<button class="text-on-surface-variant hover:text-error p-1"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Live Mobile App Preview & Quality Audit (lg:col-span-4 / ~33%) -->
+<div class="lg:col-span-4 flex flex-col gap-space-xl sticky top-20">
+<!-- Mobile Simulation Frame -->
+<div class="bg-surface-container-lowest p-space-lg rounded-2xl shadow-[0_8px_30px_rgba(15,81,50,0.08)] flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">phone_iphone</span>
+<span class="font-label-lg text-label-lg font-bold text-on-surface">معاينة مباشرة في تطبيق المواطن</span>
+</div>
+<span class="font-caption text-caption text-secondary font-mono bg-secondary-container px-space-xs py-0.5 rounded">محيّن آنياً</span>
+</div>
+<!-- Phone Shell Container -->
+<div class="w-full bg-[#f8faf8] rounded-2xl p-3 shadow-md flex flex-col gap-3 overflow-hidden">
+<!-- Mini Top App Bar -->
+<div class="flex items-center justify-between text-on-surface px-1">
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+<span class="font-label-md text-label-md font-bold text-primary">تفاصيل الصيدلية</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">share</span>
+<span class="material-symbols-outlined text-[18px]">favorite_border</span>
+</div>
+</div>
+<!-- Mini Hero Card Image -->
+<div class="relative w-full h-36 rounded-xl overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Vibrant modern Abu Homs pharmacy illuminated entrance at sunset with high clarity signage and friendly welcoming atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF4NtxSUW8-Hu0IKENSTJUfbZpfpAwxH0gPcJ_bBUiDA9iDappzxJy3wPeB6YShI4TyPivPTSIK9FaJF5LomIw3tEEKtJqjLfTKnQuUyBCoSKPQ1oI9fo4TxwNrJq3TMWbsozlctCmU-JZx4cNEb2sYE__-yIAcXv_yq6riiOCXetRcFcCq3Qg-W_xYSaLjgNDtzfTdqrMR9cS8xGa8xWZ1S_KBk8z4CA867idkuaA"/>
+<div class="absolute top-2 right-2 flex items-center gap-1 bg-tertiary-fixed text-on-tertiary-fixed px-space-xs py-0.5 rounded-full font-caption text-caption font-bold shadow-sm">
+<span class="material-symbols-outlined text-[14px]">hotel_class</span>
+<span>راعي مميز</span>
+</div>
+<div class="absolute bottom-2 right-2 left-2 flex items-center justify-between">
+<span class="bg-primary text-on-primary font-caption text-caption px-space-xs py-0.5 rounded-md font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed animate-pulse"></span>
+                مفتوح الآن (24 ساعة)
+              </span>
+<span class="bg-surface/90 backdrop-blur text-primary font-caption text-caption px-space-xs py-0.5 rounded-md font-mono font-bold">
+                ★ 4.9 (142 تقييم)
+              </span>
+</div>
+</div>
+<!-- Title & Badges in Mockup -->
+<div class="flex flex-col gap-1 text-right">
+<div class="flex items-center gap-1 justify-start">
+<h3 class="font-headline-sm text-title-md font-bold text-on-surface">صيدلية الأمل الحديثة</h3>
+<span class="material-symbols-outlined text-secondary text-[16px]">verified</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">location_on</span>
+              بندر أبوحمص • شارع المحطة العمومي
+            </p>
+</div>
+<!-- Quick Actions Bar in Mockup -->
+<div class="grid grid-cols-3 gap-2">
+<button class="bg-primary-container text-on-primary py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 shadow-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[18px]">call</span>
+<span class="font-caption text-caption font-bold">اتصال</span>
+</button>
+<button class="bg-secondary text-on-secondary py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 shadow-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[18px]">chat</span>
+<span class="font-caption text-caption font-bold">واتساب</span>
+</button>
+<button class="bg-surface-container-high text-on-surface py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 shadow-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[18px]">directions</span>
+<span class="font-caption text-caption font-bold">الموقع</span>
+</button>
+</div>
+<!-- Mini Feature Highlights -->
+<div class="bg-surface-container-lowest p-2.5 rounded-xl shadow-xs flex flex-col gap-1.5">
+<div class="flex items-center justify-between font-caption text-caption">
+<span class="text-on-surface-variant">خدمة التوصيل المنزلي:</span>
+<span class="text-secondary font-bold">متاحة طوال الليل</span>
+</div>
+<div class="flex items-center justify-between font-caption text-caption">
+<span class="text-on-surface-variant">نطاق التغطية:</span>
+<span class="text-on-surface font-semibold">بندر أبوحمص والقرى المجاورة</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between font-caption text-caption text-on-surface-variant pt-space-xs">
+<span>حجم الشاشة: iPhone 15 / Galaxy S24</span>
+<button class="text-primary font-bold hover:underline flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+            تجربة في نافذة مستقلة
+          </button>
+</div>
+</div>
+<!-- Municipal Verification & Integrity Checklist (ضوابط النزاهة) -->
+<div class="bg-surface-container-lowest p-space-lg rounded-2xl shadow-[0_4px_16px_rgba(15,81,50,0.04)] flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[22px]">fact_check</span>
+<span class="font-headline-md text-headline-md font-bold text-on-surface">ضوابط التدقيق والنزاهة</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-secondary bg-secondary-container px-space-sm py-0.5 rounded-full">3 / 4 مكتمل</span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Item 1 Done -->
+<label class="flex items-start gap-space-sm p-space-sm rounded-xl bg-surface-container-low cursor-pointer">
+<input checked="" class="w-5 h-5 mt-0.5 accent-primary rounded cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">الاسم مطابق تماماً لليافطة الرسمية</span>
+<span class="font-caption text-caption text-on-surface-variant">تمت المطابقة مع صورة المعاينة الميدانية.</span>
+</div>
+</label>
+<!-- Item 2 Done -->
+<label class="flex items-start gap-space-sm p-space-sm rounded-xl bg-surface-container-low cursor-pointer">
+<input checked="" class="w-5 h-5 mt-0.5 accent-primary rounded cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">رقم الهاتف يعمل وتم الاتصال للتجربة</span>
+<span class="font-caption text-caption text-on-surface-variant">أجاب الصيدلي المناوب وتم التحقق من الجاهزية.</span>
+</div>
+</label>
+<!-- Item 3 Done -->
+<label class="flex items-start gap-space-sm p-space-sm rounded-xl bg-surface-container-low cursor-pointer">
+<input checked="" class="w-5 h-5 mt-0.5 accent-primary rounded cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">الموقع الجغرافي دقيق على خريطة أبوحمص</span>
+<span class="font-caption text-caption text-on-surface-variant">تم تثبيت الإحداثيات على مبنى الصيدلية الفعلي.</span>
+</div>
+</label>
+<!-- Item 4 Pending -->
+<label class="flex items-start gap-space-sm p-space-sm rounded-xl bg-error-container/40 cursor-pointer">
+<input class="w-5 h-5 mt-0.5 accent-primary rounded cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-error-container">تأكيد مواعيد جدول النوبتجية الليلية</span>
+<span class="font-caption text-caption text-on-surface-variant">بحاجة لرسالة واتساب للتأكد من جداول أيام العطلات.</span>
+</div>
+</label>
+</div>
+<!-- Municipal Inspector Note Box -->
+<div class="flex flex-col gap-1 p-space-sm bg-surface-container rounded-xl">
+<span class="font-caption text-caption font-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+            ملاحظة المدقق الداخلي:
+          </span>
+<textarea class="w-full bg-surface-container-lowest font-caption text-caption p-space-xs rounded-lg text-on-surface resize-none focus:outline-none" placeholder="اكتب ملاحظة للفريق الإداري حول هذا النشاط..." rows="2">تم التحقق من الترخيص الصيدلي ومطابقته لسجلات الإدارة الصحية بأبوحمص.</textarea>
+</div>
+</div>
+<!-- QR Code & Marketing Toolkit Card -->
+<div class="bg-surface-container-lowest p-space-lg rounded-2xl shadow-[0_4px_16px_rgba(15,81,50,0.04)] flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">qr_code_2</span>
+<span class="font-label-lg text-label-lg font-bold text-on-surface">ملصق وباركود الدليل الذكي (QR)</span>
+</div>
+<span class="font-caption text-caption font-mono text-on-surface-variant">PLC-104</span>
+</div>
+<div class="flex items-center gap-space-md p-space-md bg-surface-container-low rounded-xl">
+<!-- Inline Generated Vector QR Representation -->
+<div class="w-20 h-20 bg-surface-container-lowest p-1 rounded-lg shadow-sm flex items-center justify-center shrink-0">
+<svg class="w-full h-full text-primary" fill="currentColor" viewbox="0 0 100 100">
+<rect fill="none" height="28" rx="2" stroke="currentColor" stroke-width="6" width="28" x="5" y="5"></rect>
+<rect fill="currentColor" height="12" width="12" x="13" y="13"></rect>
+<rect fill="none" height="28" rx="2" stroke="currentColor" stroke-width="6" width="28" x="67" y="5"></rect>
+<rect fill="currentColor" height="12" width="12" x="75" y="13"></rect>
+<rect fill="none" height="28" rx="2" stroke="currentColor" stroke-width="6" width="28" x="5" y="67"></rect>
+<rect fill="currentColor" height="12" width="12" x="13" y="75"></rect>
+<rect fill="currentColor" height="16" width="8" x="42" y="10"></rect>
+<rect fill="currentColor" height="8" width="16" x="42" y="34"></rect>
+<rect fill="currentColor" height="8" width="16" x="10" y="42"></rect>
+<rect fill="currentColor" height="18" width="8" x="68" y="42"></rect>
+<rect fill="currentColor" height="14" width="14" x="44" y="50"></rect>
+<rect fill="currentColor" height="10" width="10" x="70" y="70"></rect>
+<rect fill="currentColor" height="8" width="8" x="85" y="85"></rect>
+</svg>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md font-bold text-on-surface">استيكر المحل الرسمي</span>
+<span class="font-caption text-caption text-on-surface-variant">يوضع على واجهة الصيدلية لفتح صفحتها فوراً في دليل أبوحمص.</span>
+<div class="flex items-center gap-space-xs mt-1">
+<button class="px-space-sm py-1 bg-surface-container text-primary rounded-lg font-caption text-caption font-bold hover:bg-surface-container-high flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">download</span>
+                تحميل SVG
+              </button>
+<button class="px-space-sm py-1 bg-surface-container text-primary rounded-lg font-caption text-caption font-bold hover:bg-surface-container-high flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">print</span>
+                طباعة A5
+              </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Final Decision Bar -->
+<div class="flex flex-col gap-space-sm bg-surface-container-high p-space-md rounded-2xl">
+<button class="w-full py-space-md rounded-xl bg-primary text-on-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-space-xs shadow-md hover:bg-secondary transition-all active:scale-[0.98]" type="button">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+<span>حفظ التغييرات ونشر فوراً للجمهور</span>
+</button>
+<button class="w-full py-space-sm rounded-xl bg-surface-container-lowest text-on-surface font-label-lg text-label-lg font-bold flex items-center justify-center gap-space-xs hover:bg-surface-container transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+<span>حفظ والانتقال للمكان التالي (3 متبقية للتنقيح)</span>
+</button>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

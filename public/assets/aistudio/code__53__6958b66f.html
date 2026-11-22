@@ -1,0 +1,470 @@
+<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="mobile_stack" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "primary-fixed": "#b0f1c7", "error-container": "#ffdad6", "tertiary-container": "#cca730", "primary-fixed-dim": "#95d4ac", "on-error": "#ffffff", "surface": "#f7faf8", "primary-container": "#0f5132", "surface-dim": "#d7dbd9", "on-secondary-fixed-variant": "#005230", "inverse-on-surface": "#eef1ef", "inverse-surface": "#2d3130", "on-tertiary-fixed-variant": "#574500", "tertiary-fixed": "#ffe088", "on-secondary-container": "#1b7047", "surface-container-lowest": "#ffffff", "surface-bright": "#f7faf8", "on-primary-container": "#84c39b", "secondary-fixed-dim": "#86d8a5", "on-tertiary-fixed": "#241a00", "surface-container-low": "#f1f4f2", "on-primary": "#ffffff", "surface-container-highest": "#e0e3e1", "on-background": "#181c1c", "secondary-container": "#9ff1bd", "on-surface-variant": "#404942", "secondary-fixed": "#a2f4c0", "inverse-primary": "#95d4ac", "background": "#f7faf8", "on-tertiary-container": "#4f3d00", "on-error-container": "#93000a", "outline-variant": "#c0c9c0", "on-surface": "#181c1c", "tertiary": "#735c00", "error": "#ba1a1a", "on-primary-fixed": "#002111", "surface-tint": "#2d6a48", "secondary": "#146c43", "on-secondary": "#ffffff", "surface-container": "#ebefed", "surface-variant": "#e0e3e1", "tertiary-fixed-dim": "#e9c349", "on-tertiary": "#ffffff", "outline": "#707971", "surface-container-high": "#e6e9e7", "on-secondary-fixed": "#002110", "on-primary-fixed-variant": "#0f5132", "primary": "#003820" }, borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" }, spacing: { "margin-lg": "1.25rem", "gutter": "1rem", "space-xs": "0.25rem", "gutter-sm": "0.75rem", "space-lg": "1.125rem", "space-sm": "0.5rem", "margin": "1rem", "space-md": "0.75rem", "space-xl": "1.5rem" }, fontFamily: { "headline-lg": ["IBM Plex Sans"], "caption": ["IBM Plex Sans"], "display-lg-mobile": ["IBM Plex Sans"], "title-md": ["IBM Plex Sans"], "body-md": ["IBM Plex Sans"], "body-lg": ["IBM Plex Sans"], "headline-md": ["IBM Plex Sans"], "label-md": ["IBM Plex Sans"], "label-lg": ["IBM Plex Sans"], "display-lg": ["IBM Plex Sans"] }, fontSize: { "headline-lg": ["22px", { lineHeight: "32px", fontWeight: "600" }], "caption": ["11px", { lineHeight: "16px", fontWeight: "400" }], "display-lg-mobile": ["26px", { lineHeight: "36px", fontWeight: "700" }], "title-md": ["17px", { lineHeight: "24px", fontWeight: "500" }], "body-md": ["14px", { lineHeight: "22px", fontWeight: "400" }], "body-lg": ["16px", { lineHeight: "26px", fontWeight: "400" }], "headline-md": ["19px", { lineHeight: "28px", fontWeight: "600" }], "label-md": ["12px", { lineHeight: "18px", fontWeight: "500" }], "label-lg": ["14px", { lineHeight: "20px", fontWeight: "600" }], "display-lg": ["32px", { lineHeight: "44px", fontWeight: "700" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;font-family:'IBM Plex Sans',sans-serif;}body{overscroll-behavior:none;background-color:#f7faf8;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style></head><body class="bg-surface text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl pt-safe shadow-[0_4px_20px_rgba(15,81,50,0.06)]"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><button aria-label="العودة للصفحة السابقة" class="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">chevron_right</span></button><div class="flex flex-col"><h1 class="text-headline-md font-headline-md text-on-surface">السلة</h1><span class="text-caption font-caption text-secondary">مطعم البرنس - أبو حمص</span></div></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe bg-surface"><div class="flex flex-col w-full pb-32 space-y-space-xl">
+<!-- Restaurant Header Card -->
+<div class="px-margin pt-space-md">
+<div class="bg-surface-container-lowest p-space-lg rounded-[20px] shadow-[0_4px_20px_rgba(15,81,50,0.05)] flex flex-col gap-space-sm">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[26px]">restaurant</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<h2 class="text-title-md font-title-md text-on-surface">مطعم البرنس للمشويات والطواجن</h2>
+<span class="material-symbols-outlined text-tertiary text-[18px]" style="font-variation-settings: 'FILL' 1;" title="موثق">verified</span>
+</div>
+<p class="text-caption font-caption text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-outline">location_on</span>
+              شارع ناصر - أمام بنك مصر - أبو حمص
+            </p>
+</div>
+</div>
+<div class="flex items-center gap-1 bg-tertiary-fixed text-on-tertiary-fixed px-space-xs py-0.5 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-label-md font-label-md font-bold">4.9</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-sm flex items-center justify-between text-on-surface-variant mt-1">
+<div class="flex items-center gap-space-xs text-secondary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[18px]">moped</span>
+<span>التوصيل المتوقع: 25 - 35 دقيقة</span>
+</div>
+<span class="text-caption font-caption bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full font-medium">سريع ومباشر</span>
+</div>
+</div>
+</div>
+<!-- Cart Items Section -->
+<div class="px-margin flex flex-col gap-space-sm">
+<div class="flex items-center justify-between px-1">
+<h3 class="text-headline-md font-headline-md text-on-surface flex items-center gap-space-xs">
+<span>سلة الوجبات</span>
+<span class="text-label-md font-label-md px-2 py-0.5 bg-primary-container text-on-primary-container rounded-full" id="total-count-badge">3 أصناف</span>
+</h3>
+<button class="text-caption font-caption text-error hover:opacity-80 transition-opacity flex items-center gap-1" onclick="clearCart()" type="button">
+<span class="material-symbols-outlined text-[16px]">delete_sweep</span>
+        مسح الكل
+      </button>
+</div>
+<!-- Item 1: Mixed Grill Tray -->
+<div class="bg-surface-container-lowest p-space-md rounded-[18px] shadow-[0_4px_16px_rgba(15,81,50,0.05)] flex gap-space-md items-center" id="cart-item-1">
+<div class="w-20 h-20 rounded-xl overflow-hidden bg-surface-container-high shrink-0 relative">
+<img alt="صينية مشويات ملوكي" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/ALJJyrDJQuVTPl-_zUmcm_--cvS-gMKipn9_PTOX1kTTtCMBLvjfHkUVJDd33eEI4fUwojNIAIVVux_21PkSt7fZxKnhhBv8uI5Uc00xnKz4cjuG2Gfi-pUtMReoQkEVoDEBX_xWiEgqF6dJdAFsqTI39XsbUXaAzKPoNBJuZzhrBT9Sdk7RbrLNz-eQ0fFuaRarMVm3DnDNyoftyb1z75usJUp0Wc7q2Df0l2mW_X9HEgvjSQ">
+<span class="absolute bottom-1 right-1 bg-primary/80 backdrop-blur-sm text-on-primary text-[10px] px-1.5 py-0.5 rounded-md">الأكثر طلباً</span>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-start justify-between">
+<h4 class="text-label-lg font-label-lg text-on-surface truncate">صينية مشويات ملوكي</h4>
+<span class="text-title-md font-title-md text-primary-container shrink-0">340 ج.م</span>
+</div>
+<p class="text-caption font-caption text-on-surface-variant truncate mt-0.5">كيلو كفتة + شيش + ربع كباب • طحينة وخبز</p>
+<div class="flex items-center justify-between mt-space-sm">
+<div class="flex items-center gap-2 bg-surface-container-low px-2 py-1 rounded-full">
+<button class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center active:scale-95 transition-transform" onclick="updateQty('qty-1', 1, 340)">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+<span class="text-label-md font-label-md text-on-surface w-4 text-center" id="qty-1">1</span>
+<button class="w-6 h-6 rounded-full bg-surface-container text-on-surface flex items-center justify-center active:scale-95 transition-transform" onclick="updateQty('qty-1', -1, 340)">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+</div>
+<span class="text-caption font-caption text-tertiary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">local_fire_department</span>
+            ساخن وطازج
+          </span>
+</div>
+</div>
+</div>
+<!-- Item 2: Italian Pizza -->
+<div class="bg-surface-container-lowest p-space-md rounded-[18px] shadow-[0_4px_16px_rgba(15,81,50,0.05)] flex gap-space-md items-center" id="cart-item-2">
+<div class="w-20 h-20 rounded-xl overflow-hidden bg-surface-container-high shrink-0 relative">
+<img alt="بيتزا سجق كيري إيطالي" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/ALJJyrAmvErvIWPhJNBRpEjt5U6eCkAjY6Z1K9qlNLbr8FCHeBYOFsOtCD-XpSjE93QfELHLgvVK3D0FW0yoxGHPSD_2Q0yg3pkgGzBbUjaJOn2kNruaSFKyuuRmZ5dhjvhyMzJZOTZsiCrF6agaYidqcI4BuHl3RhbVe71-o4EALARJnXEiWNfft8HtKsnLuaxPlT0iaMIdLB5kL79FXUK1BK8pnvXX2FahaoptS_alB4RA">
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-start justify-between">
+<h4 class="text-label-lg font-label-lg text-on-surface truncate">بيتزا سجق كيري إيطالي</h4>
+<span class="text-title-md font-title-md text-primary-container shrink-0">120 ج.م</span>
+</div>
+<p class="text-caption font-caption text-on-surface-variant truncate mt-0.5">وسط • موتزاريلا طبيعية وسجق بلدي بالفرن</p>
+<div class="flex items-center justify-between mt-space-sm">
+<div class="flex items-center gap-2 bg-surface-container-low px-2 py-1 rounded-full">
+<button class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center active:scale-95 transition-transform" onclick="updateQty('qty-2', 1, 120)">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+<span class="text-label-md font-label-md text-on-surface w-4 text-center" id="qty-2">1</span>
+<button class="w-6 h-6 rounded-full bg-surface-container text-on-surface flex items-center justify-center active:scale-95 transition-transform" onclick="updateQty('qty-2', -1, 120)">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+</div>
+<span class="text-caption font-caption text-secondary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">nest_eco_leaf</span>
+            عجينة إيطالية
+          </span>
+</div>
+</div>
+</div>
+<!-- Item 3: Akkawi Casserole -->
+<div class="bg-surface-container-lowest p-space-md rounded-[18px] shadow-[0_4px_16px_rgba(15,81,50,0.05)] flex gap-space-md items-center" id="cart-item-3">
+<div class="w-20 h-20 rounded-xl overflow-hidden bg-surface-container-high shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Traditional Egyptian slow-cooked beef oxtail casserole, Akkawi tagine served bubbling hot in an artisanal clay pot with caramelized onions and roasted spices, warm golden ambient lighting on rustic table" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPYXjrdEB8mnXQTYIU__QYxPHk1xxOg9dR1mHu2p6_Bp0mUKtHuspPFIs62SEnCFiY9bD88JZ2klAQRBbr4Ws11qcl0CXPP8SE2R7cNE2Il0KwYC6ABjNVqa8XwsIFQxJBcfMhBKnNuus6HTHY5JZ1rMm7ZduUjJCnUxRl5Osv3kJE4QZTp44pAW88v02qdQ8d3wE-ItIuVOQerJp1oYr3tpr-na9_WwTQQJhhF_cH">
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-start justify-between">
+<h4 class="text-label-lg font-label-lg text-on-surface truncate">طاجن عكاوي بلدي بالأورمة</h4>
+<span class="text-title-md font-title-md text-primary-container shrink-0">210 ج.م</span>
+</div>
+<p class="text-caption font-caption text-on-surface-variant truncate mt-0.5">بصل أورمة مكرمل مع بهارات البرنس المميزة</p>
+<div class="flex items-center justify-between mt-space-sm">
+<div class="flex items-center gap-2 bg-surface-container-low px-2 py-1 rounded-full">
+<button class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center active:scale-95 transition-transform" onclick="updateQty('qty-3', 1, 210)">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+<span class="text-label-md font-label-md text-on-surface w-4 text-center" id="qty-3">1</span>
+<button class="w-6 h-6 rounded-full bg-surface-container text-on-surface flex items-center justify-center active:scale-95 transition-transform" onclick="updateQty('qty-3', -1, 210)">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+</div>
+<span class="text-caption font-caption text-on-surface-variant flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">dinner_dining</span>
+            طاجن فخار أصلي
+          </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Smart Location & Map Sharing Card -->
+<div class="px-margin flex flex-col gap-space-sm">
+<div class="flex items-center justify-between px-1">
+<h3 class="text-headline-md font-headline-md text-on-surface flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[22px]">share_location</span>
+        تحديد ومشاركة موقع التوصيل
+      </h3>
+<span class="text-caption font-caption text-secondary font-medium">GPS دقيق</span>
+</div>
+<div class="bg-surface-container-lowest rounded-[20px] p-space-md shadow-[0_4px_20px_rgba(15,81,50,0.06)] flex flex-col gap-space-md">
+<!-- Simulated Interactive Map Widget -->
+<div class="relative w-full h-36 rounded-2xl overflow-hidden bg-surface-container-high" data-location="Abu Hummus, El Beheira, Egypt">
+<div class="absolute inset-0 bg-gradient-to-t from-primary/70 via-transparent to-transparent flex items-end p-space-sm z-10">
+<div class="flex items-center gap-space-xs text-on-primary">
+<span class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-fixed opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-secondary-fixed"></span>
+</span>
+<span class="text-label-md font-label-md drop-shadow">شارع المحطة - بجوار المستشفى المركزي، أبوحمص</span>
+</div>
+</div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="relative">
+<span class="material-symbols-outlined text-error text-[40px] drop-shadow-lg" style="font-variation-settings: 'FILL' 1;">location_on</span>
+<div class="w-3 h-1.5 bg-black/30 rounded-full mx-auto blur-[1px]"></div>
+</div>
+</div>
+</div>
+<!-- Quick Action Buttons for Location Sharing -->
+<div class="grid grid-cols-2 gap-space-sm">
+<button class="bg-secondary-container text-on-secondary-container hover:bg-primary-fixed transition-colors p-space-sm rounded-xl flex items-center justify-center gap-1.5 text-label-md font-label-md active:scale-95 shadow-sm text-center" id="gps-btn" onclick="captureGPSLocation()" type="button">
+<span class="material-symbols-outlined text-[18px]">my_location</span>
+<span>تحديث GPS التلقائي</span>
+</button>
+<button class="bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors p-space-sm rounded-xl flex items-center justify-center gap-1.5 text-label-md font-label-md active:scale-95 text-center" onclick="openWhatsAppPinPrompt()" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary">pin_drop</span>
+<span>إرسال Pin واتساب</span>
+</button>
+</div>
+<!-- Village / Area Selector Pills -->
+<div class="flex flex-col gap-1.5">
+<label class="text-label-md font-label-md text-on-surface-variant flex items-center justify-between">
+<span>المنطقة / القرية التابعة:</span>
+<span class="text-caption font-caption text-secondary" id="delivery-price-label">التوصيل: 10 ج.م</span>
+</label>
+<div class="flex items-center gap-2 overflow-x-auto pb-1 text-label-md font-label-md">
+<button class="area-pill active-area px-3.5 py-1.5 rounded-full bg-primary-container text-on-primary whitespace-nowrap shadow-sm" onclick="selectArea('بندر أبوحمص', 10, this)" type="button">
+            بندر أبوحمص (10 ج)
+          </button>
+<button class="area-pill px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface whitespace-nowrap hover:bg-surface-container-high" onclick="selectArea('بركة غطاس', 15, this)" type="button">
+            بركة غطاس (15 ج)
+          </button>
+<button class="area-pill px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface whitespace-nowrap hover:bg-surface-container-high" onclick="selectArea('زاوية نعيم', 15, this)" type="button">
+            زاوية نعيم (15 ج)
+          </button>
+<button class="area-pill px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface whitespace-nowrap hover:bg-surface-container-high" onclick="selectArea('بلقطر', 15, this)" type="button">
+            بلقطر (15 ج)
+          </button>
+<button class="area-pill px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface whitespace-nowrap hover:bg-surface-container-high" onclick="selectArea('الجرف', 15, this)" type="button">
+            الجرف (15 ج)
+          </button>
+</div>
+</div>
+<!-- Customer Contact Inputs -->
+<div class="flex flex-col gap-space-sm pt-2">
+<div>
+<label class="text-label-md font-label-md text-on-surface-variant block mb-1">اسم العميل بالكامل</label>
+<div class="bg-surface-container-low rounded-xl px-space-md py-2.5 flex items-center gap-space-sm focus-within:bg-surface-container-lowest focus-within:shadow-[0_2px_12px_rgba(15,81,50,0.1)] transition-all">
+<span class="material-symbols-outlined text-outline text-[20px]">person</span>
+<input class="bg-transparent border-0 outline-none w-full text-body-md font-body-md text-on-surface placeholder:text-outline" id="customer-name" placeholder="أدخل اسمك الكريم" type="text" value="أحمد عبد الله">
+</div>
+</div>
+<div>
+<label class="text-label-md font-label-md text-on-surface-variant block mb-1">رقم الهاتف للتواصل والدليفري</label>
+<div class="bg-surface-container-low rounded-xl px-space-md py-2.5 flex items-center gap-space-sm focus-within:bg-surface-container-lowest focus-within:shadow-[0_2px_12px_rgba(15,81,50,0.1)] transition-all" dir="ltr">
+<span class="material-symbols-outlined text-outline text-[20px]">call</span>
+<input class="bg-transparent border-0 outline-none w-full text-body-md font-body-md text-on-surface placeholder:text-outline text-right" id="customer-phone" placeholder="010XXXXXXXX" type="tel" value="01098765432">
+</div>
+</div>
+<div>
+<label class="text-label-md font-label-md text-on-surface-variant block mb-1">العنوان بالتفصيل والعلامة المميزة</label>
+<div class="bg-surface-container-low rounded-xl px-space-md py-2.5 flex items-start gap-space-sm focus-within:bg-surface-container-lowest focus-within:shadow-[0_2px_12px_rgba(15,81,50,0.1)] transition-all">
+<span class="material-symbols-outlined text-outline text-[20px] mt-0.5">home_pin</span>
+<textarea class="bg-transparent border-0 outline-none w-full text-body-md font-body-md text-on-surface placeholder:text-outline resize-none" id="customer-address" placeholder="مثال: عمارة البركة، الدور الثالث شقة 5، بجوار صيدلية الدكتور..." rows="2">شارع المحطة - عمارة البركة - الدور الثالث شقة 5 (بجوار المستشفى)</textarea>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Payment Method Section -->
+<div class="px-margin flex flex-col gap-space-sm">
+<h3 class="text-headline-md font-headline-md text-on-surface flex items-center gap-space-xs px-1">
+<span class="material-symbols-outlined text-secondary text-[22px]">payments</span>
+      طريقة الدفع المفضلة
+    </h3>
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Option 1: Cash On Delivery -->
+<label class="relative bg-surface-container-lowest p-space-md rounded-[18px] shadow-[0_4px_16px_rgba(15,81,50,0.05)] cursor-pointer flex flex-col gap-space-xs transition-all active:scale-[0.98]">
+<input checked="" class="peer sr-only" name="payment_method" onchange="togglePayment(this.value)" type="radio" value="cash">
+<div class="w-full flex items-center justify-between">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+</div>
+<div class="w-5 h-5 rounded-full bg-surface-container peer-checked:bg-primary-container flex items-center justify-center transition-colors">
+<div class="w-2 h-2 rounded-full bg-primary-container"></div>
+</div>
+</div>
+<span class="text-label-lg font-label-lg text-on-surface mt-1">كاش مع الدليفري</span>
+<span class="text-caption font-caption text-on-surface-variant">عند استلام الطلب طازجاً</span>
+<div class="absolute inset-0 rounded-[18px] pointer-events-none transition-all shadow-[inset_0_0_0_2px_#0f5132]"></div>
+</label>
+<!-- Option 2: Vodafone Cash / InstaPay -->
+<label class="relative bg-surface-container-lowest p-space-md rounded-[18px] shadow-[0_4px_16px_rgba(15,81,50,0.05)] cursor-pointer flex flex-col gap-space-xs transition-all active:scale-[0.98]">
+<input class="peer sr-only" name="payment_method" onchange="togglePayment(this.value)" type="radio" value="online">
+<div class="w-full flex items-center justify-between">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+</div>
+<div class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center transition-colors"></div>
+</div>
+<span class="text-label-lg font-label-lg text-on-surface mt-1">إنستاباي / محفظة</span>
+<span class="text-caption font-caption text-on-surface-variant">تحويل فوري للدليل</span>
+</label>
+</div>
+<!-- InstaPay Details Accordion (Hidden by default) -->
+<div class="hidden bg-tertiary-fixed/30 p-space-md rounded-xl text-on-surface" id="instapay-box">
+<div class="flex items-center justify-between text-label-md font-label-md">
+<span>رقم فودافون كاش / إنستاباي:</span>
+<span class="font-bold text-primary-container" dir="ltr">010 1234 5678</span>
+</div>
+<p class="text-caption font-caption text-on-surface-variant mt-1">يُرجى إرفاق لقطة شاشة التحويل في محادثة الواتساب عند فتحها تلقائياً.</p>
+</div>
+</div>
+<!-- Coupon Code Voucher -->
+<div class="px-margin">
+<div class="bg-surface-container-lowest p-space-md rounded-[18px] shadow-[0_4px_16px_rgba(15,81,50,0.05)] flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-[24px]">confirmation_number</span>
+<div>
+<span class="text-label-md font-label-md text-on-surface block font-bold">كوبون خصم الدليل مفعّل: ABUHOMS10</span>
+<span class="text-caption font-caption text-secondary">تم توفير 30 ج.م كهدية لمستخدمي دليل أبو حمص</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Order Receipt & Pricing Summary -->
+<div class="px-margin">
+<div class="bg-surface-container-lowest p-space-lg rounded-[20px] shadow-[0_4px_20px_rgba(15,81,50,0.06)] flex flex-col gap-space-sm">
+<h4 class="text-title-md font-title-md text-on-surface pb-1">ملخص الفاتورة والحساب</h4>
+<div class="flex items-center justify-between text-body-md font-body-md text-on-surface-variant">
+<span>المجموع الفرعي للوجبات:</span>
+<span id="subtotal-val">670 ج.م</span>
+</div>
+<div class="flex items-center justify-between text-body-md font-body-md text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span>رسوم التوصيل</span>
+<span class="text-caption font-caption text-outline">(بندر أبوحمص):</span>
+</span>
+<span id="delivery-val">10 ج.م</span>
+</div>
+<div class="flex items-center justify-between text-body-md font-body-md text-secondary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">local_offer</span>
+<span>خصم كود الدليل (ABUHOMS10):</span>
+</span>
+<span id="discount-val">-30 ج.م</span>
+</div>
+<div class="w-full h-px bg-surface-container my-1"></div>
+<div class="flex items-center justify-between">
+<div>
+<span class="text-headline-md font-headline-md text-on-surface block">الإجمالي النهائي المطلوب:</span>
+<span class="text-caption font-caption text-outline">شامل كافة الوجبات والضريبة والتوصيل</span>
+</div>
+<div class="text-left">
+<span class="text-display-lg-mobile font-display-lg-mobile text-primary-container font-bold" id="grand-total-val">650</span>
+<span class="text-label-md font-label-md text-primary-container mr-1">ج.م</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Safety Trust Badge -->
+<div class="px-margin flex items-center justify-center gap-space-xs text-on-surface-variant/80 text-caption font-caption pb-4">
+<span class="material-symbols-outlined text-[16px] text-secondary">verified_user</span>
+<span>طلبك مدعوم ومتابع رسمياً من إدارة دليل مدينة أبوحمص</span>
+</div>
+<!-- Sticky Bottom Checkout Action Dock -->
+<div class="fixed bottom-0 inset-x-0 bg-surface/95 backdrop-blur-xl p-margin shadow-[0_-8px_30px_rgba(15,81,50,0.12)] z-40">
+<div class="max-w-md mx-auto flex items-center gap-space-md">
+<div class="flex flex-col shrink-0">
+<span class="text-caption font-caption text-on-surface-variant">المبلغ الإجمالي</span>
+<span class="text-title-md font-title-md text-primary-container font-bold" id="bottom-total-preview">650 ج.م</span>
+</div>
+<a href="{{DATA:SCREEN:SCREEN_124}}" class="flex-1 h-14 bg-primary-container hover:bg-secondary text-on-primary rounded-[18px] flex items-center justify-center gap-space-sm shadow-[0_6px_20px_rgba(15,81,50,0.25)] active:scale-[0.98] transition-all"><span class="material-symbols-outlined text-[24px]">send</span><span class="text-label-lg font-label-lg font-bold">تأكيد الطلب عبر واتساب 🚀</span></a>
+</div>
+</div>
+</div>
+<script>
+  let cartQuantities = {
+    'qty-1': { qty: 1, price: 340, name: 'صينية مشويات ملوكي' },
+    'qty-2': { qty: 1, price: 120, name: 'بيتزا سجق كيري إيطالي' },
+    'qty-3': { qty: 1, price: 210, name: 'طاجن عكاوي بلدي بالأورمة' }
+  };
+  let deliveryFee = 10;
+  let discountAmount = 30;
+  let selectedAreaName = 'بندر أبوحمص';
+  let paymentMethod = 'كاش عند الاستلام';
+
+  function updateQty(id, delta, unitPrice) {
+    if (!cartQuantities[id]) return;
+    let nextVal = cartQuantities[id].qty + delta;
+    if (nextVal < 1) nextVal = 1;
+    cartQuantities[id].qty = nextVal;
+    const el = document.getElementById(id);
+    if (el) el.innerText = nextVal;
+    recalculateTotals();
+  }
+
+  function recalculateTotals() {
+    let subtotal = 0;
+    let totalItems = 0;
+    for (const key in cartQuantities) {
+      subtotal += cartQuantities[key].qty * cartQuantities[key].price;
+      totalItems += cartQuantities[key].qty;
+    }
+
+    const grandTotal = Math.max(0, subtotal + deliveryFee - discountAmount);
+
+    const subtotalEl = document.getElementById('subtotal-val');
+    const grandTotalEl = document.getElementById('grand-total-val');
+    const bottomPreviewEl = document.getElementById('bottom-total-preview');
+    const badgeEl = document.getElementById('total-count-badge');
+
+    if (subtotalEl) subtotalEl.innerText = subtotal + ' ج.م';
+    if (grandTotalEl) grandTotalEl.innerText = grandTotal;
+    if (bottomPreviewEl) bottomPreviewEl.innerText = grandTotal + ' ج.م';
+    if (badgeEl) badgeEl.innerText = totalItems + ' أصناف';
+  }
+
+  function selectArea(areaName, fee, buttonElement) {
+    selectedAreaName = areaName;
+    deliveryFee = fee;
+
+    document.querySelectorAll('.area-pill').forEach(btn => {
+      btn.className = 'area-pill px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface whitespace-nowrap hover:bg-surface-container-high';
+    });
+
+    buttonElement.className = 'area-pill active-area px-3.5 py-1.5 rounded-full bg-primary-container text-on-primary whitespace-nowrap shadow-sm';
+
+    const deliveryLabel = document.getElementById('delivery-price-label');
+    const deliveryVal = document.getElementById('delivery-val');
+
+    if (deliveryLabel) deliveryLabel.innerText = 'التوصيل: ' + fee + ' ج.م';
+    if (deliveryVal) deliveryVal.innerText = fee + ' ج.م';
+
+    recalculateTotals();
+  }
+
+  function togglePayment(method) {
+    const box = document.getElementById('instapay-box');
+    if (method === 'online') {
+      paymentMethod = 'إنستاباي / محفظة فودافون كاش';
+      if (box) box.classList.remove('hidden');
+    } else {
+      paymentMethod = 'كاش عند الاستلام';
+      if (box) box.classList.add('hidden');
+    }
+  }
+
+  function captureGPSLocation() {
+    const btn = document.getElementById('gps-btn');
+    if (!btn) return;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span> جاري التحديد...';
+    
+    setTimeout(() => {
+      btn.innerHTML = '<span class="material-symbols-outlined text-[18px] text-secondary">check</span> تم حفظ اللوكيشن!';
+      const addr = document.getElementById('customer-address');
+      if (addr && !addr.value.includes('GPS')) {
+        addr.value += ' [إحداثيات GPS مرفقة بدقة 5 أمتار]';
+      }
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+      }, 2500);
+    }, 900);
+  }
+
+  function openWhatsAppPinPrompt() {
+    alert('سيتم إرفاق دبوس موقعك الحالي وبيانات العنوان تلقائياً في رسالة الواتساب المجهزة للمطعم.');
+  }
+
+  function clearCart() {
+    if (confirm('هل ترغب بتفريغ سلة المأكولات؟')) {
+      for (const key in cartQuantities) {
+        cartQuantities[key].qty = 1;
+        const el = document.getElementById(key);
+        if (el) el.innerText = 1;
+      }
+      recalculateTotals();
+    }
+  }
+
+  function confirmOrderAndWhatsApp() {
+    const name = document.getElementById('customer-name')?.value || 'زبون دليل أبو حمص';
+    const phone = document.getElementById('customer-phone')?.value || '';
+    const address = document.getElementById('customer-address')?.value || '';
+    
+    let subtotal = 0;
+    let itemsList = '';
+    for (const key in cartQuantities) {
+      const item = cartQuantities[key];
+      subtotal += item.qty * item.price;
+      itemsList += `• ${item.name} (عدد ${item.qty}) = ${item.qty * item.price} ج.م%0A`;
+    }
+    const finalTotal = subtotal + deliveryFee - discountAmount;
+
+    const message = 
+      `*طلب جديد من تطبيق دليل أبوحمص 🌟*%0A` +
+      `*المطعم:* مطعم البرنس للمشويات والطواجن%0A%0A` +
+      `*تفاصيل الوجبات:*%0A${itemsList}%0A` +
+      `*المنطقة:* ${selectedAreaName}%0A` +
+      `*العنوان الدقيق:* ${encodeURIComponent(address)}%0A` +
+      `*اسم العميل:* ${encodeURIComponent(name)}%0A` +
+      `*رقم التواصل:* ${phone}%0A` +
+      `*طريقة الدفع:* ${paymentMethod}%0A` +
+      `*المجموع الفرعي:* ${subtotal} ج.م%0A` +
+      `*رسوم التوصيل:* ${deliveryFee} ج.م%0A` +
+      `*خصم الكوبون:* -${discountAmount} ج.م%0A` +
+      `*الإجمالي النهائي المطلوب:* ${finalTotal} ج.م%0A%0A` +
+      `📍 *لوكيشن العميل (أبوحمص):* https://maps.google.com/?q=31.0988,30.3082`;
+
+    // Opens WhatsApp with prefilled message
+    window.open(`https://api.whatsapp.com/send?phone=201012345678&text=${message}`, '_blank');
+  }
+</script></main>
+
+</body></html>

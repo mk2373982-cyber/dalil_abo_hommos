@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "surface-tint": "#2d6a48",
+          "on-secondary-fixed": "#002110",
+          "outline": "#707971",
+          "surface-container-lowest": "#ffffff",
+          "on-tertiary": "#ffffff",
+          "error": "#ba1a1a",
+          "on-primary-fixed-variant": "#0f5132",
+          "on-error-container": "#93000a",
+          "surface-container-high": "#e6e9e7",
+          "surface-bright": "#f7faf8",
+          "tertiary": "#735c00",
+          "error-container": "#ffdad6",
+          "on-primary-container": "#84c39b",
+          "primary-container": "#0f5132",
+          "on-surface": "#181c1c",
+          "outline-variant": "#c0c9c0",
+          "secondary": "#146c43",
+          "tertiary-fixed-dim": "#e9c349",
+          "primary-fixed": "#b0f1c7",
+          "secondary-container": "#9ff1bd",
+          "inverse-on-surface": "#eef1ef",
+          "primary": "#003820",
+          "tertiary-fixed": "#ffe088",
+          "on-background": "#181c1c",
+          "on-secondary-container": "#1b7047",
+          "background": "#f7faf8",
+          "on-tertiary-fixed": "#241a00",
+          "on-secondary": "#ffffff",
+          "on-tertiary-fixed-variant": "#574500",
+          "primary-fixed-dim": "#95d4ac",
+          "on-error": "#ffffff",
+          "surface-container": "#ebefed",
+          "on-surface-variant": "#404942",
+          "secondary-fixed-dim": "#86d8a5",
+          "surface-variant": "#e0e3e1",
+          "surface": "#f7faf8",
+          "surface-container-highest": "#e0e3e1",
+          "on-primary": "#ffffff",
+          "surface-dim": "#d7dbd9",
+          "tertiary-container": "#cca730",
+          "inverse-primary": "#95d4ac",
+          "inverse-surface": "#2d3130",
+          "on-secondary-fixed-variant": "#005230",
+          "surface-container-low": "#f1f4f2",
+          "secondary-fixed": "#a2f4c0",
+          "on-tertiary-container": "#4f3d00",
+          "on-primary-fixed": "#002111"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "space-md": "0.75rem",
+          "space-xl": "1.5rem",
+          "space-lg": "1.125rem",
+          "gutter": "1rem",
+          "space-xs": "0.25rem",
+          "space-sm": "0.5rem",
+          "margin": "1rem",
+          "gutter-sm": "0.75rem",
+          "margin-lg": "1.25rem"
+        },
+        "fontFamily": {
+          "display-lg-mobile": [
+            "IBM Plex Sans"
+          ],
+          "display-lg": [
+            "IBM Plex Sans"
+          ],
+          "headline-md": [
+            "IBM Plex Sans"
+          ],
+          "caption": [
+            "IBM Plex Sans"
+          ],
+          "headline-lg": [
+            "IBM Plex Sans"
+          ],
+          "body-md": [
+            "IBM Plex Sans"
+          ],
+          "body-lg": [
+            "IBM Plex Sans"
+          ],
+          "label-md": [
+            "IBM Plex Sans"
+          ],
+          "label-lg": [
+            "IBM Plex Sans"
+          ],
+          "title-md": [
+            "IBM Plex Sans"
+          ]
+        },
+        "fontSize": {
+          "display-lg-mobile": [
+            "26px",
+            {
+              "lineHeight": "36px",
+              "fontWeight": "700"
+            }
+          ],
+          "display-lg": [
+            "32px",
+            {
+              "lineHeight": "44px",
+              "fontWeight": "700"
+            }
+          ],
+          "headline-md": [
+            "19px",
+            {
+              "lineHeight": "28px",
+              "fontWeight": "600"
+            }
+          ],
+          "caption": [
+            "11px",
+            {
+              "lineHeight": "16px",
+              "fontWeight": "400"
+            }
+          ],
+          "headline-lg": [
+            "22px",
+            {
+              "lineHeight": "32px",
+              "fontWeight": "600"
+            }
+          ],
+          "body-md": [
+            "14px",
+            {
+              "lineHeight": "22px",
+              "fontWeight": "400"
+            }
+          ],
+          "body-lg": [
+            "16px",
+            {
+              "lineHeight": "26px",
+              "fontWeight": "400"
+            }
+          ],
+          "label-md": [
+            "12px",
+            {
+              "lineHeight": "18px",
+              "fontWeight": "500"
+            }
+          ],
+          "label-lg": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "fontWeight": "600"
+            }
+          ],
+          "title-md": [
+            "17px",
+            {
+              "lineHeight": "24px",
+              "fontWeight": "500"
+            }
+          ]
+        }
+      },
+    },
+  }</script></head><body class="bg-surface font-body-md text-on-surface"><aside class="fixed right-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_4px_16px_rgba(15,81,50,0.05)] z-50 flex flex-col justify-between py-6 px-4 transition-transform duration-300 ease-in-out"><div class="flex flex-col gap-6"><div class="flex items-center gap-3 px-3"><div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm"><span class="material-symbols-outlined text-[22px]">location_city</span></div><div class="flex flex-col"><span class="font-label-lg text-label-lg text-on-surface">دليل أبوحمص</span><span class="font-caption text-caption text-on-surface-variant">مبادرة مجتمعية مستقلة</span></div></div><nav class="flex flex-col gap-1" data-active-classes="bg-primary-container text-on-primary font-bold shadow-sm"><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span>لوحة التحكم</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="places-and-categories" href="#"><span class="material-symbols-outlined text-[20px]">store</span><span>الأماكن والتصنيفات</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="reports-and-analytics" href="#"><span class="material-symbols-outlined text-[20px]">insights</span><span>التقارير والإحصائيات</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="whatsapp-directory" href="#"><span class="material-symbols-outlined text-[20px]">forum</span><span>قائمة واتساب</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="real-estate-and-sections" href="#"><span class="material-symbols-outlined text-[20px]">apartment</span><span>إدارة العقارات والأقسام</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="finance-and-profits" href="#"><span class="material-symbols-outlined text-[20px]">payments</span><span>الحسابات والأرباح</span></a><a aria-current="page" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all bg-primary-container text-on-primary font-bold shadow-sm" data-path="settings-and-partners" href="#"><span class="material-symbols-outlined text-[20px]">tune</span><span>الإعدادات والشركاء</span></a></nav></div><div class="flex flex-col gap-3 px-3"><div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-secondary"></span><span class="font-label-md text-label-md text-on-surface">حالة الدليل</span></div><span class="font-caption text-caption text-secondary font-medium">متصل 100%</span></div><div class="text-center"><span class="font-caption text-caption text-on-surface-variant">إصدار المنظومة 2.4.0</span></div></div></aside><div class="pr-72"><header class="fixed top-0 right-72 left-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-gutter"><div class="flex items-center gap-3"><button class="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">search</span></button><div class="flex items-center gap-2"><span class="font-label-md text-label-md text-on-surface-variant">مدينة أبوحمص - محافظة البحيرة</span></div></div><div class="flex items-center gap-3"><button class="relative w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2 left-2 w-2 h-2 rounded-full bg-error"></span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="relative pt-16 bg-surface px-gutter min-h-screen"><div class="flex flex-col w-full pb-16">
+<!-- Toast Notification Center -->
+<div class="fixed bottom-6 left-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-xl" id="toast-notification">
+<span class="material-symbols-outlined text-[22px]" id="toast-icon"></span>
+<span class="font-label-lg text-label-lg" id="toast-message"></span>
+</div>
+<!-- Unsaved Changes Floating Bar -->
+<div class="sticky top-16 z-30 mb-6 bg-tertiary-fixed text-on-tertiary-fixed px-5 py-3 rounded-xl shadow-md flex flex-wrap items-center justify-between gap-3 transition-all duration-300" id="unsaved-banner">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-tertiary-container/30 flex items-center justify-center text-tertiary font-bold">
+<span class="material-symbols-outlined text-[20px]">pending_actions</span>
+</div>
+<div>
+<p class="font-label-lg text-label-lg font-bold">توجد تعديلات تشغيلية غير محفوظة</p>
+<p class="font-caption text-caption text-on-tertiary-fixed-variant">هذه التغييرات تؤثر فوراً على ظهور الخدمات وقنوات التواصل في الواجهة العامة للزوار.</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3.5 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container font-label-md text-label-md transition-colors" onclick="resetFormState()" type="button">
+        تجاهل
+      </button>
+<button class="px-4 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-secondary transition-colors shadow-sm" onclick="triggerSave('success')" type="button">
+        تطبيق الآن
+      </button>
+</div>
+</div>
+<!-- Header Context Meta & Prototype Disclaimer -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="font-caption text-caption uppercase tracking-wider text-secondary font-bold">إدارة المنظومة والضوابط</span>
+<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+<span class="font-caption text-caption text-on-surface-variant">المرجع: AD-SET-2025</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary">الإعدادات العامة وضوابط المنظومة</h1>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-high text-on-surface-variant px-3.5 py-2 rounded-xl">
+<span class="material-symbols-outlined text-[18px] text-tertiary">science</span>
+<span class="font-caption text-caption">البيانات المعروضة: <strong>بيانات تشغيلية تجريبية للنموذج الأولي</strong></span>
+</div>
+</div>
+<!-- Bento Grid Container -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Card 1: Initiative Identity & Mission (Col: 7) -->
+<div class="lg:col-span-7 bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-start justify-between gap-4 mb-4">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm">
+<span class="material-symbols-outlined text-[28px]">verified</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-headline-md text-headline-md text-on-surface">دليل أبوحمص</h2>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-caption font-label-md bg-secondary-container text-on-secondary-container">
+                  نشط ومعتمد
+                </span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant">مبادرة مجتمعية رقمية مفتوحة</p>
+</div>
+</div>
+<span class="font-caption text-caption text-outline bg-surface-container px-2.5 py-1 rounded-lg">إصدار 2.4.0</span>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">اسم المبادرة والظهور العام</label>
+<input class="w-full bg-surface-container-low text-on-surface rounded-xl px-4 py-2.5 font-body-md text-body-md focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container transition-all" id="initiative-name" onchange="markUnsaved()" type="text" value="دليل أبوحمص - الدليل المدني الموحد"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">الرسالة ونطاق العمل</label>
+<textarea class="w-full bg-surface-container-low text-on-surface rounded-xl px-4 py-2.5 font-body-md text-body-md focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container transition-all resize-none" id="initiative-desc" onchange="markUnsaved()" rows="3">مبادرة مجتمعية مستقلة تهدف لتوثيق الأنشطة التجارية والطبية والخدمية بمركز ومدينة أبوحمص، وربط الأهالي بمقدمي الخدمات بأعلى كفاءة وشفافية.</textarea>
+</div>
+<div class="p-3.5 rounded-xl bg-error-container/40 text-on-error-container flex items-start gap-3">
+<span class="material-symbols-outlined text-[20px] text-error shrink-0 mt-0.5">policy</span>
+<div class="space-y-0.5">
+<p class="font-label-md text-label-md font-bold">إقرار قانوني وميثاق المبادرة</p>
+<p class="font-caption text-caption">«مبادرة أهلية مستقلة غير حكومية». لا تمثل أي جهة إدارية رسمية، وجميع الإدراجات تخضع للمراجعة المجتمعية المتبادلة دون إعطاء صبغة تصديق حكومي.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-6 pt-4 flex items-center justify-between">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span class="font-caption text-caption">آخر تحديث للنص: منذ 3 أيام بواسطة المشرف</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+<span>معاينة للزائر</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 2: Quick Links & Partner Accounting (Col: 5) -->
+<div class="lg:col-span-5 flex flex-col gap-6">
+<!-- Direct Bridge to Partners -->
+<div class="bg-gradient-to-br from-primary-container to-primary text-on-primary rounded-xl p-6 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+<div class="absolute -left-6 -bottom-6 w-32 h-32 rounded-full bg-secondary-container/10 pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between mb-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest/15 flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[22px]">handshake</span>
+</div>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed font-caption text-caption px-2.5 py-0.5 rounded-full font-bold">إشراف مشترك</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-primary mb-1">نسب الشريكين والتسويات المالية</h3>
+<p class="font-body-md text-body-md text-on-primary-container">إدارة حصص الشركاء المؤسسين (رائد ومحمد)، تدقيق عوائد الاشتراكات، وسجل حركات الأرباح المعتمد.</p>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between">
+<span class="font-caption text-caption text-on-primary-container">المحفظة متوازنة بنسبة 50/50</span>
+<a class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface-container-lowest text-primary-container font-label-md text-label-md hover:bg-secondary-container transition-colors shadow-sm" data-path="finance-and-profits" href="#">
+<span>فتح شاشة النسب</span>
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+</a>
+</div>
+</div>
+<!-- Quick Link: Real Estate & Sections -->
+<div class="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex items-center justify-between hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[22px]">apartment</span>
+</div>
+<div>
+<h4 class="font-label-lg text-label-lg text-on-surface">إدارة العقارات والتقسيمات</h4>
+<p class="font-caption text-caption text-on-surface-variant">التحكم في تصنيفات المباني، الأراضي والوحدات</p>
+</div>
+</div>
+<a class="w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="real-estate-and-sections" href="#">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+</a>
+</div>
+</div>
+<!-- Card 3: Contact Channels & Field Operational Links (Col: 6) -->
+<div class="lg:col-span-6 bg-surface-container-lowest rounded-xl p-6 shadow-sm space-y-5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[22px]">contact_phone</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">قنوات الخدمة والتواصل المعتمدة</h3>
+<p class="font-caption text-caption text-on-surface-variant">تظهر للمواطنين في شاشة الدعم وطلب توثيق الأنشطة</p>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container/50 text-secondary">
+<span class="material-symbols-outlined text-[16px]">timer</span>
+<span class="font-caption text-caption font-bold">هدف الرد: 48 ساعة</span>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">هاتف الدعم والاستفسارات الميدانية</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low text-on-surface rounded-xl pl-10 pr-4 py-2.5 font-body-md text-body-md text-left focus:outline-none focus:ring-2 focus:ring-primary-container" dir="ltr" onchange="markUnsaved()" type="text" value="+20 102 345 6789"/>
+<span class="material-symbols-outlined absolute left-3 top-3 text-[18px] text-on-surface-variant">phone</span>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">رقم واتساب المعتمد للمتابعة الميدانية والتحقق</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low text-on-surface rounded-xl pl-10 pr-4 py-2.5 font-body-md text-body-md text-left focus:outline-none focus:ring-2 focus:ring-primary-container" dir="ltr" onchange="markUnsaved()" type="text" value="+20 115 889 0123"/>
+<span class="material-symbols-outlined absolute left-3 top-3 text-[18px] text-secondary">chat</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant mt-1 block">يتم استخدامه لإرسال صور التراخيص وإثباتات النشاط بواسطة أصحاب المحال.</span>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">رابط الوصول العام للتطبيق (Domain / Shortlink)</label>
+<div class="flex items-center gap-2">
+<div class="relative grow">
+<input class="w-full bg-surface-container-low text-on-surface rounded-xl pl-10 pr-4 py-2.5 font-body-md text-body-md text-left focus:outline-none focus:ring-2 focus:ring-primary-container" dir="ltr" id="place-url" onchange="markUnsaved()" type="text" value="https://abuhoms.directory/{place_url}"/>
+<span class="material-symbols-outlined absolute left-3 top-3 text-[18px] text-on-surface-variant">link</span>
+</div>
+<button class="h-[44px] px-3.5 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors flex items-center gap-1" onclick="copyUrl()" type="button">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+<span>نسخ</span>
+</button>
+</div>
+</div>
+<div class="pt-2 flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface">استقبال بلاغات التصحيح من العامة</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" onchange="markUnsaved()" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- Card 4: Geographic Coverage & Village Units (Col: 6) -->
+<div class="lg:col-span-6 bg-surface-container-lowest rounded-xl p-6 shadow-sm space-y-5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[22px]">map</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">نطاق التغطية والوحدات الجغرافية</h3>
+<p class="font-caption text-caption text-on-surface-variant">توزيع الفلاتر المكانية بالدليل لمركز ومدينة أبوحمص</p>
+</div>
+</div>
+<span class="font-caption text-caption px-2 py-0.5 rounded-lg bg-surface-container font-medium text-on-surface">5 وحدات رئيسية</span>
+</div>
+<div class="space-y-3">
+<!-- Center -->
+<div class="p-3.5 rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px]">location_on</span>
+<div>
+<p class="font-label-lg text-label-lg font-bold text-on-surface">بندر أبوحمص (المدينة المركزية)</p>
+<p class="font-caption text-caption text-on-surface-variant">الشارع العمومي، المحطة، المعهد، حي الزهور</p>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full text-caption font-label-md bg-secondary-container text-on-secondary-container">تغطية تامة (100%)</span>
+</div>
+<!-- Village Units Checklist -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<input checked="" class="w-4 h-4 accent-primary-container rounded" id="unit-1" onchange="markUnsaved()" type="checkbox"/>
+<label class="font-label-md text-label-md text-on-surface cursor-pointer" for="unit-1">بركة غطاس وتوابعها</label>
+</div>
+<span class="font-caption text-caption text-on-surface-variant">نشط</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<input checked="" class="w-4 h-4 accent-primary-container rounded" id="unit-2" onchange="markUnsaved()" type="checkbox"/>
+<label class="font-label-md text-label-md text-on-surface cursor-pointer" for="unit-2">بسنتواي وتوابعها</label>
+</div>
+<span class="font-caption text-caption text-on-surface-variant">نشط</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<input checked="" class="w-4 h-4 accent-primary-container rounded" id="unit-3" onchange="markUnsaved()" type="checkbox"/>
+<label class="font-label-md text-label-md text-on-surface cursor-pointer" for="unit-3">جواد حسني والنجوع</label>
+</div>
+<span class="font-caption text-caption text-on-surface-variant">نشط</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<input checked="" class="w-4 h-4 accent-primary-container rounded" id="unit-4" onchange="markUnsaved()" type="checkbox"/>
+<label class="font-label-md text-label-md text-on-surface cursor-pointer" for="unit-4">بطورس والعزب المجاورة</label>
+</div>
+<span class="font-caption text-caption text-on-surface-variant">نشط</span>
+</div>
+</div>
+<!-- Add Custom Geographic Unit -->
+<div class="flex items-center gap-2 pt-1">
+<input class="grow bg-surface-container-low text-on-surface placeholder:text-outline text-body-md font-body-md px-3.5 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-container" placeholder="إضافة وحدة قروية أو عزبة تابعة..." type="text"/>
+<button class="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors shrink-0 flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>إضافة</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 5: Promotion Rules, Fair Rotation & Banners (Col: 12 Full) -->
+<div class="lg:col-span-12 bg-surface-container-lowest rounded-xl p-6 shadow-sm space-y-6">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[22px]">featured_seasonal_and_gifts</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">ضوابط التمييز التشغيلي وبنرات الواجهة</h3>
+<p class="font-caption text-caption text-on-surface-variant">معايير عرض الأنشطة المميزة والكروت الذهبية وسياسات التدوير العادل</p>
+</div>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-container-low text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-tertiary">info</span>
+<span class="font-caption text-caption">الأسعار تحددها الإدارة داخلياً ولا توجد وعود تسويقية غير معتمدة.</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+<!-- Setting 1: Banner Seats -->
+<div class="p-4 rounded-xl bg-surface-container-low space-y-3">
+<div class="flex items-center justify-between">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">كراسي بنرات الواجهة</span>
+<span class="text-caption font-label-md px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant">الحد الأقصى</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant">العدد الأقصى للبنرات الدعائية المتحركة في الشريط العلوي لواجهة التطبيق لمنع التشتيت.</p>
+<div class="flex items-center gap-3">
+<input class="w-20 bg-surface-container-lowest text-on-surface rounded-lg px-3 py-1.5 font-label-lg text-label-lg text-center focus:outline-none focus:ring-2 focus:ring-primary-container" max="10" min="1" onchange="markUnsaved()" type="number" value="4"/>
+<span class="font-body-md text-body-md text-on-surface-variant">بنرات متداولة</span>
+</div>
+</div>
+<!-- Setting 2: Rotation Duration -->
+<div class="p-4 rounded-xl bg-surface-container-low space-y-3">
+<div class="flex items-center justify-between">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">مدة دورة التدوير العادل</span>
+<span class="text-caption font-label-md px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant">ثواني/بنر</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant">الفترة الزمنية التلقائية قبل انتقال العرض للنشاط التالي في شريط الصدارة.</p>
+<div class="flex items-center gap-3">
+<input class="w-20 bg-surface-container-lowest text-on-surface rounded-lg px-3 py-1.5 font-label-lg text-label-lg text-center focus:outline-none focus:ring-2 focus:ring-primary-container" max="15" min="3" onchange="markUnsaved()" type="number" value="6"/>
+<span class="font-body-md text-body-md text-on-surface-variant">ثوانٍ لكل ظهور</span>
+</div>
+</div>
+<!-- Setting 3: Golden Card Limits -->
+<div class="p-4 rounded-xl bg-surface-container-low space-y-3">
+<div class="flex items-center justify-between">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">كوتة الكروت الذهبية لكل قسم</span>
+<span class="text-caption font-label-md px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant">المحلات / العيادات</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant">حفظ النزاهة والموثوقية بعدم تكديس أكثر من سعة محددة كنشاط مميز في كل قسم.</p>
+<div class="flex items-center gap-3">
+<input class="w-20 bg-surface-container-lowest text-on-surface rounded-lg px-3 py-1.5 font-label-lg text-label-lg text-center focus:outline-none focus:ring-2 focus:ring-primary-container" max="6" min="1" onchange="markUnsaved()" type="number" value="3"/>
+<span class="font-body-md text-body-md text-on-surface-variant">أنشطة مميزة لكل تصنيف</span>
+</div>
+</div>
+</div>
+<!-- Fair Sharing Principles Box -->
+<div class="p-4 rounded-xl bg-surface-container flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="space-y-1">
+<span class="font-label-md text-label-md text-on-surface font-bold">ميثاق التدوير العادل (Fair Rotation Engine)</span>
+<p class="font-caption text-caption text-on-surface-variant">توزيع فرص الظهور عشوائياً بين كافة المحلات والعيادات المشتركة بنفس الدرجة تلقائياً عند فتح كل جلسة مستخدم جديدة.</p>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<span class="font-caption text-caption text-secondary font-bold">خوارزمية العدالة مفعلة</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" onchange="markUnsaved()" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Global Actions Toolbar -->
+<div class="mt-8 bg-surface-container-lowest rounded-xl p-4 shadow-md flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">save</span>
+</div>
+<div>
+<p class="font-label-lg text-label-lg text-on-surface">التحكم في تحديث المنظومة</p>
+<p class="font-caption text-caption text-on-surface-variant">جميع التغييرات تنعكس فورياً على قاعدة البيانات وتطبيق المستخدمين</p>
+</div>
+</div>
+<!-- Action Buttons & State Simulators -->
+<div class="flex flex-wrap items-center gap-2.5">
+<!-- Status State Trigger Select (For testing demonstration) -->
+<div class="flex items-center gap-1.5 pl-2">
+<span class="font-caption text-caption text-on-surface-variant">اختبار المحاكاة:</span>
+<select class="bg-surface-container-low text-on-surface rounded-lg px-2.5 py-1.5 font-caption text-caption focus:outline-none" id="state-simulator-selector">
+<option value="success">حفظ ناجح</option>
+<option value="error">خطأ في الاتصال</option>
+</select>
+</div>
+<button class="px-5 py-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-lg text-label-lg transition-colors flex items-center gap-2" onclick="resetFormState()" type="button">
+<span class="material-symbols-outlined text-[18px]">undo</span>
+<span>إلغاء التغييرات</span>
+</button>
+<button class="px-6 py-2.5 rounded-xl bg-primary-container hover:bg-secondary text-on-primary font-label-lg text-label-lg transition-all flex items-center gap-2 shadow-sm min-h-[44px]" id="save-main-button" onclick="runSimulatedSave()" type="button">
+<span class="material-symbols-outlined text-[18px] hidden animate-spin" id="save-spinner">progress_activity</span>
+<span class="material-symbols-outlined text-[18px]" id="save-icon">check_circle</span>
+<span id="save-label">حفظ التعديلات</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  let hasUnsavedChanges = false;
+
+  function markUnsaved() {
+    hasUnsavedChanges = true;
+    const banner = document.getElementById('unsaved-banner');
+    if (banner) {
+      banner.classList.remove('hidden');
+      banner.style.display = 'flex';
+    }
+  }
+
+  function resetFormState() {
+    hasUnsavedChanges = false;
+    const banner = document.getElementById('unsaved-banner');
+    if (banner) {
+      banner.style.display = 'none';
+    }
+    showToast('تم إلغاء التغييرات واستعادة القيم الأصلية', 'info');
+  }
+
+  function runSimulatedSave() {
+    const selector = document.getElementById('state-simulator-selector');
+    const selectedMode = selector ? selector.value : 'success';
+    triggerSave(selectedMode);
+  }
+
+  function triggerSave(mode) {
+    const saveBtn = document.getElementById('save-main-button');
+    const spinner = document.getElementById('save-spinner');
+    const icon = document.getElementById('save-icon');
+    const label = document.getElementById('save-label');
+
+    // Loading State
+    if (saveBtn) saveBtn.disabled = true;
+    if (spinner) spinner.classList.remove('hidden');
+    if (icon) icon.classList.add('hidden');
+    if (label) label.innerText = 'جاري المزامنة والحفظ...';
+
+    setTimeout(() => {
+      // Revert Button
+      if (saveBtn) saveBtn.disabled = false;
+      if (spinner) spinner.classList.add('hidden');
+      if (icon) icon.classList.remove('hidden');
+      if (label) label.innerText = 'حفظ التعديلات';
+
+      if (mode === 'success') {
+        hasUnsavedChanges = false;
+        const banner = document.getElementById('unsaved-banner');
+        if (banner) banner.style.display = 'none';
+        showToast('تم حفظ كافة الإعدادات والضوابط التشغيلية بنجاح!', 'success');
+      } else {
+        showToast('تعذر مزامنة الإعدادات مع الخادم. يرجى إعادة المحاولة.', 'error');
+      }
+    }, 900);
+  }
+
+  function showToast(message, type) {
+    const toast = document.getElementById('toast-notification');
+    const msgEl = document.getElementById('toast-message');
+    const iconEl = document.getElementById('toast-icon');
+
+    if (!toast || !msgEl || !iconEl) return;
+
+    msgEl.innerText = message;
+
+    // Reset styles
+    toast.className = 'fixed bottom-6 left-6 z-50 transition-all duration-300 pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-xl';
+
+    if (type === 'success') {
+      toast.classList.add('bg-primary-container', 'text-on-primary');
+      iconEl.innerText = 'check_circle';
+    } else if (type === 'error') {
+      toast.classList.add('bg-error', 'text-on-error');
+      iconEl.innerText = 'error';
+    } else {
+      toast.classList.add('bg-surface-container-highest', 'text-on-surface');
+      iconEl.innerText = 'info';
+    }
+
+    toast.classList.remove('translate-y-24', 'opacity-0');
+    toast.classList.add('translate-y-0', 'opacity-100');
+
+    setTimeout(() => {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-24', 'opacity-0');
+    }, 3800);
+  }
+
+  function copyUrl() {
+    const input = document.getElementById('place-url');
+    if (input) {
+      navigator.clipboard.writeText(input.value).then(() => {
+        showToast('تم نسخ الرابط المعتمد بنجاح!', 'info');
+      }).catch(() => {
+        showToast('فشل النسخ الآلي، يرجى النسخ يدوياً', 'error');
+      });
+    }
+  }
+
+  // Initial check to keep notice visible or tucked
+  document.addEventListener('DOMContentLoaded', () => {
+    // Unsaved banner is visible as demo starts with sample unsaved state
+  });
+</script></main></div></body></html>

@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "IBM Plex Sans Arabic", system-ui, -apple-system, sans-serif;
+  --color-primary: #003820;
+  --color-primary-container: #0f5132;
+  --color-secondary: #146c43;
+  --color-secondary-container: #9ff1bd;
+  --color-mint-soft: #e6f4ec;
+  --color-gold: #cca730;
+  --color-gold-soft: #ffe088;
+  --color-surface: #f7faf8;
+  --color-surface-low: #f1f4f2;
+  --color-surface-container: #ebefed;
+  --color-ink: #181c1c;
+  --color-ink-muted: #404942;
+  --color-outline-soft: #e4ece7;
+  --color-danger: #ba1a1a;
+  --color-danger-soft: #ffdad6;
+}
+
+@layer base {
+  html {
+    font-family: "IBM Plex Sans Arabic", system-ui, -apple-system, sans-serif;
+    direction: rtl;
+    background-color: #f7faf8;
+    color: #181c1c;
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background-color: #f7faf8;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid #0f5132;
+    outline-offset: 2px;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.shadow-civic-1 {
+  box-shadow: 0 4px 16px rgba(15, 81, 50, 0.05);
+}
+
+.shadow-civic-2 {
+  box-shadow: 0 8px 24px rgba(15, 81, 50, 0.09);
+}
+
+.shadow-civic-3 {
+  box-shadow: 0 -8px 28px rgba(15, 81, 50, 0.12);
+}
+
+/* App-wide tactile micro-interactions for interactive cards & controls */
+main a[class*="rounded-3xl"],
+main a[class*="rounded-2xl"] {
+  transition:
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+main button {
+  transition:
+    transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+main a[class*="rounded-3xl"]:active,
+main a[class*="rounded-2xl"]:active {
+  transform: scale(0.985);
+}
+
+main button:not(:disabled):active {
+  transform: scale(0.965);
+}
+
+@media (hover: hover) {
+  main a[class*="shadow-civic-"]:hover {
+    transform: translateY(-2.5px);
+    box-shadow: 0 12px 28px -8px rgba(15, 81, 50, 0.14);
+  }
+
+  main a[class*="rounded-3xl"] img,
+  main a[class*="rounded-2xl"] img {
+    transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease;
+  }
+
+  main a[class*="rounded-3xl"]:hover img,
+  main a[class*="rounded-2xl"]:hover img {
+    transform: scale(1.04);
+  }
+}
+
+/* Lively tactile spring motion for DynamicCategoryIcon (current & future categories) */
+.category-icon-tile {
+  transition:
+    transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.category-icon-glyph {
+  transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.category-icon-sheen {
+  transform: translateX(135%);
+  transition: transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.group:active .category-icon-tile {
+  transform: scale(0.93);
+}
+
+@media (hover: hover) {
+  .group:hover .category-icon-tile {
+    transform: translateY(-3px) scale(1.07) rotate(-3deg);
+  }
+
+  .group:hover .category-icon-glyph {
+    transform: scale(1.1) rotate(5deg);
+  }
+
+  .group:hover .category-icon-sheen {
+    transform: translateX(-135%);
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  main a[class*="rounded-3xl"],
+  main a[class*="rounded-2xl"],
+  main button,
+  main a img,
+  .category-icon-tile,
+  .category-icon-glyph,
+  .category-icon-sheen {
+    transition: none !important;
+    transform: none !important;
+  }
+}

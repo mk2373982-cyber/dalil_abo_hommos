@@ -1,0 +1,796 @@
+<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="mobile_tab" name="shell-type"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{width:100vw;margin:0;padding:0;font-family:'IBM Plex Sans Arabic',sans-serif;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "tertiary-container": "#cca730", "on-surface-variant": "#404942", "error": "#ba1a1a", "primary-fixed": "#b0f1c7", "on-secondary-fixed-variant": "#005230", "on-tertiary-fixed-variant": "#574500", "on-secondary-fixed": "#002110", "inverse-surface": "#2d3130", "inverse-on-surface": "#eef1ef", "on-background": "#181c1c", "tertiary-fixed-dim": "#e9c349", "outline": "#707971", "surface-container": "#ebefed", "primary-container": "#0f5132", "tertiary": "#735c00", "outline-variant": "#c0c9c0", "on-primary-fixed-variant": "#0f5132", "on-secondary": "#ffffff", "primary": "#003820", "surface-container-low": "#f1f4f2", "secondary-fixed-dim": "#86d8a5", "surface-container-highest": "#e0e3e1", "secondary-fixed": "#a2f4c0", "on-error-container": "#93000a", "surface-container-high": "#e6e9e7", "secondary": "#146c43", "background": "#f7faf8", "on-primary": "#ffffff", "on-tertiary-fixed": "#241a00", "on-surface": "#181c1c", "surface": "#f7faf8", "error-container": "#ffdad6", "on-primary-container": "#84c39b", "surface-variant": "#e0e3e1", "primary-fixed-dim": "#95d4ac", "on-error": "#ffffff", "surface-container-lowest": "#ffffff", "surface-dim": "#d7dbd9", "on-tertiary": "#ffffff", "inverse-primary": "#95d4ac", "on-tertiary-container": "#4f3d00", "surface-tint": "#2d6a48", "on-secondary-container": "#1b7047", "surface-bright": "#f7faf8", "secondary-container": "#9ff1bd", "on-primary-fixed": "#002111", "tertiary-fixed": "#ffe088" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.125rem", "gutter-sm": "0.75rem", "space-xl": "1.5rem", "space-sm": "0.5rem", "margin": "1rem", "space-md": "0.75rem", "margin-lg": "1.25rem", "space-xs": "0.25rem", "gutter": "1rem" }, "fontFamily": { "display-lg": ["IBM Plex Sans Arabic"], "caption": ["IBM Plex Sans Arabic"], "label-lg": ["IBM Plex Sans Arabic"], "headline-lg": ["IBM Plex Sans Arabic"], "label-md": ["IBM Plex Sans Arabic"], "display-lg-mobile": ["IBM Plex Sans Arabic"], "body-md": ["IBM Plex Sans Arabic"], "headline-md": ["IBM Plex Sans Arabic"], "body-lg": ["IBM Plex Sans Arabic"], "title-md": ["IBM Plex Sans Arabic"] }, "fontSize": { "display-lg": ["32px", { "lineHeight": "44px", "fontWeight": "700" }], "caption": ["11px", { "lineHeight": "16px", "fontWeight": "400" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "headline-lg": ["22px", { "lineHeight": "32px", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "18px", "fontWeight": "500" }], "display-lg-mobile": ["26px", { "lineHeight": "36px", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }], "headline-md": ["19px", { "lineHeight": "28px", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }], "title-md": ["17px", { "lineHeight": "24px", "fontWeight": "500" }] } } } };</script></head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen selection:bg-secondary-container"><header class="fixed top-0 w-full z-50 bg-surface/85 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(15,81,50,0.06)]"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm"><span class="material-symbols-outlined text-[20px]">account_balance</span></div><div class="flex flex-col"><span class="font-label-md text-label-md text-secondary">دليل أبو حمص الإداري</span><h1 class="font-title-md text-title-md text-on-surface leading-tight">Profit Distribution</h1></div></div><div class="flex items-center gap-space-xs"><button aria-label="الإشعارات" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[22px]">notifications</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full px-margin pt-16 pb-28 bg-surface"><div class="flex flex-col w-full gap-space-xl">
+<!-- Municipal Trust Banner & Accounting Protocol Notice -->
+<section class="w-full bg-surface-container-low rounded-xl p-space-md shadow-sm relative overflow-hidden">
+<div class="flex items-start gap-space-sm">
+<div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[22px]">policy</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-headline-md text-headline-md text-primary">نظام إدارة وتوزيع الأرباح</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-caption font-caption bg-secondary-container text-on-secondary-container">
+            معتمد بلدياً • أبو حمص
+          </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1 leading-relaxed">
+          حسابات الإيرادات والمصروفات وصافي الأرباح التشاركية الموثقة. تحديث أو اعتماد النسب يسري على الدورات القادمة ولا يمس التسويات التاريخية المغلقة.
+        </p>
+</div>
+</div>
+</section>
+<!-- Executive Financial Overview (The Immutable Truth) -->
+<section class="w-full flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">account_balance_wallet</span>
+<h2 class="font-title-md text-title-md text-on-surface">ملخص الدورة المالية الحالية (أكتوبر 2024)</h2>
+</div>
+<span class="font-caption text-caption text-on-surface-variant bg-surface-container px-2 py-1 rounded-full">دورة نشطة</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
+<!-- Total Revenue -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">إجمالي الإيرادات المحصلة</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]">trending_up</span>
+</div>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg-mobile text-display-lg-mobile text-primary tracking-tight" id="disp-total-revenue">32,500</span>
+<span class="font-label-md text-label-md text-on-surface-variant">ج.م</span>
+</div>
+<span class="font-caption text-caption text-secondary mt-1">شاملة الإعلانات والاشتراكات التجارية</span>
+</div>
+<!-- Operational Expenses -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">المصروفات التشغيلية المعتمدة</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[18px]">receipt</span>
+</div>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg-mobile text-display-lg-mobile text-error tracking-tight" id="disp-total-expenses">6,200</span>
+<span class="font-label-md text-label-md text-on-surface-variant">ج.م</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant mt-1">سيرفرات، تسويق، وطباعة ميدانية</span>
+</div>
+<!-- Net Distributable Profit -->
+<div class="bg-primary-container text-on-primary rounded-xl p-space-md shadow-md flex flex-col justify-between">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-md text-label-md text-on-primary-container">صافي الربح القابل للتوزيع</span>
+<div class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[18px]">savings</span>
+</div>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg-mobile text-display-lg-mobile text-on-primary font-bold tracking-tight" id="disp-net-profit">26,300.00</span>
+<span class="font-label-md text-label-md text-on-primary-container">ج.م</span>
+</div>
+<span class="font-caption text-caption text-on-primary-container mt-1">جاهز للتخصيص والصرف الفوري</span>
+</div>
+</div>
+</section>
+<!-- Interactive Demo Switcher for Simulation (Unassigned vs Assigned) -->
+<div class="bg-surface-container rounded-xl p-space-sm flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">tune</span>
+<span class="font-label-md text-label-md text-on-surface">محاكي حالة النظام:</span>
+</div>
+<div class="flex items-center gap-1 bg-surface-container-lowest p-1 rounded-lg">
+<button class="px-3 py-1.5 rounded-md font-label-md text-label-md transition-all text-on-surface-variant hover:text-primary" id="btn-state-unassigned" type="button">
+        نسب معلقة (لم تُحدد)
+      </button>
+<button class="px-3 py-1.5 rounded-md font-label-md text-label-md bg-primary text-on-primary shadow-sm transition-all" id="btn-state-assigned" type="button">
+        نسب معتمدة ونشطة
+      </button>
+</div>
+</div>
+<!-- State A: Unassigned / Pending Banner (Toggled dynamically) -->
+<section class="hidden w-full bg-tertiary-container/15 rounded-xl p-space-md shadow-sm" id="banner-pending-state">
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<div class="w-10 h-10 rounded-xl bg-tertiary-fixed-dim text-on-tertiary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">pending_actions</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface font-semibold">نسب التوزيع لم تُحدد بعد (معلقة)</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+            الأرباح المتاحة (26,300.00 ج.م) محتجزة في خزينة الحسابات. يرجى تحديد واعتماد نسب التوزيع المتفق عليها بين الشريكين لتفعيل الصرف.
+          </p>
+</div>
+</div>
+<button class="w-full sm:w-auto h-11 px-5 rounded-full bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-space-xs shadow-sm active:scale-95 transition-transform" id="btn-initiate-setup" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>تحديد واعتماد النسب الآن</span>
+</button>
+</div>
+</section>
+<!-- Interactive Configuration Engine (Mobile-First Keypad & Percentage Editor) -->
+<section class="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md" id="config-section">
+<!-- Header of Config -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-xs gap-space-xs">
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[22px]">calculate</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">إعداد النسب المعتمدة للشريكين</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+          نظام نسبي ديناميكي مرن يدعم الكسور العشرية (مثل 52.5% و 47.5%) مع موازنة تلقائية تحقق 100%.
+        </p>
+</div>
+<div class="flex items-center gap-space-xs text-secondary bg-surface-container-low px-3 py-1.5 rounded-full self-start sm:self-auto">
+<span class="material-symbols-outlined text-[16px]">event_available</span>
+<span class="font-caption text-caption" id="active-date-label">سارية بدءاً من: 01 أكتوبر 2024</span>
+</div>
+</div>
+<!-- Error Direct Indicator (Global / Inline) -->
+<div class="bg-surface-container-low p-space-sm rounded-xl flex flex-col gap-1.5 border border-outline-variant/30"><div class="flex items-center justify-between"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[18px]">science</span><span class="font-label-md text-label-md text-on-surface font-semibold">شريط اختبار حالات التحقق الصارم والمحاكاة:</span></div><span class="font-caption text-caption text-on-surface-variant">اختبار استجابة النظام الفورية</span></div><div class="flex items-center gap-space-xs overflow-x-auto py-1"><button type="button" id="test-case-empty" class="px-2.5 py-1 rounded-lg bg-surface-container-lowest text-error font-caption text-caption border border-error/20 hover:bg-error-container hover:text-on-error-container transition-colors shrink-0">اختبار: حقل فارغ</button><button type="button" id="test-case-overflow" class="px-2.5 py-1 rounded-lg bg-surface-container-lowest text-error font-caption text-caption border border-error/20 hover:bg-error-container hover:text-on-error-container transition-colors shrink-0">اختبار: قيمة 130%</button><button type="button" id="test-case-negative" class="px-2.5 py-1 rounded-lg bg-surface-container-lowest text-error font-caption text-caption border border-error/20 hover:bg-error-container hover:text-on-error-container transition-colors shrink-0">اختبار: قيمة سالبة (-5%)</button><button type="button" id="test-case-sum-invalid" class="px-2.5 py-1 rounded-lg bg-surface-container-lowest text-error font-caption text-caption border border-error/20 hover:bg-error-container hover:text-on-error-container transition-colors shrink-0">اختبار: مجموع لا يساوي 100%</button><button type="button" id="test-case-valid-decimal" class="px-2.5 py-1 rounded-lg bg-surface-container-lowest text-secondary font-caption text-caption border border-secondary/20 hover:bg-secondary-container hover:text-on-secondary-container transition-colors shrink-0">اختبار: كسر عشري (52.5% / 47.5%)</button><button type="button" id="test-case-first-use" class="px-2.5 py-1 rounded-lg bg-surface-container-lowest text-tertiary font-caption text-caption border border-tertiary/20 hover:bg-tertiary-container/20 hover:text-on-surface transition-colors shrink-0">اختبار: أول استخدام (بدون نسب)</button></div></div><div class="hidden p-3 rounded-lg bg-error-container text-on-error-container font-label-md text-label-md flex items-center gap-2" id="percentage-error-banner">
+<span class="material-symbols-outlined text-[18px]">error</span>
+<span id="percentage-error-text">يجب أن تكون النسبة رقماً بين 0% و 100% فقط.</span>
+</div>
+<!-- Dual Partners Input Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Partner 1: Raed -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col justify-between relative focus-within:ring-2 focus-within:ring-primary/20 transition-all" id="partner-card-raed">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-12 h-12 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-title-md text-title-md font-bold shadow-sm">
+              ر
+            </div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-on-surface font-bold">رائد</span>
+<span class="material-symbols-outlined text-tertiary text-[18px]" title="شريك معتمد">verified</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant block mt-0.5">مسؤول البيانات والتشغيل والمبيعات</span>
+</div>
+</div>
+<span class="text-caption font-caption bg-surface-container px-2.5 py-1 rounded-full text-secondary font-medium">الشريك الأول</span>
+</div>
+<!-- Input Box -->
+<div class="mt-space-md">
+<label class="font-label-md text-label-md text-on-surface-variant block mb-1" for="input-raed">النسبة المئوية (%)</label>
+<div class="relative flex items-center">
+<input class="w-full h-12 bg-surface-container-lowest text-on-surface font-headline-md text-headline-md px-4 pl-12 rounded-xl outline-none text-left focus:ring-2 focus:ring-primary shadow-sm" id="input-raed" max="100" min="0" placeholder="0.0" step="0.1" type="number" value="52.5">
+<span class="absolute left-4 font-headline-md text-headline-md text-on-surface-variant pointer-events-none">%</span>
+</div>
+<span class="hidden text-error font-caption text-caption mt-1" id="raed-field-error">أدخل نسبة صحيحة بين 0 و 100</span>
+</div>
+<!-- Dynamic Share Value Pill -->
+<div class="mt-space-sm pt-space-xs flex items-center justify-between text-on-surface-variant">
+<span class="font-caption text-caption">الحصة المقدرة حالياً:</span>
+<span class="font-title-md text-title-md text-primary font-bold" id="card-share-raed">13,807.50 ج.م</span>
+</div>
+</div>
+<!-- Partner 2: Mohamed -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col justify-between relative focus-within:ring-2 focus-within:ring-primary/20 transition-all" id="partner-card-mohamed">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-title-md text-title-md font-bold shadow-sm">
+              م
+            </div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-on-surface font-bold">محمد</span>
+<span class="material-symbols-outlined text-tertiary text-[18px]" title="شريك معتمد">verified</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant block mt-0.5">مسؤول التطوير البرمجي والاستضافة</span>
+</div>
+</div>
+<span class="text-caption font-caption bg-surface-container px-2.5 py-1 rounded-full text-secondary font-medium">الشريك الثاني</span>
+</div>
+<!-- Input Box -->
+<div class="mt-space-md">
+<label class="font-label-md text-label-md text-on-surface-variant block mb-1" for="input-mohamed">النسبة المئوية (%)</label>
+<div class="relative flex items-center">
+<input class="w-full h-12 bg-surface-container-lowest text-on-surface font-headline-md text-headline-md px-4 pl-12 rounded-xl outline-none text-left focus:ring-2 focus:ring-primary shadow-sm" id="input-mohamed" max="100" min="0" placeholder="0.0" step="0.1" type="number" value="47.5">
+<span class="absolute left-4 font-headline-md text-headline-md text-on-surface-variant pointer-events-none">%</span>
+</div>
+<span class="hidden text-error font-caption text-caption mt-1" id="mohamed-field-error">أدخل نسبة صحيحة بين 0 و 100</span>
+</div>
+<!-- Dynamic Share Value Pill -->
+<div class="mt-space-sm pt-space-xs flex items-center justify-between text-on-surface-variant">
+<span class="font-caption text-caption">الحصة المقدرة حالياً:</span>
+<span class="font-title-md text-title-md text-primary font-bold" id="card-share-mohamed">12,492.50 ج.م</span>
+</div>
+</div>
+</div>
+<!-- Soft Touch Numeric Keypad & Quick Increments (Tailored for mobile delight) -->
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">معدلات سريعة ومفاتيح لمسية:</span>
+<button class="font-caption text-caption text-secondary flex items-center gap-1" id="toggle-keypad-btn" type="button">
+<span class="material-symbols-outlined text-[16px]">dialpad</span>
+<span id="toggle-keypad-text">إظهار لوحة اللمس</span>
+</button>
+</div>
+<!-- Quick distribution presets (dynamically flexible) -->
+<div class="flex items-center gap-space-xs overflow-x-auto py-1">
+<button class="preset-btn px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container hover:text-on-secondary-container shrink-0 transition-colors" data-raed="50" type="button">
+          تناصف متساوٍ (50% / 50%)
+        </button>
+<button class="preset-btn px-3 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md shrink-0 transition-colors" data-raed="52.5" type="button">
+          المقترح الحالي (52.5% / 47.5%)
+        </button>
+<button class="preset-btn px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container hover:text-on-secondary-container shrink-0 transition-colors" data-raed="55" type="button">
+          تفاضلي (55% / 45%)
+        </button>
+<button class="preset-btn px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container hover:text-on-secondary-container shrink-0 transition-colors" data-raed="48.5" type="button">
+          تفاضلي (48.5% / 51.5%)
+        </button>
+</div>
+<!-- Collapsible Mobile Touch Keypad -->
+<div class="hidden grid grid-cols-4 gap-2 bg-surface-container-low p-space-sm rounded-xl mt-space-xs" id="soft-keypad">
+<button class="kp-key h-11 bg-surface-container-lowest rounded-lg font-headline-md text-headline-md text-on-surface flex items-center justify-center active:bg-secondary-container" type="button">1</button>
+<button class="kp-key h-11 bg-surface-container-lowest rounded-lg font-headline-md text-headline-md text-on-surface flex items-center justify-center active:bg-secondary-container" type="button">2</button>
+<button class="kp-key h-11 bg-surface-container-lowest rounded-lg font-headline-md text-headline-md text-on-surface flex items-center justify-center active:bg-secondary-container" type="button">3</button>
+<button class="kp-step h-11 bg-surface-container rounded-lg font-label-md text-label-md text-secondary flex items-center justify-center active:scale-95" data-step="0.5" type="button">+0.5%</button>
+<button class="kp-key h-11 bg-surface-container-lowest rounded-lg font-headline-md text-headline-md text-on-surface flex items-center justify-center active:bg-secondary-container" type="button">4</button>
+<button class="kp-key h-11 bg-surface-container-lowest rounded-lg font-headline-md text-headline-md text-on-surface flex items-center justify-center active:bg-secondary-container" type="button">5</button>
+<button class="kp-key h-11 bg-surface-container-lowest rounded-lg font-headline-md text-headline-md text-on-surface flex items-center justify-center active:bg-secondary-container" type="button">6</button>
+<button class="kp-step h-11 bg-surface-container rounded-lg font-label-md text-label-md text-secondary flex items-center justify-center active:scale-95" data-step="-0.5" type="button">-0.5%</button>
+<button class="kp-key h-11 bg-surface-container-lowest rounded-lg font-headline-md text-headline-md text-on-surface flex items-center justify-center active:bg-secondary-container" type="button">7</button>
+<button class="kp-key h-11 bg-surface-container-lowest rounded-lg font-headline-md text-headline-md text-on-surface flex items-center justify-center active:bg-secondary-container" type="button">8</button>
+<button class="kp-key h-11 bg-surface-container-lowest rounded-lg font-headline-md text-headline-md text-on-surface flex items-center justify-center active:bg-secondary-container" type="button">9</button>
+<button class="h-11 bg-surface-container rounded-lg text-error flex items-center justify-center active:scale-95" id="kp-backspace" type="button">
+<span class="material-symbols-outlined text-[20px]">backspace</span>
+</button>
+<button class="kp-key h-11 bg-surface-container-lowest rounded-lg font-headline-md text-headline-md text-on-surface flex items-center justify-center active:bg-secondary-container" type="button">.</button>
+<button class="kp-key h-11 bg-surface-container-lowest rounded-lg font-headline-md text-headline-md text-on-surface flex items-center justify-center active:bg-secondary-container" type="button">0</button>
+<button class="h-11 bg-surface-container rounded-lg font-label-md text-label-md text-on-surface-variant flex items-center justify-center active:scale-95" id="kp-clear" type="button">مسح</button>
+<button class="h-11 bg-primary text-on-primary rounded-lg font-label-md text-label-md flex items-center justify-center active:scale-95" id="kp-done" type="button">تم</button>
+</div>
+</div>
+<!-- Live Preview Card (Moments of Delight & Precise Mathematical Proof) -->
+<div class="bg-surface-container-high rounded-xl p-space-md shadow-inner flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">visibility</span>
+<span class="font-label-lg text-label-lg text-on-surface">معاينة التوزيع اللحظي المباشر</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant" id="math-proof-badge">المجموع: 100.0% = 26,300.00 ج.م</span>
+</div>
+<!-- Ratio Visual Bar -->
+<div class="w-full h-4 bg-surface-container-highest rounded-full overflow-hidden flex flex-row-reverse shadow-inner">
+<div class="bg-secondary h-full transition-all duration-300" id="bar-raed" style="width: 52.5%;"></div>
+<div class="bg-primary-container h-full transition-all duration-300" id="bar-mohamed" style="width: 47.5%;"></div>
+</div>
+<!-- Breakdown figures -->
+<div class="grid grid-cols-2 gap-space-sm pt-space-xs">
+<div class="bg-surface-container-lowest p-space-sm rounded-lg flex flex-col">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary inline-block"></span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">حصة رائد (<span id="prev-pct-raed">52.5</span>%)</span>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-md text-headline-md text-primary font-bold" id="prev-val-raed">13,807.50</span>
+<span class="font-caption text-caption text-on-surface-variant">ج.م</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-sm rounded-lg flex flex-col">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container inline-block"></span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">حصة محمد (<span id="prev-pct-mohamed">47.5</span>%)</span>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-md text-headline-md text-primary font-bold" id="prev-val-mohamed">12,492.50</span>
+<span class="font-caption text-caption text-on-surface-variant">ج.م</span>
+</div>
+</div>
+</div>
+<!-- Interactive Actions Row -->
+<div class="flex flex-col sm:flex-row items-center gap-space-sm pt-space-xs">
+<button class="w-full sm:flex-1 h-12 rounded-xl bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-space-xs shadow-md active:bg-secondary transition-colors" id="btn-save-rates" type="button">
+<span class="material-symbols-outlined text-[20px]">save</span>
+<span>حفظ واعتماد النسب الحالية</span>
+</button>
+<button class="w-full sm:w-auto px-6 h-12 rounded-xl bg-surface-container text-on-surface-variant font-label-lg text-label-lg flex items-center justify-center gap-space-xs hover:bg-surface-container-highest transition-colors" id="btn-cancel-edit" type="button">
+<span class="material-symbols-outlined text-[20px]">restart_alt</span>
+<span>إلغاء التعديل واسترجاع السابقة</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Settlements Ledger & Cash Distribution Table -->
+<section class="w-full flex flex-col gap-space-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[22px]">account_tree</span>
+<h3 class="font-title-md text-title-md text-on-surface">تفاصيل التسويات المالية المعتمدة والأرصدة</h3>
+</div>
+<span class="font-caption text-caption text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-full self-start sm:self-auto">
+        الأرصدة متاحة للصرف الفوري عبر الحساب المصرفي
+      </span>
+</div>
+<!-- Responsive Cards for Mobile View (Hidden on Tablet/Desktop) -->
+<div class="flex flex-col gap-space-sm sm:hidden">
+<!-- Raed Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between pb-2">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-label-md">ر</div>
+<div>
+<span class="font-title-md text-title-md text-on-surface font-bold">رائد</span>
+<span class="font-caption text-caption text-on-surface-variant block">دورة أكتوبر 2024</span>
+</div>
+</div>
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-caption font-semibold" id="card-mobile-pct-raed">52.5%</span>
+</div>
+<div class="grid grid-cols-2 gap-2 bg-surface-container-low p-space-sm rounded-lg text-body-md font-body-md">
+<div>
+<span class="text-caption font-caption text-on-surface-variant block">الحصة المستحقة</span>
+<span class="font-label-lg text-label-lg text-on-surface" id="card-mobile-gross-raed">13,807.50 ج.م</span>
+</div>
+<div>
+<span class="text-caption font-caption text-on-surface-variant block">المسحوبات السابقة</span>
+<span class="font-label-lg text-label-lg text-error">3,000.00 ج.م</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<span class="font-label-md text-label-md text-on-surface-variant">الرصيد المتبقي للصرف:</span>
+<span class="font-headline-md text-headline-md text-primary font-bold" id="card-mobile-net-raed">10,807.50 ج.م</span>
+</div>
+</div>
+<!-- Mohamed Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between pb-2">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-label-md">م</div>
+<div>
+<span class="font-title-md text-title-md text-on-surface font-bold">محمد</span>
+<span class="font-caption text-caption text-on-surface-variant block">دورة أكتوبر 2024</span>
+</div>
+</div>
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-caption font-semibold" id="card-mobile-pct-mohamed">47.5%</span>
+</div>
+<div class="grid grid-cols-2 gap-2 bg-surface-container-low p-space-sm rounded-lg text-body-md font-body-md">
+<div>
+<span class="text-caption font-caption text-on-surface-variant block">الحصة المستحقة</span>
+<span class="font-label-lg text-label-lg text-on-surface" id="card-mobile-gross-mohamed">12,492.50 ج.م</span>
+</div>
+<div>
+<span class="text-caption font-caption text-on-surface-variant block">المسحوبات السابقة</span>
+<span class="font-label-lg text-label-lg text-error">2,500.00 ج.م</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<span class="font-label-md text-label-md text-on-surface-variant">الرصيد المتبقي للصرف:</span>
+<span class="font-headline-md text-headline-md text-primary font-bold" id="card-mobile-net-mohamed">9,992.50 ج.م</span>
+</div>
+</div>
+</div>
+<!-- High Density Table for Screens >= sm -->
+<div class="hidden sm:block w-full overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm">
+<div class="w-full overflow-x-auto">
+<table class="w-full text-right border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md">
+<th class="p-space-sm">الفترة المحاسبية</th>
+<th class="p-space-sm">الشريك</th>
+<th class="p-space-sm">صافي الربح الكلي</th>
+<th class="p-space-sm">النسبة المعتمدة</th>
+<th class="p-space-sm">الحصة المستحقة</th>
+<th class="p-space-sm">مسحوبات سابقة</th>
+<th class="p-space-sm">الرصيد القابل للصرف</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 font-body-md text-body-md text-on-surface">
+<!-- Row Raed -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="p-space-sm font-medium">أكتوبر 2024</td>
+<td class="p-space-sm">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-secondary text-on-secondary flex items-center justify-center text-caption font-bold">ر</div>
+<span class="font-semibold">رائد</span>
+</div>
+</td>
+<td class="p-space-sm">26,300.00 ج.م</td>
+<td class="p-space-sm font-semibold text-secondary" id="tbl-pct-raed">52.5%</td>
+<td class="p-space-sm font-semibold" id="tbl-gross-raed">13,807.50 ج.م</td>
+<td class="p-space-sm text-error">3,000.00 ج.م</td>
+<td class="p-space-sm font-bold text-primary" id="tbl-net-raed">10,807.50 ج.م</td>
+</tr>
+<!-- Row Mohamed -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="p-space-sm font-medium">أكتوبر 2024</td>
+<td class="p-space-sm">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-caption font-bold">م</div>
+<span class="font-semibold">محمد</span>
+</div>
+</td>
+<td class="p-space-sm">26,300.00 ج.م</td>
+<td class="p-space-sm font-semibold text-secondary" id="tbl-pct-mohamed">47.5%</td>
+<td class="p-space-sm font-semibold" id="tbl-gross-mohamed">12,492.50 ج.م</td>
+<td class="p-space-sm text-error">2,500.00 ج.م</td>
+<td class="p-space-sm font-bold text-primary" id="tbl-net-mohamed">9,992.50 ج.م</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Historical Audit Trail & Log (Municipal Transparency) -->
+<section class="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[22px]">history</span>
+<h3 class="font-title-md text-title-md text-on-surface">سجل التغييرات التاريخية (Audit Log)</h3>
+</div>
+<span class="font-caption text-caption text-on-surface-variant">غير قابل للتعديل</span>
+</div>
+<div class="flex flex-col gap-space-sm" id="audit-log-container">
+<!-- Item 1: Recent -->
+<div class="p-space-sm rounded-xl bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
+<div class="flex items-start gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<div>
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-label-md text-label-md text-on-surface font-bold">تحديث نسب الربع الأخير</span>
+<span class="font-caption text-caption text-on-surface-variant">بواسطة النظام المشترك</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+              تعديل حصة رائد إلى 52.5% وحصة محمد إلى 47.5% لمواكبة توسع العمليات الميدانية في قرى مركز أبو حمص.
+            </p>
+</div>
+</div>
+<div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center shrink-0 text-caption font-caption text-on-surface-variant pt-2 sm:pt-0">
+<span>01 أكتوبر 2024</span>
+<span class="text-secondary font-semibold">سارية المفعول</span>
+</div>
+</div>
+<!-- Item 2: Initial Setup -->
+<div class="p-space-sm rounded-xl bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
+<div class="flex items-start gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]">bookmark_added</span>
+</div>
+<div>
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-label-md text-label-md text-on-surface font-bold">التأسيس المالي الأولي</span>
+<span class="font-caption text-caption text-on-surface-variant">اعتماد إداري</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+              توزيع أرباح مرحلة الإطلاق بنسبة متساوية (50% لكل من رائد ومحمد).
+            </p>
+</div>
+</div>
+<div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center shrink-0 text-caption font-caption text-on-surface-variant pt-2 sm:pt-0">
+<span>01 يونيو 2024</span>
+<span class="text-on-surface-variant">تسوية مؤرشفة</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Municipal Compliance Footer Note -->
+<div class="text-center py-2">
+<p class="font-caption text-caption text-on-surface-variant max-w-lg mx-auto">
+      تمت مراجعة هذه الدورة المحاسبية طبقاً لقواعد الشفافية الإدارية لدليل أبو حمص الرقمي. جميع العمليات الحسابية تلتزم بدقة القروش والمطابقة المباشرة.
+    </p>
+</div>
+</div>
+<script>
+  (function initFinancialApp() {
+    // Immutable constants
+    const NET_PROFIT = 26300.00;
+    const RAED_WITHDRAWALS = 3000.00;
+    const MOHAMED_WITHDRAWALS = 2500.00;
+
+    // Current State
+    let isPending = false;
+    let savedRaedPct = 52.5;
+    let currentRaedPct = 52.5;
+    let activeInputId = 'input-raed'; // for keypad
+
+    // DOM Elements
+    const inputRaed = document.getElementById('input-raed');
+    const inputMohamed = document.getElementById('input-mohamed');
+    const cardShareRaed = document.getElementById('card-share-raed');
+    const cardShareMohamed = document.getElementById('card-share-mohamed');
+    const prevPctRaed = document.getElementById('prev-pct-raed');
+    const prevPctMohamed = document.getElementById('prev-pct-mohamed');
+    const prevValRaed = document.getElementById('prev-val-raed');
+    const prevValMohamed = document.getElementById('prev-val-mohamed');
+    const barRaed = document.getElementById('bar-raed');
+    const barMohamed = document.getElementById('bar-mohamed');
+    const errBanner = document.getElementById('percentage-error-banner');
+    const errText = document.getElementById('percentage-error-text');
+    const raedFieldError = document.getElementById('raed-field-error');
+    const mohamedFieldError = document.getElementById('mohamed-field-error');
+
+    // Table elements
+    const tblPctRaed = document.getElementById('tbl-pct-raed');
+    const tblGrossRaed = document.getElementById('tbl-gross-raed');
+    const tblNetRaed = document.getElementById('tbl-net-raed');
+    const tblPctMohamed = document.getElementById('tbl-pct-mohamed');
+    const tblGrossMohamed = document.getElementById('tbl-gross-mohamed');
+    const tblNetMohamed = document.getElementById('tbl-net-mohamed');
+
+    // Mobile Cards Elements
+    const mobilePctRaed = document.getElementById('card-mobile-pct-raed');
+    const mobileGrossRaed = document.getElementById('card-mobile-gross-raed');
+    const mobileNetRaed = document.getElementById('card-mobile-net-raed');
+    const mobilePctMohamed = document.getElementById('card-mobile-pct-mohamed');
+    const mobileGrossMohamed = document.getElementById('card-mobile-gross-mohamed');
+    const mobileNetMohamed = document.getElementById('card-mobile-net-mohamed');
+
+    // State Switcher Buttons
+    const btnStateUnassigned = document.getElementById('btn-state-unassigned');
+    const btnStateAssigned = document.getElementById('btn-state-assigned');
+    const bannerPending = document.getElementById('banner-pending-state');
+    const configSection = document.getElementById('config-section');
+    const btnInitiateSetup = document.getElementById('btn-initiate-setup');
+
+    // Action buttons
+    const btnSave = document.getElementById('btn-save-rates');
+    const btnCancel = document.getElementById('btn-cancel-edit');
+    const auditContainer = document.getElementById('audit-log-container');
+
+    // Keypad elements
+    const toggleKeypadBtn = document.getElementById('toggle-keypad-btn');
+    const toggleKeypadText = document.getElementById('toggle-keypad-text');
+    const softKeypad = document.getElementById('soft-keypad');
+
+    // Currency Formatter
+    function formatCurrency(num) {
+      return (Number(num).toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    // Precise recalculation engine
+    function updateCalculations(raedPct) {
+      // Validate
+      if (isNaN(raedPct) || raedPct < 0 || raedPct > 100) {
+        showError('النسبة المئوية يجب أن تكون بين 0% و 100% فقط.');
+        return false;
+      }
+      clearError();
+
+      const mohamedPct = Math.round((100 - raedPct) * 10) / 10;
+      currentRaedPct = raedPct;
+
+      // Ensure input display is in sync
+      if (document.activeElement !== inputRaed) {
+        inputRaed.value = raedPct;
+      }
+      if (document.activeElement !== inputMohamed) {
+        inputMohamed.value = mohamedPct;
+      }
+
+      // Money Calculations
+      const raedShare = Math.round((NET_PROFIT * (raedPct / 100)) * 100) / 100;
+      // Balance Mohamed precisely to ensure sum is exactly 26,300.00
+      const mohamedShare = Math.round((NET_PROFIT - raedShare) * 100) / 100;
+
+      // Update Card Previews
+      cardShareRaed.textContent = formatCurrency(raedShare) + ' ج.م';
+      cardShareMohamed.textContent = formatCurrency(mohamedShare) + ' ج.م';
+
+      // Update Live Preview Bar & Numbers
+      prevPctRaed.textContent = raedPct;
+      prevPctMohamed.textContent = mohamedPct;
+      prevValRaed.textContent = formatCurrency(raedShare);
+      prevValMohamed.textContent = formatCurrency(mohamedShare);
+
+      barRaed.style.width = raedPct + '%';
+      barMohamed.style.width = mohamedPct + '%';
+
+      // Update Settlements Tables & Cards
+      tblPctRaed.textContent = raedPct + '%';
+      tblGrossRaed.textContent = formatCurrency(raedShare) + ' ج.م';
+      tblNetRaed.textContent = formatCurrency(raedShare - RAED_WITHDRAWALS) + ' ج.م';
+
+      tblPctMohamed.textContent = mohamedPct + '%';
+      tblGrossMohamed.textContent = formatCurrency(mohamedShare) + ' ج.م';
+      tblNetMohamed.textContent = formatCurrency(mohamedShare - MOHAMED_WITHDRAWALS) + ' ج.م';
+
+      mobilePctRaed.textContent = raedPct + '%';
+      mobileGrossRaed.textContent = formatCurrency(raedShare) + ' ج.م';
+      mobileNetRaed.textContent = formatCurrency(raedShare - RAED_WITHDRAWALS) + ' ج.م';
+
+      mobilePctMohamed.textContent = mohamedPct + '%';
+      mobileGrossMohamed.textContent = formatCurrency(mohamedShare) + ' ج.م';
+      mobileNetMohamed.textContent = formatCurrency(mohamedShare - MOHAMED_WITHDRAWALS) + ' ج.م';
+
+      return true;
+    }
+
+    function showError(msg) {
+      errBanner.classList.remove('hidden');
+      errText.textContent = msg;
+      raedFieldError.classList.remove('hidden');
+      mohamedFieldError.classList.remove('hidden');
+    }
+
+    function clearError() {
+      errBanner.classList.add('hidden');
+      raedFieldError.classList.add('hidden');
+      mohamedFieldError.classList.add('hidden');
+    }
+
+    // Input handlers
+    inputRaed.addEventListener('input', function(e) {
+      activeInputId = 'input-raed';
+      const val = parseFloat(e.target.value);
+      if (isNaN(val)) return;
+      updateCalculations(val);
+    });
+
+    inputMohamed.addEventListener('input', function(e) {
+      activeInputId = 'input-mohamed';
+      const val = parseFloat(e.target.value);
+      if (isNaN(val)) return;
+      const calculatedRaed = Math.round((100 - val) * 10) / 10;
+      updateCalculations(calculatedRaed);
+    });
+
+    inputRaed.addEventListener('focus', function() { activeInputId = 'input-raed'; });
+    inputMohamed.addEventListener('focus', function() { activeInputId = 'input-mohamed'; });
+
+    // Preset buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const raed = parseFloat(this.getAttribute('data-raed'));
+        updateCalculations(raed);
+        document.querySelectorAll('.preset-btn').forEach(b => {
+          b.classList.remove('bg-secondary-container', 'text-on-secondary-container');
+          b.classList.add('bg-surface-container', 'text-on-surface-variant');
+        });
+        this.classList.remove('bg-surface-container', 'text-on-surface-variant');
+        this.classList.add('bg-secondary-container', 'text-on-secondary-container');
+      });
+    });
+
+    // Keypad Logic
+    toggleKeypadBtn.addEventListener('click', function() {
+      const isHidden = softKeypad.classList.contains('hidden');
+      if (isHidden) {
+        softKeypad.classList.remove('hidden');
+        toggleKeypadText.textContent = 'إخفاء لوحة اللمس';
+      } else {
+        softKeypad.classList.add('hidden');
+        toggleKeypadText.textContent = 'إظهار لوحة اللمس';
+      }
+    });
+
+    document.querySelectorAll('.kp-key').forEach(key => {
+      key.addEventListener('click', function() {
+        const char = this.textContent.trim();
+        const targetInput = document.getElementById(activeInputId);
+        let current = targetInput.value;
+        if (char === '.' && current.includes('.')) return;
+        targetInput.value = current + char;
+        targetInput.dispatchEvent(new Event('input'));
+      });
+    });
+
+    document.querySelectorAll('.kp-step').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const step = parseFloat(this.getAttribute('data-step'));
+        const targetInput = document.getElementById(activeInputId);
+        let current = parseFloat(targetInput.value) || 0;
+        let nextVal = Math.round((current + step) * 10) / 10;
+        if (nextVal >= 0 && nextVal <= 100) {
+          targetInput.value = nextVal;
+          targetInput.dispatchEvent(new Event('input'));
+        }
+      });
+    });
+
+    document.getElementById('kp-backspace').addEventListener('click', function() {
+      const targetInput = document.getElementById(activeInputId);
+      targetInput.value = targetInput.value.slice(0, -1);
+      targetInput.dispatchEvent(new Event('input'));
+    });
+
+    document.getElementById('kp-clear').addEventListener('click', function() {
+      const targetInput = document.getElementById(activeInputId);
+      targetInput.value = '';
+      targetInput.dispatchEvent(new Event('input'));
+    });
+
+    document.getElementById('kp-done').addEventListener('click', function() {
+      softKeypad.classList.add('hidden');
+      toggleKeypadText.textContent = 'إظهار لوحة اللمس';
+    });
+
+    // Save and Cancel buttons
+    btnSave.addEventListener('click', function() {
+      if (currentRaedPct < 0 || currentRaedPct > 100 || isNaN(currentRaedPct)) {
+        showError('يرجى تصحيح النسبة قبل الحفظ.');
+        return;
+      }
+      savedRaedPct = currentRaedPct;
+      const mohamedPct = Math.round((100 - savedRaedPct) * 10) / 10;
+
+      // Add to historical audit log
+      const newAuditItem = document.createElement('div');
+      newAuditItem.className = 'p-space-sm rounded-xl bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs';
+      newAuditItem.innerHTML = `
+        <div class="flex items-start gap-space-sm">
+          <div class="w-8 h-8 rounded-lg bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0 mt-0.5">
+            <span class="material-symbols-outlined text-[18px]">done_all</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-label-md text-label-md text-on-surface font-bold">تعديل واعتماد نسب فوري</span>
+              <span class="font-caption text-caption text-secondary">نشط الآن</span>
+            </div>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+              تم اعتماد حصة رائد بنسبة ${savedRaedPct}% ومحمد بنسبة ${mohamedPct}% للدورات المالية القادمة.
+            </p>
+          </div>
+        </div>
+        <div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center shrink-0 text-caption font-caption text-on-surface-variant pt-2 sm:pt-0">
+          <span>الآن</span>
+          <span class="text-secondary font-semibold">سارية المفعول</span>
+        </div>
+      `;
+      auditContainer.insertBefore(newAuditItem, auditContainer.firstChild);
+
+      // Brief visual confirmation
+      const originalText = btnSave.innerHTML;
+      btnSave.classList.replace('bg-primary', 'bg-secondary');
+      btnSave.innerHTML = `<span class="material-symbols-outlined text-[20px]">check_circle</span><span>تم الحفظ والاعتماد بنجاح</span>`;
+      setTimeout(() => {
+        btnSave.classList.replace('bg-secondary', 'bg-primary');
+        btnSave.innerHTML = originalText;
+      }, 1600);
+    });
+
+    btnCancel.addEventListener('click', function() {
+      if (isPending) {
+        // Return to pending state if unassigned
+        setSystemState(true);
+      } else {
+        updateCalculations(savedRaedPct);
+      }
+    });
+
+    // Unassigned (Pending) State Simulation
+    function setSystemState(pending) {
+      isPending = pending;
+      if (pending) {
+        bannerPending.classList.remove('hidden');
+        btnStateUnassigned.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+        btnStateUnassigned.classList.remove('text-on-surface-variant');
+        btnStateAssigned.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+        btnStateAssigned.classList.add('text-on-surface-variant');
+
+        // Reset visible shares in preview
+        cardShareRaed.textContent = 'معلق حتى الاعتماد';
+        cardShareMohamed.textContent = 'معلق حتى الاعتماد';
+        prevValRaed.textContent = '0.00';
+        prevValMohamed.textContent = '0.00';
+        prevPctRaed.textContent = '-';
+        prevPctMohamed.textContent = '-';
+        barRaed.style.width = '0%';
+        barMohamed.style.width = '0%';
+      } else {
+        bannerPending.classList.add('hidden');
+        btnStateAssigned.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+        btnStateAssigned.classList.remove('text-on-surface-variant');
+        btnStateUnassigned.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+        btnStateUnassigned.classList.add('text-on-surface-variant');
+
+        updateCalculations(savedRaedPct);
+      }
+    }
+
+    btnStateUnassigned.addEventListener('click', () => setSystemState(true));
+    btnStateAssigned.addEventListener('click', () => setSystemState(false));
+    btnInitiateSetup.addEventListener('click', () => {
+      setSystemState(false);
+      configSection.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // Initial render
+    updateCalculations(savedRaedPct);
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-2px_12px_rgba(15,81,50,0.08)]" data-active-classes="text-secondary font-label-md"><div class="flex justify-around items-center h-20 px-space-xs"><a class="flex flex-col items-center justify-center gap-space-xs w-16 h-16 text-on-surface-variant transition-colors hover:text-secondary" data-path="overview" href="#"><span class="material-symbols-outlined text-[22px]">dashboard</span><span class="font-label-md text-label-md">الرئيسية</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-space-xs w-16 h-16 transition-colors text-secondary font-label-md" data-path="profit-distribution" href="#"><span class="material-symbols-outlined text-[22px]">payments</span><span class="font-label-md text-label-md">الأرباح</span></a><a class="flex flex-col items-center justify-center gap-space-xs w-16 h-16 text-on-surface-variant transition-colors hover:text-secondary" data-path="partners-directory" href="#"><span class="material-symbols-outlined text-[22px]">group</span><span class="font-label-md text-label-md">الشركاء</span></a><a class="flex flex-col items-center justify-center gap-space-xs w-16 h-16 text-on-surface-variant transition-colors hover:text-secondary" data-path="ledger-audits" href="#"><span class="material-symbols-outlined text-[22px]">receipt_long</span><span class="font-label-md text-label-md">السجل</span></a></div></nav>
+
+</body></html>

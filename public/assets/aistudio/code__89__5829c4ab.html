@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;font-family:'IBM Plex Sans Arabic',sans-serif;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-tertiary-fixed-variant":"#574500","primary-container":"#0f5132","surface-container-lowest":"#ffffff","surface-container":"#ebefed","on-secondary":"#ffffff","on-primary-fixed-variant":"#0f5132","on-error":"#ffffff","background":"#f7faf8","on-tertiary":"#ffffff","surface-container-low":"#f1f4f2","on-tertiary-fixed":"#241a00","tertiary-fixed-dim":"#e9c349","surface-container-high":"#e6e9e7","on-background":"#181c1c","inverse-surface":"#2d3130","on-surface":"#181c1c","on-secondary-container":"#1b7047","secondary":"#146c43","surface-dim":"#d7dbd9","outline-variant":"#c0c9c0","tertiary-container":"#cca730","secondary-fixed":"#a2f4c0","error-container":"#ffdad6","primary":"#003820","primary-fixed":"#b0f1c7","surface-tint":"#2d6a48","inverse-primary":"#95d4ac","on-error-container":"#93000a","secondary-fixed-dim":"#86d8a5","error":"#ba1a1a","secondary-container":"#9ff1bd","surface-bright":"#f7faf8","outline":"#707971","on-surface-variant":"#404942","on-tertiary-container":"#4f3d00","tertiary":"#735c00","tertiary-fixed":"#ffe088","surface-container-highest":"#e0e3e1","surface-variant":"#e0e3e1","on-primary-container":"#84c39b","surface":"#f7faf8","primary-fixed-dim":"#95d4ac","on-secondary-fixed-variant":"#005230","on-secondary-fixed":"#002110","on-primary":"#ffffff","inverse-on-surface":"#eef1ef","on-primary-fixed":"#002111"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"gutter-sm":"0.75rem","gutter":"1rem","space-sm":"0.5rem","space-md":"0.75rem","margin":"1rem","space-lg":"1.125rem","space-xl":"1.5rem","space-xs":"0.25rem","margin-lg":"1.25rem"},"fontFamily":{"title-md":["IBM Plex Sans"],"display-lg-mobile":["IBM Plex Sans"],"label-md":["IBM Plex Sans"],"caption":["IBM Plex Sans"],"body-lg":["IBM Plex Sans"],"body-md":["IBM Plex Sans"],"headline-lg":["IBM Plex Sans"],"label-lg":["IBM Plex Sans"],"headline-md":["IBM Plex Sans"],"display-lg":["IBM Plex Sans"]},"fontSize":{"title-md":["17px",{"lineHeight":"24px","fontWeight":"500"}],"display-lg-mobile":["26px",{"lineHeight":"36px","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"18px","fontWeight":"500"}],"caption":["11px",{"lineHeight":"16px","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"26px","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["22px",{"lineHeight":"32px","fontWeight":"600"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"600"}],"headline-md":["19px",{"lineHeight":"28px","fontWeight":"600"}],"display-lg":["32px",{"lineHeight":"44px","fontWeight":"700"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface min-h-screen selection:bg-secondary-container selection:text-on-secondary-container"><aside class="fixed right-0 top-0 h-full w-72 bg-surface-container-low z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center gap-space-md bg-surface-container-low"><div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary flex items-center justify-center shadow-[0_2px_8px_rgba(15,81,50,0.18)]"><span class="material-symbols-outlined text-[24px]">account_balance</span></div><div class="flex flex-col"><span class="font-headline-md text-headline-md text-primary font-bold leading-tight">دليل أبوحمص</span><span class="font-caption text-caption text-on-surface-variant font-medium">لوحة الإدارة المركزية والتشغيل</span></div></div><div class="px-space-lg py-space-sm"><div class="p-space-sm rounded-xl bg-surface-container flex items-center justify-between gap-space-xs"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-md text-label-md text-on-surface-variant">حالة النظام:</span></div><span class="font-label-md text-label-md text-secondary font-bold">99.98% متصل</span></div></div><nav class="flex flex-col gap-space-xs px-space-md mt-space-sm" data-active-classes="bg-primary-container text-on-primary font-bold shadow-[0_2px_8px_rgba(15,81,50,0.12)]"><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="overview" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">dashboard</span><span class="font-label-lg text-label-lg">لوحة الملخص والمؤشرات</span></div></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="places-management" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">storefront</span><span class="font-label-lg text-label-lg">إدارة وتدقيق الأماكن</span></div></a><a aria-current="page" class="group flex items-center justify-between px-space-md py-space-sm rounded-xl transition-all duration-150 bg-primary-container text-on-primary font-bold shadow-[0_2px_8px_rgba(15,81,50,0.12)]" data-path="requests-and-reports" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">mark_email_unread</span><span class="font-label-lg text-label-lg">مراجعة الطلبات والبلاغات</span></div><span class="bg-error text-on-error font-label-md text-caption px-space-xs py-0.5 rounded-full font-bold">14</span></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="promotions-and-banners" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">campaign</span><span class="font-label-lg text-label-lg">الإعلانات والعروض المميزة</span></div></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="accounts-and-profit-split" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">payments</span><span class="font-label-lg text-label-lg">الحسابات وأرباح الشريكين</span></div></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="data-import" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">upload_file</span><span class="font-label-lg text-label-lg">استيراد CSV والبيانات</span></div></a></nav></div><div class="p-space-lg"><div class="bg-surface-container-lowest p-space-md rounded-xl shadow-[0_1px_4px_rgba(15,81,50,0.06)]"><div class="flex items-center gap-space-sm mb-space-xs"><span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span><span class="font-label-md text-label-md text-on-surface font-semibold">نظام الإدارة البلدية</span></div><p class="font-caption text-caption text-on-surface-variant">مركز إدارة المحتوى التجاري والحكومي لمجلس مدينة أبوحمص، البحيرة.</p></div></div></aside><div class="pr-72"><header class="fixed top-0 left-0 right-72 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-space-xs rounded-xl shadow-[0_1px_4px_rgba(15,81,50,0.04)]"><span class="material-symbols-outlined text-secondary text-[20px]">handshake</span><div class="flex items-center gap-space-xs font-label-md text-label-md"><span class="text-on-surface-variant">حساب الشراكة:</span><span class="text-primary font-bold">رائد محمد (60% تشغيل ومبيعات)</span><span class="text-outline-variant">|</span><span class="text-secondary font-medium">محمد عبد الوهاب (40% تطوير واستضافة)</span></div><span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span></div></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-xs"><button class="relative p-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 left-1.5 w-2 h-2 rounded-full bg-error"></span></button><button class="p-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">help_outline</span></button></div><div class="h-6 w-px bg-surface-container-high"></div><div class="flex items-center gap-space-md"><div class="flex flex-col text-left"><span class="font-label-lg text-label-lg text-on-surface font-bold">مدير النظام التنفيذي</span><span class="font-caption text-caption text-secondary font-medium">سلطة تشغيل كاملة</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Content Canvas Container -->
+<div class="p-space-xl flex flex-col gap-space-xl">
+<!-- Top Strategic Operations Bar -->
+<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-space-lg bg-surface-container-lowest p-space-xl rounded-xl shadow-sm">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 rounded-full bg-error animate-ping"></span>
+<span class="font-headline-lg text-headline-lg text-primary font-bold">غرفة مراجعة وتدقيق الطلبات والبلاغات</span>
+<span class="bg-error-container text-on-error-container font-label-md text-label-md px-space-sm py-0.5 rounded-full font-bold">14 طلب نشط</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          نظام التحقق الآلي والبلدي المزدوج لضمان مصداقية بيانات الأنشطة التجارية والخدمية بمركز أبوحمص والقرى التابعة.
+        </p>
+</div>
+<!-- Quick Metrics Ribbon -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-md">
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-on-surface-variant font-medium">قيد التدقيق</span>
+<span class="material-symbols-outlined text-error text-[18px]">pending_actions</span>
+</div>
+<div class="mt-space-xs">
+<span class="font-display-lg text-display-lg font-bold text-on-surface">14</span>
+<span class="font-caption text-caption text-error font-medium block">يتطلب قراراً حاسماً</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-on-surface-variant font-medium">اقتراح أماكن</span>
+<span class="material-symbols-outlined text-secondary text-[18px]">add_business</span>
+</div>
+<div class="mt-space-xs">
+<span class="font-display-lg text-display-lg font-bold text-primary">6</span>
+<span class="font-caption text-caption text-on-surface-variant font-medium block">محلات وورش جديدة</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-on-surface-variant font-medium">تصحيح وبلاغات</span>
+<span class="material-symbols-outlined text-tertiary text-[18px]">report_problem</span>
+</div>
+<div class="mt-space-xs">
+<span class="font-display-lg text-display-lg font-bold text-on-surface">5</span>
+<span class="font-caption text-caption text-tertiary font-medium block">مواعيد وأرقام وهواتف</span>
+</div>
+</div>
+<div class="bg-secondary-container/40 p-space-md rounded-xl flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-on-secondary-container font-medium">متوسط زمن المعالجة</span>
+<span class="material-symbols-outlined text-secondary text-[18px]">timer</span>
+</div>
+<div class="mt-space-xs">
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display-lg text-display-lg font-bold text-primary">18</span>
+<span class="font-label-md text-label-md text-secondary font-bold">ساعة</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full mt-space-xs overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 37.5%"></div>
+</div>
+<span class="font-caption text-caption text-on-secondary-container mt-0.5 block">الهدف المعتمد: أقل من 48 ساعة</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Filter & Control Deck -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<!-- Tab Pills with Counters -->
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1 lg:pb-0" id="filter-tabs">
+<button class="tab-btn px-space-md py-space-xs rounded-full font-label-md text-label-md font-bold transition-all bg-primary-container text-on-primary shadow-sm flex items-center gap-space-xs" data-target="all" type="button">
+<span>الكل</span>
+<span class="bg-white/20 text-white px-space-xs py-0.2 rounded-full font-caption text-caption">14</span>
+</button>
+<button class="tab-btn px-space-md py-space-xs rounded-full font-label-md text-label-md font-medium transition-all bg-surface-container text-on-surface-variant hover:bg-surface-container-high flex items-center gap-space-xs" data-target="corrections" type="button">
+<span>بلاغات الأخطاء والمغلق</span>
+<span class="bg-surface-container-highest text-on-surface px-space-xs py-0.2 rounded-full font-caption text-caption">5</span>
+</button>
+<button class="tab-btn px-space-md py-space-xs rounded-full font-label-md text-label-md font-medium transition-all bg-surface-container text-on-surface-variant hover:bg-surface-container-high flex items-center gap-space-xs" data-target="places" type="button">
+<span>اقتراحات الأماكن الجديدة</span>
+<span class="bg-surface-container-highest text-on-surface px-space-xs py-0.2 rounded-full font-caption text-caption">6</span>
+</button>
+<button class="tab-btn px-space-md py-space-xs rounded-full font-label-md text-label-md font-medium transition-all bg-surface-container text-on-surface-variant hover:bg-surface-container-high flex items-center gap-space-xs" data-target="reviews" type="button">
+<span>التقييمات والمراجعات</span>
+<span class="bg-surface-container-highest text-on-surface px-space-xs py-0.2 rounded-full font-caption text-caption">3</span>
+</button>
+<button class="tab-btn px-space-md py-space-xs rounded-full font-label-md text-label-md font-medium transition-all bg-surface-container text-on-surface-variant hover:bg-surface-container-high flex items-center gap-space-xs" data-target="archive" type="button">
+<span>الأرشيف والمرفوضات</span>
+</button>
+</div>
+<!-- Search input -->
+<div class="relative w-full lg:w-72">
+<input class="w-full bg-surface-container-low text-on-surface placeholder:text-on-surface-variant px-space-md py-space-xs pr-9 rounded-xl font-body-md text-body-md outline-none focus:ring-2 focus:ring-primary/20 transition-all" placeholder="بحث بالاسم، رقم الموبايل أو المعرف..." type="text"/>
+<span class="material-symbols-outlined absolute right-2.5 top-2 text-on-surface-variant text-[20px]">search</span>
+</div>
+</div>
+<!-- Secondary Detailed Selectors -->
+<div class="flex flex-wrap items-center gap-space-md pt-space-xs">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span>تصفية سريعة:</span>
+</div>
+<!-- Geographic dropdown -->
+<div class="relative">
+<select class="appearance-none bg-surface-container px-space-md py-1.5 pl-8 rounded-lg font-label-md text-label-md text-on-surface outline-none cursor-pointer hover:bg-surface-container-high transition-colors">
+<option value="all">كافة مناطق وقرى أبوحمص</option>
+<option value="city">بندر أبوحمص (المدينة)</option>
+<option value="birket">بركة غطاس والمحطة</option>
+<option value="jawad">جواد حسني والنجوع</option>
+<option value="damsheet">دمسنا وبسنتواي</option>
+<option value="qurayza">قريزة وقرى الأطراف</option>
+</select>
+<span class="material-symbols-outlined absolute left-2 top-2 text-on-surface-variant text-[18px] pointer-events-none">expand_more</span>
+</div>
+<!-- Priority dropdown -->
+<div class="relative">
+<select class="appearance-none bg-surface-container px-space-md py-1.5 pl-8 rounded-lg font-label-md text-label-md text-on-surface outline-none cursor-pointer hover:bg-surface-container-high transition-colors">
+<option value="all">كل درجات الأولوية</option>
+<option value="high">🔴 عاجل جداً (خلل حيوي / طبي)</option>
+<option value="med">🟡 أولوية عادية</option>
+<option value="low">🟢 اقتراحات دورية</option>
+</select>
+<span class="material-symbols-outlined absolute left-2 top-2 text-on-surface-variant text-[18px] pointer-events-none">expand_more</span>
+</div>
+<!-- Date Sorting -->
+<div class="relative">
+<select class="appearance-none bg-surface-container px-space-md py-1.5 pl-8 rounded-lg font-label-md text-label-md text-on-surface outline-none cursor-pointer hover:bg-surface-container-high transition-colors">
+<option value="newest">الأحدث وصولاً أولاً</option>
+<option value="oldest">الأقدم في قائمة الانتظار</option>
+</select>
+<span class="material-symbols-outlined absolute left-2 top-2 text-on-surface-variant text-[18px] pointer-events-none">expand_more</span>
+</div>
+<div class="mr-auto flex items-center gap-space-xs font-caption text-caption text-on-surface-variant">
+<span>تم التحديث: منذ 3 دقائق عبر خادم المزامنة التلقائية</span>
+<button class="hover:text-primary transition-colors" title="إعادة التحميل" type="button">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Cards Section & Moderator Workbench -->
+<div class="flex flex-col gap-space-lg">
+<!-- ITEM 1: Pharmacy Edit & Diff View Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md transition-all hover:shadow-md">
+<!-- Item Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-error-container/60 text-error flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[26px]">medical_services</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">صيدلية الأمل الحديثة - تعديل مواعيد العمل والهاتف</span>
+<span class="bg-error-container text-on-error-container font-label-md text-caption px-space-xs py-0.5 rounded-full font-bold">بلاغ تصحيح بيانات</span>
+<span class="bg-surface-container text-on-surface-variant font-label-md text-caption px-space-xs py-0.5 rounded-full">معرف: #MOD-8941</span>
+</div>
+<div class="flex items-center gap-space-md font-caption text-caption text-on-surface-variant mt-1 flex-wrap">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> بندر أبوحمص - شارع المحطة الرئيسي</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> تم التقديم: منذ 4 ساعات</span>
+<span class="flex items-center gap-1 font-semibold text-primary"><span class="material-symbols-outlined text-[14px]">person</span> المبلغ: م. محمد الشرقاوي (01012345678)</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0 self-end sm:self-center">
+<span class="bg-error text-on-error text-caption font-bold px-space-sm py-1 rounded-full flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+              أولوية مرتفعة (خدمة طبية 24 ساعة)
+            </span>
+</div>
+</div>
+<!-- Diff Inspector Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md bg-surface-container-low p-space-md rounded-xl">
+<!-- Text Diff (Col 1-8) -->
+<div class="lg:col-span-8 flex flex-col gap-space-sm">
+<span class="font-label-md text-label-md font-bold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[18px]">difference</span>
+              مقارنة التغييرات المطلوبة (الحالي مقابل المقترح):
+            </span>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm">
+<!-- Field: Work hours -->
+<div class="bg-surface-container-lowest p-space-sm rounded-xl flex flex-col gap-1">
+<span class="font-caption text-caption text-on-surface-variant font-medium">مواعيد الدوام:</span>
+<div class="flex flex-col gap-1">
+<div class="bg-error-container/40 text-on-error-container p-1 rounded font-body-md text-body-md flex items-center justify-between">
+<span class="line-through">من 9:00 ص حتى 11:00 م</span>
+<span class="material-symbols-outlined text-[16px]">close</span>
+</div>
+<div class="bg-secondary-container/50 text-on-secondary-container p-1 rounded font-body-md text-body-md font-bold flex items-center justify-between">
+<span>مفتوح 24 ساعة طوال الأسبوع (مناوبة ليلية)</span>
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+</div>
+</div>
+<!-- Field: Phone number -->
+<div class="bg-surface-container-lowest p-space-sm rounded-xl flex flex-col gap-1">
+<span class="font-caption text-caption text-on-surface-variant font-medium">رقم الطوارئ والواتساب:</span>
+<div class="flex flex-col gap-1">
+<div class="bg-error-container/40 text-on-error-container p-1 rounded font-body-md text-body-md flex items-center justify-between">
+<span class="line-through font-mono">045-2560120</span>
+<span class="material-symbols-outlined text-[16px]">close</span>
+</div>
+<div class="bg-secondary-container/50 text-on-secondary-container p-1 rounded font-body-md text-body-md font-bold flex items-center justify-between">
+<span class="font-mono">01278945612 / 045-2560888</span>
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Notes by Reporter -->
+<div class="bg-surface-container-lowest p-space-sm rounded-xl flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">chat</span>
+<p class="font-body-md text-body-md text-on-surface">
+<span class="font-bold">ملاحظة المُرسل:</span> "الصيدلية نقلت خط الإسعاف الليلي للمقر الجديد وتم تركيب يافطة جديدة توضح خدمة 24 ساعة لخدمة أهالي منطقة المحطة بدلاً من إغلاق منتصف الليل، مرفق صورة اليافطة المحدثة."
+              </p>
+</div>
+</div>
+<!-- Evidence / Attachment (Col 9-12) -->
+<div class="lg:col-span-4 flex flex-col gap-space-xs">
+<span class="font-label-md text-label-md font-bold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-tertiary">attach_file</span>
+              المستند المرفق للإثبات:
+            </span>
+<div class="relative group rounded-xl overflow-hidden bg-surface-container h-36">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Clear exterior storefront signage of modern Egyptian pharmacy in Abu Homs with illuminated green crescent cross and bold Arabic text stating 24 hours open service with phone numbers written cleanly, taken in daylight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-bkBIPeUPwpDsQ47gsBLPHln1hT38WDVZy1k4wklVWZGwHnBFPbkhjlh0ZjuOq7XlU7T4w1hJtsreQ-9ja6vFYDSfApbHByGVBY5e8wPGobWEK61pPQCJqvueyeNGP8BO4vYTPTfDEfNK36EQih5MelgjrxpSano--mwdqj7GMlyfou0z3188xLrS9cfoj71VomYb0O4Fn1pzvqkAWt49LP9Uj9BVl8fjYLbkjVMt"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent flex items-end p-space-xs">
+<span class="text-on-primary font-caption text-caption font-bold">صيدلية_يافطة_جديدة_2024.jpg</span>
+</div>
+<button class="absolute top-2 left-2 bg-surface-container-lowest/80 text-on-surface p-1 rounded-lg backdrop-blur-sm hover:bg-surface-container-lowest" title="تكبير الصورة" type="button">
+<span class="material-symbols-outlined text-[18px]">zoom_in</span>
+</button>
+</div>
+<span class="font-caption text-caption text-secondary font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">verified</span> تم تدقيق الصورة وتطابق اسم الدكتور الصيدلي
+            </span>
+</div>
+</div>
+<!-- Moderator Decision Actions Toolbar -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-xs">
+<div class="flex items-center gap-space-xs">
+<!-- Green Approve Button -->
+<button class="bg-primary hover:bg-secondary text-on-primary px-space-lg py-2.5 rounded-xl font-label-lg text-label-lg flex items-center gap-space-xs shadow-sm transition-all" onclick="showToast('تم اعتماد وتحديث مواعيد صيدلية الأمل ونشرها في الدليل فوراً!')" type="button">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+<span>اعتماد ونشر التعديل فوراً</span>
+</button>
+<!-- Yellow WhatsApp request button -->
+<button class="bg-tertiary-container hover:bg-tertiary-fixed text-on-tertiary-container px-space-md py-2.5 rounded-xl font-label-lg text-label-lg flex items-center gap-space-xs transition-all" onclick="openWhatsAppModal('01012345678', 'صيدلية الأمل الحديثة')" type="button">
+<span class="material-symbols-outlined text-[20px]">mark_chat_unread</span>
+<span>طلب استيضاح عبر واتساب</span>
+</button>
+<!-- Red Reject Button -->
+<button class="bg-surface-container hover:bg-error-container text-on-surface-variant hover:text-on-error-container px-space-md py-2.5 rounded-xl font-label-lg text-label-lg flex items-center gap-space-xs transition-all" onclick="openRejectDrawer('#MOD-8941', 'صيدلية الأمل الحديثة')" type="button">
+<span class="material-symbols-outlined text-[20px]">cancel</span>
+<span>رفض البلاغ مع إبداء السبب</span>
+</button>
+</div>
+<div class="flex items-center gap-space-xs font-caption text-caption text-on-surface-variant">
+<span>المشرف المسؤول: رائد محمد</span>
+<span>•</span>
+<button class="text-secondary hover:underline" type="button">سجل التعديلات السابق للمكان (3)</button>
+</div>
+</div>
+</div>
+<!-- ITEM 2: New Place Suggestion without image -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md transition-all hover:shadow-md">
+<!-- Item Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-secondary-container/70 text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[26px]">storefront</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">اقتراح إضافة: ورشة النصر للميكانيكا والخراطة</span>
+<span class="bg-secondary-container text-on-secondary-container font-label-md text-caption px-space-xs py-0.5 rounded-full font-bold">مكان جديد مقترح</span>
+<span class="bg-surface-container text-on-surface-variant font-label-md text-caption px-space-xs py-0.5 rounded-full">معرف: #MOD-8942</span>
+</div>
+<div class="flex items-center gap-space-md font-caption text-caption text-on-surface-variant mt-1 flex-wrap">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> قرية قريزة - طريق الترعة التوفيقية بجوار مسجد النصر</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> تم التقديم: منذ 7 ساعات</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">badge</span> صاحب النشاط: المعلم أحمد عبد العاطي</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0 self-end sm:self-center">
+<span class="bg-surface-container-high text-on-surface-variant text-caption font-bold px-space-sm py-1 rounded-full flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+              أولوية عادية (ورش وحرف)
+            </span>
+</div>
+</div>
+<!-- Missing Data Notice & Inspection -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md bg-surface-container-low p-space-md rounded-xl">
+<div class="lg:col-span-8 flex flex-col gap-space-sm">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
+<div class="bg-surface-container-lowest p-space-sm rounded-xl">
+<span class="font-caption text-caption text-on-surface-variant block">القسم والتصنيف</span>
+<span class="font-body-md text-body-md font-bold text-on-surface">خدمات سيارات وميكانيكا</span>
+</div>
+<div class="bg-surface-container-lowest p-space-sm rounded-xl">
+<span class="font-caption text-caption text-on-surface-variant block">رقم التواصل المسجل</span>
+<span class="font-body-md text-body-md font-bold text-on-surface font-mono">01145678901</span>
+</div>
+<div class="bg-surface-container-lowest p-space-sm rounded-xl">
+<span class="font-caption text-caption text-on-surface-variant block">العنوان التقريبي</span>
+<span class="font-body-md text-body-md font-bold text-on-surface truncate">بجوار مسجد النصر، قريزة</span>
+</div>
+</div>
+<div class="p-space-sm rounded-xl bg-error-container/30 flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">warning</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-error-container">نقص في المتطلبات البلدية الأساسية (صورة واجهة المحل أو يافطة الورشة مفقودة)</span>
+<span class="font-body-md text-body-md text-on-surface-variant">لا يمكن اعتماد إدراج المحل بشكل رسمي في الخريطة دون التقاط صورة واضحة لمدخل الورشة ولوحة الاسم وفق معايير الجودة المعتمدة لأبوحمص.</span>
+</div>
+</div>
+</div>
+<!-- Quick WhatsApp Workflow Trigger Box (Col 9-12) -->
+<div class="lg:col-span-4 bg-surface-container-lowest p-space-md rounded-xl flex flex-col justify-between">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-space-xs text-secondary font-bold font-label-md text-label-md">
+<span class="material-symbols-outlined text-[18px]">forum</span>
+<span>استكمال البيانات الذكي</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant">
+                أرسل رابط رفع الصورة للعميل مباشرة على حسابه في واتساب بضغطة زر واحدة لمتابعة الإجراء دون تأخير.
+              </p>
+</div>
+<button class="mt-space-sm bg-secondary-container hover:bg-secondary-fixed text-on-secondary-container px-space-md py-2 rounded-xl font-label-md text-label-md font-bold flex items-center justify-center gap-space-xs transition-colors" onclick="openWhatsAppModal('01145678901', 'ورشة النصر للميكانيكا والخراطة')" type="button">
+<span class="material-symbols-outlined text-[18px]">send</span>
+<span>إرسال قالب استكمال البيانات للعميل</span>
+</button>
+</div>
+</div>
+<!-- Action Row -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-xs">
+<div class="flex items-center gap-space-xs">
+<button class="bg-surface-container hover:bg-surface-container-high text-on-surface-variant px-space-md py-2 rounded-xl font-label-lg text-label-lg flex items-center gap-space-xs transition-all" onclick="showToast('تم تعليق الطلب ونقله إلى قائمة المتابعة الميدانية بنجاح.')" type="button">
+<span class="material-symbols-outlined text-[18px]">pause_circle</span>
+<span>تعليق بانتظار استكمال الصورة</span>
+</button>
+<button class="bg-surface-container hover:bg-error-container text-on-surface-variant hover:text-on-error-container px-space-md py-2 rounded-xl font-label-lg text-label-lg flex items-center gap-space-xs transition-all" onclick="openRejectDrawer('#MOD-8942', 'ورشة النصر للميكانيكا')" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+<span>رفض المقترح</span>
+</button>
+</div>
+<div class="flex items-center gap-space-xs font-caption text-caption text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-tertiary">info</span>
+<span>يحق للعميل إعادة المحاولة خلال 7 أيام قبل الحذف التلقائي</span>
+</div>
+</div>
+</div>
+<!-- ITEM 3: Customer Rating & Feedback Moderation -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md transition-all hover:shadow-md">
+<!-- Item Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[26px]">reviews</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">تقييم ومراجعة مشتري: مطعم كبابجي البرنس</span>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-md text-caption px-space-xs py-0.5 rounded-full font-bold">تقييم معلق (1 من 5 نجوم)</span>
+<span class="bg-surface-container text-on-surface-variant font-label-md text-caption px-space-xs py-0.5 rounded-full">معرف: #REV-1044</span>
+</div>
+<div class="flex items-center gap-space-md font-caption text-caption text-on-surface-variant mt-1 flex-wrap">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">store</span> مطعم كبابجي البرنس - بجوار مجلس المدينة</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> تم التقييم: منذ ساعة ونصف</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">account_circle</span> صاحب التقييم: محمود إبراهيم (حساب موثق بالرقم القومي)</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0 self-end sm:self-center">
+<div class="flex text-tertiary">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[20px]">star</span>
+<span class="material-symbols-outlined text-[20px]">star</span>
+<span class="material-symbols-outlined text-[20px]">star</span>
+<span class="material-symbols-outlined text-[20px]">star</span>
+</div>
+<span class="font-label-lg text-label-lg font-bold text-tertiary">1.0</span>
+</div>
+</div>
+<!-- Rating Verification Body -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md bg-surface-container-low p-space-md rounded-xl">
+<div class="lg:col-span-8 flex flex-col gap-space-sm">
+<div class="bg-surface-container-lowest p-space-md rounded-xl">
+<span class="font-caption text-caption text-on-surface-variant block mb-1">نص المراجعة المنشورة من العميل:</span>
+<p class="font-body-md text-body-md text-on-surface italic">
+                "الأكل وصل بارد جداً بعد انتظار أكثر من ساعة ونصف في دليفري داخل نفس بندر أبوحمص! ولم يرد المطعم على الهاتف الأرضي عند الشكوى. تجربة سيئة جداً ولن أطلب ثانية."
+              </p>
+</div>
+<!-- Fraud & Order Verification Indicator -->
+<div class="flex items-center justify-between p-space-sm bg-surface-container-lowest rounded-xl">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">receipt_long</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">التحقق من إثبات الشراء (منع الكيدية والتنافس التجاري غير الشريف)</span>
+<span class="font-caption text-caption text-on-surface-variant">تم إرفاق فاتورة ورقية من كاشير المطعم برقم إيصال: #9042 بتاريخ اليوم</span>
+</div>
+</div>
+<span class="bg-secondary-container text-on-secondary-container font-label-md text-caption px-space-sm py-1 rounded-full font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+                عميل حقيقي مؤكد
+              </span>
+</div>
+</div>
+<!-- Merchant Right of Reply Status (Col 9-12) -->
+<div class="lg:col-span-4 bg-surface-container-lowest p-space-md rounded-xl flex flex-col justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md font-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">policy</span>
+                ميثاق شفافية التقييم البلدي
+              </span>
+<p class="font-caption text-caption text-on-surface-variant">
+                بما أن الشاكي أرفق إيصال شراء حقيقي، تنص اللائحة على نشر التقييم لحفظ حقوق المستهلكين مع إخطار إدارة المطعم عبر واتساب للرد أو الاعتذار الرسمي.
+              </p>
+</div>
+<div class="mt-space-sm p-space-xs bg-surface-container rounded-lg flex items-center justify-between">
+<span class="font-caption text-caption text-on-surface-variant">إشعار مالك المطعم:</span>
+<span class="font-caption text-caption text-secondary font-bold">تم الإرسال تلقائياً</span>
+</div>
+</div>
+</div>
+<!-- Rating Decision Controls -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-xs">
+<div class="flex items-center gap-space-xs">
+<button class="bg-primary hover:bg-secondary text-on-primary px-space-lg py-2 rounded-xl font-label-lg text-label-lg flex items-center gap-space-xs shadow-sm transition-all" onclick="showToast('تم نشر التقييم على صفحة المطعم بشفافية كاملة!')" type="button">
+<span class="material-symbols-outlined text-[18px]">publish</span>
+<span>نشر التقييم بشفافية</span>
+</button>
+<button class="bg-surface-container hover:bg-surface-container-high text-on-surface px-space-md py-2 rounded-xl font-label-lg text-label-lg flex items-center gap-space-xs transition-all" onclick="openWhatsAppModal('01099887766', 'العميل محمود إبراهيم بخصوص تقييم كبابجي البرنس')" type="button">
+<span class="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
+<span>مراسلة المشتكي للتوفيق</span>
+</button>
+<button class="bg-surface-container hover:bg-error-container text-on-surface-variant hover:text-on-error-container px-space-md py-2 rounded-xl font-label-lg text-label-lg flex items-center gap-space-xs transition-all" onclick="openRejectDrawer('#REV-1044', 'تقييم كبابجي البرنس')" type="button">
+<span class="material-symbols-outlined text-[18px]">block</span>
+<span>حجب المراجعة لعدم كفاية الإثبات</span>
+</button>
+</div>
+<div class="flex items-center gap-space-xs font-caption text-caption text-on-surface-variant">
+<span>مراجعة الإدارة: محمد عبد الوهاب</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Moderation Guidelines Banner -->
+<div class="bg-surface-container-low p-space-lg rounded-xl flex flex-col md:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">gavel</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg font-bold text-on-surface">ضوابط النشر والتدقيق الصادرة عن إدارة الدليل</span>
+<span class="font-caption text-caption text-on-surface-variant">يُحظر رفض أي بلاغ دون اختيار قالب سبب الرد الرسمي، وتخضع القرارات لمراجعة تدقيقية دورية بين الشركاء.</span>
+</div>
+</div>
+<a class="text-primary font-label-md text-label-md font-bold hover:underline flex items-center gap-1 shrink-0" href="#">
+<span>تحميل دليل المعايير البلدية PDF</span>
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+</a>
+</div>
+</div>
+<!-- SLIDE-OVER DRAWER: Reason for Rejection / Pre-written Response Templates -->
+<div class="fixed inset-0 bg-primary/40 backdrop-blur-sm z-50 hidden transition-opacity opacity-0" id="reject-drawer-backdrop"></div>
+<div class="fixed top-0 left-0 bottom-0 w-full sm:w-[480px] bg-surface-container-lowest z-50 shadow-2xl flex flex-col justify-between translate-x-[-100%] transition-transform duration-300 ease-in-out" id="reject-drawer">
+<!-- Drawer Header -->
+<div class="p-space-xl border-b border-surface-container-high bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-xl bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">assignment_late</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">سبب الرفض أو طلب الاستكمال</span>
+<span class="font-caption text-caption text-on-surface-variant" id="drawer-item-title">معرف الطلب المحدد</span>
+</div>
+</div>
+<button class="p-space-xs rounded-lg hover:bg-surface-container text-on-surface-variant" onclick="closeRejectDrawer()" type="button">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+</div>
+<!-- Drawer Body / Pre-written templates selection -->
+<div class="p-space-xl flex flex-col gap-space-lg overflow-y-auto">
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-lg text-label-lg font-bold text-on-surface">اختر قالب الرد الرسمي المعتمد:</label>
+<span class="font-caption text-caption text-on-surface-variant">سيتم إرسال هذا النص رسمياً إلى مقدم الطلب عبر الإشعارات وتطبيق واتساب.</span>
+</div>
+<div class="flex flex-col gap-space-sm" id="templates-container">
+<!-- Template 1 -->
+<label class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-all flex items-start gap-space-sm">
+<input checked="" class="mt-1 text-primary focus:ring-primary" name="reason_template" onchange="selectTemplate(1)" type="radio"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">عدم وضوح صورة الواجهة أو اليافطة</span>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+              "نعتذر لعدم تمكننا من اعتماد طلبكم نظراً لعدم وضوح صورة الواجهة أو لافتة المحل التجارية. يُرجى إعادة التصوير نهاراً مع إظهار الاسم بوضوح."
+            </p>
+</div>
+</label>
+<!-- Template 2 -->
+<label class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-all flex items-start gap-space-sm">
+<input class="mt-1 text-primary focus:ring-primary" name="reason_template" onchange="selectTemplate(2)" type="radio"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">رقم الهاتف غير صحيح أو لا يوجد عليه واتساب</span>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+              "تم فحص أرقام الاتصال المرفقة وتبيّن أنها خارج الخدمة أو غير متاحة. نشترط رقم هاتف شغال مخصص للنشاط التجاري لخدمة الأهالي."
+            </p>
+</div>
+</label>
+<!-- Template 3 -->
+<label class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-all flex items-start gap-space-sm">
+<input class="mt-1 text-primary focus:ring-primary" name="reason_template" onchange="selectTemplate(3)" type="radio"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">النشاط خارج نطاق مركز أبوحمص</span>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+              "هذا النشاط يتبع نطاقاً جغرافياً خارج حدود مركز وقرى أبوحمص (دمنهور أو كفر الدوار). دليلنا مخصص حصرياً للخدمات البلدية لأبوحمص."
+            </p>
+</div>
+</label>
+<!-- Template 4: Custom -->
+<label class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container cursor-pointer transition-all flex items-start gap-space-sm">
+<input class="mt-1 text-primary focus:ring-primary" name="reason_template" onchange="selectTemplate(4)" type="radio"/>
+<div class="flex flex-col w-full">
+<span class="font-label-md text-label-md font-bold text-on-surface">صياغة سبب مخصص يدوياً...</span>
+</div>
+</label>
+</div>
+<!-- Editable Message Area -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md font-bold text-on-surface">معاينة نص الرسالة قبل الإرسال والتحديث:</label>
+<textarea class="w-full p-space-md bg-surface-container-low rounded-xl font-body-md text-body-md text-on-surface outline-none focus:ring-2 focus:ring-primary/20" id="template-text-editor" rows="4">نعتذر لعدم تمكننا من اعتماد طلبكم نظراً لعدم وضوح صورة الواجهة أو لافتة المحل التجارية. يُرجى إعادة التصوير نهاراً مع إظهار الاسم بوضوح لضمان حق المشتري.</textarea>
+</div>
+<!-- Internal Admin Note -->
+<div class="flex items-center gap-space-xs p-space-sm bg-surface-container rounded-xl">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">lock</span>
+<span class="font-caption text-caption text-on-surface-variant">سيتم تدوين اسم المشرف وتوقيت الرفض في السجل المحاسبي والتشغيلي للنظام.</span>
+</div>
+</div>
+<!-- Drawer Footer Actions -->
+<div class="p-space-xl border-t border-surface-container-high bg-surface-container-low flex items-center justify-between gap-space-md">
+<button class="w-full bg-error hover:bg-error/90 text-on-error py-3 rounded-xl font-label-lg text-label-lg font-bold flex items-center justify-center gap-space-xs shadow-sm transition-all" onclick="confirmRejectSubmission()" type="button">
+<span class="material-symbols-outlined text-[20px]">send</span>
+<span>إرسال الرد وتحديث حالة الطلب إلى (مرفوض مع إشعار)</span>
+</button>
+<button class="px-space-md py-3 rounded-xl bg-surface-container font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" onclick="closeRejectDrawer()" type="button">
+        إلغاء
+      </button>
+</div>
+</div>
+<!-- MODAL: Direct WhatsApp Dispatch Dialog -->
+<div class="fixed inset-0 bg-primary/40 backdrop-blur-sm z-50 hidden items-center justify-center p-space-lg" id="whatsapp-modal">
+<div class="bg-surface-container-lowest max-w-lg w-full rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+<div class="p-space-lg bg-surface-container-low border-b border-surface-container-high flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-xl bg-secondary text-on-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">chat</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">إرسال استكمال البيانات عبر واتساب</span>
+<span class="font-caption text-caption text-secondary font-medium" id="wa-target-number">الرقم الموجه</span>
+</div>
+</div>
+<button class="p-space-xs rounded-lg hover:bg-surface-container text-on-surface-variant" onclick="closeWhatsAppModal()" type="button">
+<span class="material-symbols-outlined text-[22px]">close</span>
+</button>
+</div>
+<div class="p-space-lg flex flex-col gap-space-md">
+<p class="font-body-md text-body-md text-on-surface">
+          سيتم فتح تطبيق واتساب للأعمال الرسمي مع تجهيز الرسالة التالية المعتمدة من مجلس إدارة دليل أبوحمص:
+        </p>
+<div class="p-space-md bg-secondary-container/30 rounded-xl font-body-md text-body-md text-on-surface border-r-4 border-secondary flex flex-col gap-2">
+<p id="wa-preview-text">
+            "أهلاً بك يا فندم! بخصوص طلبكم لإضافة النشاط في دليل أبوحمص، نحتاج فقط التكرم بإرسال صورة واضحة لمدخل الورشة أو اليافطة لكي يتم تفعيل الإعلان والظهور على الخريطة مباشرة. شكراً لتعاونكم معنا."
+          </p>
+<span class="font-caption text-caption text-on-surface-variant text-left dir-ltr">https://abuhoms.gov.eg/upload?id=8942</span>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface-variant font-caption text-caption">
+<span class="material-symbols-outlined text-[16px] text-secondary">check_circle</span>
+<span>يتضمن الرابط المباشر كود جلسة مؤمن لرفع الصور بجودة فائقة</span>
+</div>
+</div>
+<div class="p-space-lg bg-surface-container-low border-t border-surface-container-high flex items-center justify-between gap-space-md">
+<button class="flex-1 bg-secondary hover:bg-primary text-on-secondary py-2.5 rounded-xl font-label-lg text-label-lg font-bold flex items-center justify-center gap-space-xs transition-colors" onclick="sendWhatsAppDispatch()" type="button">
+<span class="material-symbols-outlined text-[20px]">open_in_new</span>
+<span>فتح واتساب وإرسال القالب الآن</span>
+</button>
+<button class="px-space-lg py-2.5 rounded-xl bg-surface-container text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container-high transition-colors" onclick="closeWhatsAppModal()" type="button">
+          إغلاق
+        </button>
+</div>
+</div>
+</div>
+<!-- TOAST FEEDBACK NOTIFICATION -->
+<div class="fixed bottom-6 left-6 z-50 bg-primary text-on-primary px-space-lg py-space-md rounded-xl shadow-xl flex items-center gap-space-sm transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none" id="toast-notification">
+<span class="material-symbols-outlined text-secondary-fixed text-[22px]">check_circle</span>
+<span class="font-label-lg text-label-lg font-bold" id="toast-message">تم الإجراء بنجاح</span>
+</div>
+</div>
+<script>
+  // Tab Pill Active State Toggle
+  const tabButtons = document.querySelectorAll('#filter-tabs .tab-btn');
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabButtons.forEach(b => {
+        b.classList.remove('bg-primary-container', 'text-on-primary', 'shadow-sm', 'font-bold');
+        b.classList.add('bg-surface-container', 'text-on-surface-variant', 'font-medium');
+      });
+      btn.classList.remove('bg-surface-container', 'text-on-surface-variant', 'font-medium');
+      btn.classList.add('bg-primary-container', 'text-on-primary', 'shadow-sm', 'font-bold');
+      showToast('تمت تصفية العرض حسب الفئة المحددة');
+    });
+  });
+
+  // Slide-over Drawer Interactions
+  const drawer = document.getElementById('reject-drawer');
+  const backdrop = document.getElementById('reject-drawer-backdrop');
+  const drawerTitle = document.getElementById('drawer-item-title');
+  const textEditor = document.getElementById('template-text-editor');
+
+  const templates = {
+    1: "نعتذر لعدم تمكننا من اعتماد طلبكم نظراً لعدم وضوح صورة الواجهة أو لافتة المحل التجارية. يُرجى إعادة التصوير نهاراً مع إظهار الاسم بوضوح لضمان حق المشتري.",
+    2: "تم فحص أرقام الاتصال المرفقة وتبيّن أنها خارج الخدمة أو غير متاحة. نشترط رقم هاتف شغال مخصص للنشاط التجاري ومربوط بواتساب لتسهيل وصول أهالي أبوحمص للخدمة.",
+    3: "هذا النشاط يتبع نطاقاً جغرافياً خارج حدود مركز وقرى أبوحمص (دمنهور أو كفر الدوار). دليلنا مخصص حصرياً للخدمات البلدية والتجارية لمركز أبوحمص والقرى التابعة.",
+    4: ""
+  };
+
+  function openRejectDrawer(itemId, itemLabel) {
+    drawerTitle.innerText = `${itemId} - ${itemLabel}`;
+    backdrop.classList.remove('hidden');
+    setTimeout(() => {
+      backdrop.classList.remove('opacity-0');
+      drawer.classList.remove('translate-x-[-100%]');
+    }, 10);
+  }
+
+  function closeRejectDrawer() {
+    drawer.classList.add('translate-x-[-100%]');
+    backdrop.classList.add('opacity-0');
+    setTimeout(() => {
+      backdrop.classList.add('hidden');
+    }, 300);
+  }
+
+  backdrop.addEventListener('click', closeRejectDrawer);
+
+  function selectTemplate(id) {
+    if (id === 4) {
+      textEditor.value = "";
+      textEditor.placeholder = "اكتب سبب الرفض المفصل هنا...";
+      textEditor.focus();
+    } else {
+      textEditor.value = templates[id];
+    }
+  }
+
+  function confirmRejectSubmission() {
+    closeRejectDrawer();
+    showToast('تم تحديث حالة الطلب إلى (مرفوض مع إشعار) وإرسال الرد الرسمي بنجاح.');
+  }
+
+  // WhatsApp Dialog Flow
+  const waModal = document.getElementById('whatsapp-modal');
+  const waTarget = document.getElementById('wa-target-number');
+  const waPreview = document.getElementById('wa-preview-text');
+
+  function openWhatsAppModal(phone, placeName) {
+    waTarget.innerText = `العميل: ${phone} (${placeName})`;
+    waPreview.innerText = `السلام عليكم ورحمة الله، بخصوص تسجيل نشاط (${placeName}) في دليل أبوحمص الرسمي، برجاء إرسال صورة واضحة للافتة المحل أو واجهة النشاط لاعتماد ونشر الصفحة للمواطنين.`;
+    waModal.classList.remove('hidden');
+    waModal.classList.add('flex');
+  }
+
+  function closeWhatsAppModal() {
+    waModal.classList.add('hidden');
+    waModal.classList.remove('flex');
+  }
+
+  function sendWhatsAppDispatch() {
+    closeWhatsAppModal();
+    showToast('تم إرسال قالب الواتساب بنجاح، وتحديث حالة البلاغ إلى قيد الانتظار.');
+  }
+
+  // Toast Notification Trigger
+  function showToast(message) {
+    const toast = document.getElementById('toast-notification');
+    const toastMsg = document.getElementById('toast-message');
+    toastMsg.innerText = message;
+    toast.classList.remove('translate-y-24', 'opacity-0');
+    setTimeout(() => {
+      toast.classList.add('translate-y-24', 'opacity-0');
+    }, 3500);
+  }
+</script></main></div></body></html>
