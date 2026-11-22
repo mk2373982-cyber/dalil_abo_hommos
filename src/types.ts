@@ -2,6 +2,31 @@ export type TemplateType = 'medical' | 'restaurants' | 'real-estate' | 'heroes' 
 
 export type AdminRole = 'super_admin' | 'partner' | 'moderator' | 'auditor';
 
+export type PartnerScope = 'clinic' | 'restaurant' | 'captain';
+
+export interface AdminUser {
+  uid: string;
+  email: string;
+  name?: string;
+  role: AdminRole;
+  partnerTypes?: PartnerScope[];
+  managedPlaceIds?: string[];
+  active?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type WeekdayKey = 'sat' | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri';
+
+export interface TimeSlot {
+  /** 24h HH:MM format, e.g. "16:00" */
+  open: string;
+  /** 24h HH:MM format, e.g. "21:00" or "02:00" (overnight) or "24:00" */
+  close: string;
+}
+
+export type WeeklySchedule = Partial<Record<WeekdayKey, TimeSlot[]>>;
+
 export interface Category {
   id: string;
   name: string;
@@ -74,6 +99,8 @@ export interface Place {
   featured?: boolean;
   openNow?: boolean;
   hours?: string;
+  workingSchedule?: WeeklySchedule;
+  is24Hours?: boolean;
   consultationFee?: number;
   experienceYears?: number;
   qrCode?: string;
@@ -82,7 +109,12 @@ export interface Place {
   filterExpirations?: Record<string, string>;
   services?: PlaceService[];
   menuItems?: MenuItem[];
+  /** Authoritative map of menuItemId -> unit price (EGP), enforced in Firestore security rules */
+  menuPriceMap?: Record<string, number>;
+  deliveryFeeInTown?: number;
+  deliveryFeeVillage?: number;
   gallery?: GalleryItem[];
+  isDemoData?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -109,6 +141,7 @@ export interface Property {
   verified?: boolean;
   featured?: boolean;
   status: 'approved' | 'pending' | 'sold';
+  isDemoData?: boolean;
   createdAt?: string;
 }
 
@@ -125,6 +158,7 @@ export interface Agency {
   dealsCount?: number;
   yearsExperience?: number;
   verified?: boolean;
+  isDemoData?: boolean;
 }
 
 export interface Offer {
@@ -143,6 +177,7 @@ export interface Offer {
   imageUrl?: string;
   active: boolean;
   featured?: boolean;
+  isDemoData?: boolean;
 }
 
 export interface Campaign {
@@ -156,6 +191,7 @@ export interface Campaign {
   impressions?: number;
   clicks?: number;
   active: boolean;
+  isDemoData?: boolean;
 }
 
 export interface EmergencyContact {
@@ -175,8 +211,12 @@ export interface ClinicQueue {
   doctorName: string;
   specialty?: string;
   clinicAddress?: string;
+  /** Working day in Africa/Cairo timezone (YYYY-MM-DD) */
+  /** Optional for compatibility with the existing, undated queue records. */
+  sessionDate?: string;
   currentNumber: number;
   lastTicketNumber: number;
+  lastTicketId?: string;
   status: 'open' | 'paused' | 'emergency' | 'closed';
   avgMinutesPerPatient?: number;
   pausedReason?: string;
@@ -187,6 +227,9 @@ export interface ClinicTicket {
   id: string;
   ticketCode: string;
   ticketNumber: number;
+  /** Working day in Africa/Cairo timezone (YYYY-MM-DD) */
+  /** Optional until the booking flow and deployed rules support dated sessions. */
+  sessionDate?: string;
   doctorId: string;
   doctorName: string;
   patientName: string;
@@ -206,6 +249,21 @@ export interface CartItem {
   quantity: number;
 }
 
+export interface DeliveryCoords {
+  lat: number;
+  lng: number;
+  accuracy?: number;
+}
+
+export interface OrderPricingSnapshot {
+  currency: 'EGP';
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+  validatedAt: string;
+  pricingSource: 'firestore_catalog' | 'api_validator';
+}
+
 export interface RestaurantOrder {
   id: string;
   orderCode: string;
@@ -216,11 +274,14 @@ export interface RestaurantOrder {
   deliveryArea?: string;
   deliveryAddress: string;
   locationShared?: boolean;
+  deliveryCoords?: DeliveryCoords;
   items: CartItem[];
   subtotal?: number;
   deliveryFee?: number;
   total: number;
+  pricingSnapshot?: OrderPricingSnapshot;
   status: 'new' | 'preparing' | 'ready' | 'on_the_way' | 'delivered' | 'cancelled';
+  captainUid?: string;
   captainName?: string;
   captainPhone?: string;
   notes?: string;
@@ -240,6 +301,7 @@ export interface DeliveryRide {
   customerPhone: string;
   estimatedFee?: number;
   status: 'pending' | 'accepted' | 'picked_up' | 'on_the_way' | 'delivered' | 'cancelled';
+  captainUid?: string;
   captainName?: string;
   captainPhone?: string;
   createdAt?: string;
@@ -265,6 +327,12 @@ export interface Submission {
   previousData?: Record<string, string | number | boolean>;
   status: 'received' | 'reviewing' | 'approved' | 'rejected' | 'expired';
   adminNote?: string;
+  applied?: boolean;
+  appliedChanges?: Record<string, string | number | boolean>;
+  publishedTargetId?: string;
+  reviewedBy?: string;
+  reviewedByUid?: string;
+  reviewedAt?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -311,6 +379,7 @@ export interface FinanceSettlement {
   mohamedShare?: number;
   status: 'closed' | 'open';
   closedAt?: string;
+  isDemoData?: boolean;
 }
 
 export interface AnalyticsEvent {
@@ -331,6 +400,7 @@ export interface PublicSettings {
   supportWhatsapp?: string;
   visitsCount: number;
   areas?: string[];
+  demoMode?: boolean;
   updatedAt?: string;
 }
 

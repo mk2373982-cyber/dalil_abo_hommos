@@ -1,0 +1,976 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // Helper Functions — Zero-Trust RBAC, Partner Isolation & Strict Validation
+    // =========================================================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isBootstrapOwner() {
+      return isSignedIn()
+        && request.auth.token.email == 'mk2373982@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function hasAdminDoc() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function adminDoc() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
+    }
+
+    function isActiveAdminDoc() {
+      return hasAdminDoc() && (!('active' in adminDoc()) || adminDoc().active == true);
+    }
+
+    function isSuperAdmin() {
+      return isBootstrapOwner() || (isActiveAdminDoc() && adminDoc().role == 'super_admin');
+    }
+
+    function isModerator() {
+      return isActiveAdminDoc() && adminDoc().role == 'moderator';
+    }
+
+    function isAuditor() {
+      return isActiveAdminDoc() && adminDoc().role == 'auditor';
+    }
+
+    function isAdminWriter() {
+      return isSuperAdmin() || isModerator();
+    }
+
+    function isAdminPanelReader() {
+      return isSuperAdmin() || isModerator() || isAuditor();
+    }
+
+    function isActivePartner() {
+      return isActiveAdminDoc() && adminDoc().role == 'partner';
+    }
+
+    function hasPartnerScope(scope) {
+      return isActivePartner()
+        && ('partnerTypes' in adminDoc())
+        && adminDoc().partnerTypes is list
+        && (scope in adminDoc().partnerTypes);
+    }
+
+    function hasManagedPlace(placeId) {
+      return isActivePartner()
+        && ('managedPlaceIds' in adminDoc())
+        && adminDoc().managedPlaceIds is list
+        && (placeId in adminDoc().managedPlaceIds);
+    }
+
+    function isClinicPartnerFor(doctorId) {
+      return hasPartnerScope('clinic') && hasManagedPlace(doctorId);
+    }
+
+    function isRestaurantPartnerFor(restaurantId) {
+      return hasPartnerScope('restaurant') && hasManagedPlace(restaurantId);
+    }
+
+    function isCaptainPartner() {
+      return hasPartnerScope('captain');
+    }
+
+    function validStr(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function validOptStr(data, field, maxLen) {
+      return !(field in data) || (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function validOptBool(data, field) {
+      return !(field in data) || data[field] is bool;
+    }
+
+    function validOptNum(data, field, minVal, maxVal) {
+      return !(field in data)
+        || (data[field] is number && data[field] >= minVal && data[field] <= maxVal);
+    }
+
+    function validOptList(data, field, maxItems) {
+      return !(field in data)
+        || (data[field] is list && data[field].size() <= maxItems);
+    }
+
+    function validOptMap(data, field, maxEntries) {
+      return !(field in data)
+        || (data[field] is map && data[field].size() <= maxEntries);
+    }
+
+    function validDateKey(val) {
+      return val is string && val.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isStrongToken(id) {
+      return id is string && id.size() >= 20 && id.size() <= 64;
+    }
+
+    function validDeliveryCoords(coords) {
+      return coords is map
+        && coords.keys().hasOnly(['lat', 'lng', 'accuracy'])
+        && ('lat' in coords) && coords.lat is number && coords.lat >= -90 && coords.lat <= 90
+        && ('lng' in coords) && coords.lng is number && coords.lng >= -180 && coords.lng <= 180
+        && (!('accuracy' in coords) || (coords.accuracy is number && coords.accuracy >= 0 && coords.accuracy <= 50000));
+    }
+
+    // =========================================================================
+    // Trusted Authoritative Menu Pricing Verification (Unrolled 1..15 Items)
+    // =========================================================================
+
+    function isValidOrderItemAt(items, idx, priceMap) {
+      return idx >= items.size()
+        || (
+          items[idx] is map
+          && items[idx].keys().hasOnly(['menuItemId', 'name', 'price', 'quantity'])
+          && items[idx].menuItemId is string
+          && items[idx].menuItemId in priceMap
+          && validStr(items[idx].name, 1, 120)
+          && items[idx].quantity is int
+          && items[idx].quantity >= 1
+          && items[idx].quantity <= 20
+          && items[idx].price is number
+          && items[idx].price == priceMap[items[idx].menuItemId]
+        );
+    }
+
+    function orderItemLineTotal(items, idx, priceMap) {
+      return idx < items.size()
+        ? (priceMap[items[idx].menuItemId] * items[idx].quantity)
+        : 0;
+    }
+
+    function allOrderItemsValid(items, priceMap) {
+      return items is list
+        && items.size() >= 1
+        && items.size() <= 15
+        && isValidOrderItemAt(items, 0, priceMap)
+        && isValidOrderItemAt(items, 1, priceMap)
+        && isValidOrderItemAt(items, 2, priceMap)
+        && isValidOrderItemAt(items, 3, priceMap)
+        && isValidOrderItemAt(items, 4, priceMap)
+        && isValidOrderItemAt(items, 5, priceMap)
+        && isValidOrderItemAt(items, 6, priceMap)
+        && isValidOrderItemAt(items, 7, priceMap)
+        && isValidOrderItemAt(items, 8, priceMap)
+        && isValidOrderItemAt(items, 9, priceMap)
+        && isValidOrderItemAt(items, 10, priceMap)
+        && isValidOrderItemAt(items, 11, priceMap)
+        && isValidOrderItemAt(items, 12, priceMap)
+        && isValidOrderItemAt(items, 13, priceMap)
+        && isValidOrderItemAt(items, 14, priceMap);
+    }
+
+    function computeOrderSubtotal(items, priceMap) {
+      return orderItemLineTotal(items, 0, priceMap)
+        + orderItemLineTotal(items, 1, priceMap)
+        + orderItemLineTotal(items, 2, priceMap)
+        + orderItemLineTotal(items, 3, priceMap)
+        + orderItemLineTotal(items, 4, priceMap)
+        + orderItemLineTotal(items, 5, priceMap)
+        + orderItemLineTotal(items, 6, priceMap)
+        + orderItemLineTotal(items, 7, priceMap)
+        + orderItemLineTotal(items, 8, priceMap)
+        + orderItemLineTotal(items, 9, priceMap)
+        + orderItemLineTotal(items, 10, priceMap)
+        + orderItemLineTotal(items, 11, priceMap)
+        + orderItemLineTotal(items, 12, priceMap)
+        + orderItemLineTotal(items, 13, priceMap)
+        + orderItemLineTotal(items, 14, priceMap);
+    }
+
+    function expectedDeliveryFee(data, place) {
+      return (('deliveryArea' in data) && data.deliveryArea is string && data.deliveryArea.matches('.*قرية.*'))
+        ? (('deliveryFeeVillage' in place && place.deliveryFeeVillage is number) ? place.deliveryFeeVillage : 25)
+        : (('deliveryFeeInTown' in place && place.deliveryFeeInTown is number) ? place.deliveryFeeInTown : 15);
+    }
+
+    function verifyOrderAgainstCatalog(data) {
+      let place = get(/databases/$(database)/documents/places/$(data.restaurantId)).data;
+      return exists(/databases/$(database)/documents/places/$(data.restaurantId))
+        && place.categorySlug == 'restaurants'
+        && ('menuPriceMap' in place)
+        && place.menuPriceMap is map
+        && place.menuPriceMap.size() > 0
+        && allOrderItemsValid(data.items, place.menuPriceMap)
+        && data.subtotal == computeOrderSubtotal(data.items, place.menuPriceMap)
+        && data.deliveryFee == expectedDeliveryFee(data, place)
+        && data.total == data.subtotal + data.deliveryFee;
+    }
+
+    // =========================================================================
+    // Entity Schema Validators
+    // =========================================================================
+
+    function isValidAdminDoc(data) {
+      return data.keys().hasOnly([
+          'uid', 'email', 'name', 'role', 'partnerTypes', 'managedPlaceIds',
+          'active', 'createdAt', 'updatedAt'
+        ])
+        && validStr(data.email, 5, 160)
+        && data.role in ['super_admin', 'partner', 'moderator', 'auditor']
+        && validOptStr(data, 'uid', 128)
+        && validOptStr(data, 'name', 120)
+        && validOptList(data, 'partnerTypes', 3)
+        && validOptList(data, 'managedPlaceIds', 20)
+        && validOptBool(data, 'active')
+        && validOptStr(data, 'createdAt', 40)
+        && validOptStr(data, 'updatedAt', 40);
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasOnly([
+          'id', 'name', 'slug', 'iconKey', 'imageUrl', 'bgColor', 'iconColor',
+          'templateType', 'order', 'active', 'description', 'updatedAt'
+        ])
+        && validStr(data.id, 2, 80)
+        && validStr(data.name, 2, 100)
+        && validStr(data.slug, 2, 80)
+        && validStr(data.iconKey, 1, 60)
+        && validOptStr(data, 'imageUrl', 500)
+        && validStr(data.bgColor, 3, 40)
+        && validStr(data.iconColor, 3, 40)
+        && data.templateType in ['medical', 'restaurants', 'real-estate', 'heroes', 'general']
+        && data.order is number && data.order >= 0 && data.order <= 999
+        && data.active is bool
+        && validOptStr(data, 'description', 400)
+        && validOptStr(data, 'updatedAt', 40);
+    }
+
+    function isValidPromoFilter(data) {
+      return data.keys().hasOnly([
+          'id', 'name', 'slug', 'iconKey', 'badgeBgColor', 'badgeTextColor',
+          'priorityWeight', 'order', 'active', 'description', 'updatedAt'
+        ])
+        && validStr(data.id, 2, 80)
+        && validStr(data.name, 2, 100)
+        && validStr(data.slug, 2, 80)
+        && validStr(data.iconKey, 1, 60)
+        && validStr(data.badgeBgColor, 3, 40)
+        && validStr(data.badgeTextColor, 3, 40)
+        && data.priorityWeight is number && data.priorityWeight >= 0 && data.priorityWeight <= 1000
+        && data.order is number && data.order >= 0 && data.order <= 999
+        && data.active is bool
+        && validOptStr(data, 'description', 400)
+        && validOptStr(data, 'updatedAt', 40);
+    }
+
+    function isValidPlace(data) {
+      return data.keys().hasOnly([
+          'id', 'name', 'categoryId', 'categorySlug', 'specialty', 'area', 'address',
+          'lat', 'lng', 'phone', 'whatsapp', 'description', 'imageUrl', 'rating', 'reviewCount',
+          'verified', 'featured', 'openNow', 'hours', 'workingSchedule', 'is24Hours',
+          'consultationFee', 'experienceYears', 'qrCode', 'tags', 'filterTags', 'filterExpirations',
+          'services', 'menuItems', 'menuPriceMap', 'deliveryFeeInTown', 'deliveryFeeVillage',
+          'gallery', 'isDemoData', 'createdAt', 'updatedAt'
+        ])
+        && validStr(data.id, 2, 100)
+        && validStr(data.name, 2, 160)
+        && validStr(data.categoryId, 2, 80)
+        && validStr(data.categorySlug, 2, 80)
+        && validStr(data.area, 2, 120)
+        && validStr(data.address, 2, 300)
+        && validStr(data.phone, 3, 40)
+        && validOptNum(data, 'lat', -90, 90)
+        && validOptNum(data, 'lng', -180, 180)
+        && validOptStr(data, 'specialty', 200)
+        && validOptStr(data, 'whatsapp', 40)
+        && validOptStr(data, 'description', 1500)
+        && validOptStr(data, 'imageUrl', 600)
+        && validOptNum(data, 'rating', 0, 5)
+        && validOptNum(data, 'reviewCount', 0, 1000000)
+        && validOptBool(data, 'verified')
+        && validOptBool(data, 'featured')
+        && validOptBool(data, 'openNow')
+        && validOptStr(data, 'hours', 300)
+        && validOptMap(data, 'workingSchedule', 7)
+        && validOptBool(data, 'is24Hours')
+        && validOptNum(data, 'consultationFee', 0, 50000)
+        && validOptNum(data, 'experienceYears', 0, 100)
+        && validOptStr(data, 'qrCode', 120)
+        && validOptList(data, 'tags', 20)
+        && validOptList(data, 'filterTags', 20)
+        && validOptMap(data, 'filterExpirations', 20)
+        && validOptList(data, 'services', 30)
+        && validOptList(data, 'menuItems', 60)
+        && validOptMap(data, 'menuPriceMap', 60)
+        && validOptNum(data, 'deliveryFeeInTown', 0, 500)
+        && validOptNum(data, 'deliveryFeeVillage', 0, 500)
+        && validOptList(data, 'gallery', 20)
+        && validOptBool(data, 'isDemoData')
+        && validOptStr(data, 'createdAt', 40)
+        && validOptStr(data, 'updatedAt', 40);
+    }
+
+    function isValidProperty(data) {
+      return data.keys().hasOnly([
+          'id', 'title', 'listingType', 'propertyType', 'price', 'areaSqm',
+          'rooms', 'baths', 'floor', 'finishing', 'area', 'address', 'agencyId',
+          'agencyName', 'phone', 'whatsapp', 'imageUrl', 'description',
+          'verified', 'featured', 'status', 'isDemoData', 'createdAt'
+        ])
+        && validStr(data.id, 2, 100)
+        && validStr(data.title, 3, 200)
+        && data.listingType in ['sale', 'rent']
+        && data.propertyType in ['apartment', 'shop', 'land', 'warehouse']
+        && data.price is number && data.price >= 0 && data.price <= 500000000
+        && data.areaSqm is number && data.areaSqm >= 1 && data.areaSqm <= 1000000
+        && validStr(data.area, 2, 120)
+        && validStr(data.phone, 3, 40)
+        && data.status in ['approved', 'pending', 'sold']
+        && validOptNum(data, 'rooms', 0, 50)
+        && validOptNum(data, 'baths', 0, 30)
+        && validOptStr(data, 'floor', 60)
+        && validOptStr(data, 'finishing', 80)
+        && validOptStr(data, 'address', 300)
+        && validOptStr(data, 'agencyId', 100)
+        && validOptStr(data, 'agencyName', 160)
+        && validOptStr(data, 'whatsapp', 40)
+        && validOptStr(data, 'imageUrl', 600)
+        && validOptStr(data, 'description', 2000)
+        && validOptBool(data, 'verified')
+        && validOptBool(data, 'featured')
+        && validOptBool(data, 'isDemoData')
+        && validOptStr(data, 'createdAt', 40);
+    }
+
+    function isValidAgency(data) {
+      return data.keys().hasOnly([
+          'id', 'name', 'licenseNumber', 'area', 'address', 'phone', 'whatsapp',
+          'rating', 'reviewCount', 'dealsCount', 'yearsExperience', 'verified', 'isDemoData'
+        ])
+        && validStr(data.id, 2, 100)
+        && validStr(data.name, 2, 160)
+        && validStr(data.area, 2, 120)
+        && validStr(data.phone, 3, 40)
+        && validOptStr(data, 'licenseNumber', 60)
+        && validOptStr(data, 'address', 300)
+        && validOptStr(data, 'whatsapp', 40)
+        && validOptNum(data, 'rating', 0, 5)
+        && validOptNum(data, 'reviewCount', 0, 100000)
+        && validOptNum(data, 'dealsCount', 0, 100000)
+        && validOptNum(data, 'yearsExperience', 0, 100)
+        && validOptBool(data, 'verified')
+        && validOptBool(data, 'isDemoData');
+    }
+
+    function isValidOffer(data) {
+      return data.keys().hasOnly([
+          'id', 'title', 'subtitle', 'placeId', 'placeName', 'categorySlug',
+          'discountPercent', 'originalPrice', 'salePrice', 'couponCode',
+          'expiresAt', 'terms', 'imageUrl', 'active', 'featured', 'isDemoData'
+        ])
+        && validStr(data.id, 2, 100)
+        && validStr(data.title, 2, 180)
+        && validStr(data.placeName, 2, 160)
+        && data.discountPercent is number && data.discountPercent >= 0 && data.discountPercent <= 100
+        && data.salePrice is number && data.salePrice >= 0 && data.salePrice <= 10000000
+        && validStr(data.couponCode, 2, 40)
+        && data.active is bool
+        && validOptStr(data, 'subtitle', 300)
+        && validOptStr(data, 'placeId', 100)
+        && validOptStr(data, 'categorySlug', 80)
+        && validOptNum(data, 'originalPrice', 0, 10000000)
+        && validOptStr(data, 'expiresAt', 40)
+        && validOptList(data, 'terms', 15)
+        && validOptStr(data, 'imageUrl', 600)
+        && validOptBool(data, 'featured')
+        && validOptBool(data, 'isDemoData');
+    }
+
+    function isValidCampaign(data) {
+      return data.keys().hasOnly([
+          'id', 'slotNumber', 'title', 'subtitle', 'badgeText', 'ctaText',
+          'targetRoute', 'impressions', 'clicks', 'active', 'isDemoData'
+        ])
+        && validStr(data.id, 2, 100)
+        && data.slotNumber is number && data.slotNumber >= 1 && data.slotNumber <= 20
+        && validStr(data.title, 2, 160)
+        && validStr(data.targetRoute, 1, 200)
+        && data.active is bool
+        && validOptStr(data, 'subtitle', 300)
+        && validOptStr(data, 'badgeText', 60)
+        && validOptStr(data, 'ctaText', 60)
+        && validOptNum(data, 'impressions', 0, 100000000)
+        && validOptNum(data, 'clicks', 0, 100000000)
+        && validOptBool(data, 'isDemoData');
+    }
+
+    function isValidEmergency(data) {
+      return data.keys().hasOnly([
+          'id', 'name', 'type', 'phone', 'area', 'address', 'statusText', 'is24h', 'priority'
+        ])
+        && validStr(data.id, 2, 100)
+        && validStr(data.name, 2, 160)
+        && data.type in ['hotline', 'pharmacy', 'hospital', 'blood']
+        && validStr(data.phone, 2, 40)
+        && data.priority is number && data.priority >= 0 && data.priority <= 999
+        && validOptStr(data, 'area', 120)
+        && validOptStr(data, 'address', 300)
+        && validOptStr(data, 'statusText', 120)
+        && validOptBool(data, 'is24h');
+    }
+
+    function isValidClinicQueue(data) {
+      return data.keys().hasOnly([
+          'doctorId', 'doctorName', 'specialty', 'clinicAddress', 'sessionDate',
+          'currentNumber', 'lastTicketNumber', 'lastTicketId', 'status',
+          'avgMinutesPerPatient', 'pausedReason', 'updatedAt'
+        ])
+        && validStr(data.doctorId, 2, 100)
+        && validStr(data.doctorName, 2, 160)
+        && validDateKey(data.sessionDate)
+        && data.currentNumber is int && data.currentNumber >= 0 && data.currentNumber <= 9999
+        && data.lastTicketNumber is int && data.lastTicketNumber >= 0 && data.lastTicketNumber <= 9999
+        && data.status in ['open', 'paused', 'emergency', 'closed']
+        && validOptStr(data, 'specialty', 200)
+        && validOptStr(data, 'clinicAddress', 300)
+        && validOptStr(data, 'lastTicketId', 80)
+        && validOptNum(data, 'avgMinutesPerPatient', 1, 240)
+        && validOptStr(data, 'pausedReason', 200)
+        && validOptStr(data, 'updatedAt', 40);
+    }
+
+    function isValidClinicTicket(data) {
+      return data.keys().hasOnly([
+          'id', 'ticketCode', 'ticketNumber', 'sessionDate', 'doctorId', 'doctorName',
+          'patientName', 'patientPhone', 'visitType', 'fee', 'status',
+          'notes', 'createdAt', 'updatedAt'
+        ])
+        && validStr(data.id, 20, 64)
+        && validStr(data.ticketCode, 4, 40)
+        && data.ticketNumber is int && data.ticketNumber >= 1 && data.ticketNumber <= 9999
+        && validDateKey(data.sessionDate)
+        && validStr(data.doctorId, 2, 100)
+        && validStr(data.doctorName, 2, 160)
+        && validStr(data.patientName, 2, 120)
+        && validStr(data.patientPhone, 6, 40)
+        && data.status in ['waiting', 'called', 'in_room', 'completed', 'cancelled', 'emergency']
+        && validOptStr(data, 'visitType', 60)
+        && validOptNum(data, 'fee', 0, 50000)
+        && validOptStr(data, 'notes', 500)
+        && validOptStr(data, 'createdAt', 40)
+        && validOptStr(data, 'updatedAt', 40);
+    }
+
+    function isValidOrderPricingSnapshot(snap) {
+      return snap is map
+        && snap.keys().hasOnly(['currency', 'subtotal', 'deliveryFee', 'total', 'validatedAt', 'pricingSource'])
+        && snap.currency == 'EGP'
+        && snap.subtotal is number && snap.subtotal >= 0
+        && snap.deliveryFee is number && snap.deliveryFee >= 0
+        && snap.total is number && snap.total == snap.subtotal + snap.deliveryFee
+        && validStr(snap.validatedAt, 10, 40)
+        && snap.pricingSource in ['firestore_catalog', 'api_validator'];
+    }
+
+    function isValidRestaurantOrder(data) {
+      return data.keys().hasOnly([
+          'id', 'orderCode', 'restaurantId', 'restaurantName', 'customerName',
+          'customerPhone', 'deliveryArea', 'deliveryAddress', 'locationShared',
+          'deliveryCoords', 'items', 'subtotal', 'deliveryFee', 'total',
+          'pricingSnapshot', 'status', 'captainUid', 'captainName', 'captainPhone',
+          'notes', 'createdAt', 'updatedAt'
+        ])
+        && validStr(data.id, 20, 64)
+        && validStr(data.orderCode, 4, 40)
+        && validStr(data.restaurantId, 2, 100)
+        && validStr(data.restaurantName, 2, 160)
+        && validStr(data.customerName, 2, 120)
+        && validStr(data.customerPhone, 6, 40)
+        && validStr(data.deliveryAddress, 3, 400)
+        && data.items is list && data.items.size() >= 1 && data.items.size() <= 15
+        && data.subtotal is number && data.subtotal >= 0 && data.subtotal <= 200000
+        && data.deliveryFee is number && data.deliveryFee >= 0 && data.deliveryFee <= 500
+        && data.total is number && data.total >= 1 && data.total <= 200500
+        && data.status in ['new', 'preparing', 'ready', 'on_the_way', 'delivered', 'cancelled']
+        && validOptStr(data, 'deliveryArea', 120)
+        && validOptBool(data, 'locationShared')
+        && (!('deliveryCoords' in data) || validDeliveryCoords(data.deliveryCoords))
+        && (!('locationShared' in data) || data.locationShared == false || ('deliveryCoords' in data))
+        && (!('pricingSnapshot' in data) || isValidOrderPricingSnapshot(data.pricingSnapshot))
+        && validOptStr(data, 'captainUid', 128)
+        && validOptStr(data, 'captainName', 120)
+        && validOptStr(data, 'captainPhone', 40)
+        && validOptStr(data, 'notes', 500)
+        && validOptStr(data, 'createdAt', 40)
+        && validOptStr(data, 'updatedAt', 40);
+    }
+
+    function isValidDeliveryRide(data) {
+      return data.keys().hasOnly([
+          'id', 'rideCode', 'pickupArea', 'pickupDetails', 'dropoffArea',
+          'dropoffDetails', 'itemDescription', 'customerName', 'customerPhone',
+          'estimatedFee', 'status', 'captainUid', 'captainName', 'captainPhone',
+          'createdAt', 'updatedAt'
+        ])
+        && validStr(data.id, 20, 64)
+        && validStr(data.rideCode, 4, 40)
+        && validStr(data.pickupArea, 2, 140)
+        && validStr(data.dropoffArea, 2, 140)
+        && validStr(data.itemDescription, 2, 400)
+        && validStr(data.customerName, 2, 120)
+        && validStr(data.customerPhone, 6, 40)
+        && data.status in ['pending', 'accepted', 'picked_up', 'on_the_way', 'delivered', 'cancelled']
+        && validOptStr(data, 'pickupDetails', 300)
+        && validOptStr(data, 'dropoffDetails', 300)
+        && validOptNum(data, 'estimatedFee', 0, 50000)
+        && validOptStr(data, 'captainUid', 128)
+        && validOptStr(data, 'captainName', 120)
+        && validOptStr(data, 'captainPhone', 40)
+        && validOptStr(data, 'createdAt', 40)
+        && validOptStr(data, 'updatedAt', 40);
+    }
+
+    function isValidSubmission(data) {
+      return data.keys().hasOnly([
+          'id', 'trackingToken', 'type', 'targetPlaceId', 'title',
+          'submitterName', 'submitterPhone', 'payload', 'previousData',
+          'status', 'adminNote', 'applied', 'appliedChanges', 'publishedTargetId',
+          'reviewedBy', 'reviewedByUid', 'reviewedAt', 'createdAt', 'updatedAt'
+        ])
+        && validStr(data.id, 8, 64)
+        && validStr(data.trackingToken, 8, 64)
+        && data.type in [
+          'suggest_place', 'report_edit', 'advertise', 'add_property',
+          'property_inspection', 'join_hero', 'hero_inquiry'
+        ]
+        && validStr(data.title, 2, 200)
+        && validStr(data.submitterName, 2, 120)
+        && validStr(data.submitterPhone, 6, 40)
+        && data.status in ['received', 'reviewing', 'approved', 'rejected', 'expired']
+        && validOptStr(data, 'targetPlaceId', 100)
+        && validOptMap(data, 'payload', 30)
+        && validOptMap(data, 'previousData', 30)
+        && validOptStr(data, 'adminNote', 1000)
+        && validOptBool(data, 'applied')
+        && validOptMap(data, 'appliedChanges', 30)
+        && validOptStr(data, 'publishedTargetId', 100)
+        && validOptStr(data, 'reviewedBy', 160)
+        && validOptStr(data, 'reviewedByUid', 128)
+        && validOptStr(data, 'reviewedAt', 40)
+        && validOptStr(data, 'createdAt', 40)
+        && validOptStr(data, 'updatedAt', 40);
+    }
+
+    function isValidWhatsappQueue(data) {
+      return data.keys().hasOnly([
+          'id', 'recipientName', 'phone', 'relatedType', 'relatedTitle',
+          'templateName', 'messageBody', 'status', 'sentAt', 'createdAt'
+        ])
+        && validStr(data.id, 2, 100)
+        && validStr(data.recipientName, 2, 160)
+        && validStr(data.phone, 6, 40)
+        && validStr(data.messageBody, 2, 2000)
+        && data.status in ['pending', 'sent', 'failed']
+        && validOptStr(data, 'relatedType', 80)
+        && validOptStr(data, 'relatedTitle', 200)
+        && validOptStr(data, 'templateName', 100)
+        && validOptStr(data, 'sentAt', 40)
+        && validOptStr(data, 'createdAt', 40);
+    }
+
+    function isValidAnalyticsEvent(data) {
+      return data.keys().hasOnly([
+          'eventType', 'query', 'targetId', 'targetName', 'categorySlug', 'resultCount', 'createdAt'
+        ])
+        && data.eventType in ['visit', 'call_click', 'whatsapp_click', 'search', 'zero_search']
+        && validOptStr(data, 'query', 120)
+        && validOptStr(data, 'targetId', 100)
+        && validOptStr(data, 'targetName', 160)
+        && validOptStr(data, 'categorySlug', 80)
+        && validOptNum(data, 'resultCount', 0, 10000)
+        && validOptStr(data, 'createdAt', 40);
+    }
+
+    function isValidPublicSettings(data) {
+      return data.keys().hasOnly([
+          'appName', 'disclaimer', 'supportPhone', 'supportWhatsapp',
+          'visitsCount', 'areas', 'demoMode', 'updatedAt'
+        ])
+        && validStr(data.appName, 2, 100)
+        && validStr(data.disclaimer, 10, 1000)
+        && data.visitsCount is int && data.visitsCount >= 0 && data.visitsCount <= 1000000000
+        && validOptStr(data, 'supportPhone', 40)
+        && validOptStr(data, 'supportWhatsapp', 40)
+        && validOptList(data, 'areas', 50)
+        && validOptBool(data, 'demoMode')
+        && validOptStr(data, 'updatedAt', 40);
+    }
+
+    function isValidFinanceConfig(data) {
+      return data.keys().hasOnly([
+          'isConfigured', 'raedPercent', 'mohamedPercent', 'updatedBy', 'updatedAt', 'history'
+        ])
+        && data.isConfigured is bool
+        && (
+          data.isConfigured == false
+          || (
+            data.raedPercent is number && data.mohamedPercent is number
+            && data.raedPercent >= 0 && data.raedPercent <= 100
+            && data.mohamedPercent >= 0 && data.mohamedPercent <= 100
+            && data.raedPercent + data.mohamedPercent == 100
+          )
+        )
+        && validOptStr(data, 'updatedBy', 160)
+        && validOptStr(data, 'updatedAt', 40)
+        && validOptList(data, 'history', 50);
+    }
+
+    function isValidFinanceSettlement(data) {
+      return data.keys().hasOnly([
+          'id', 'periodLabel', 'totalRevenue', 'expenses', 'netProfit',
+          'raedPercentLocked', 'mohamedPercentLocked', 'raedShare', 'mohamedShare',
+          'status', 'closedAt', 'isDemoData'
+        ])
+        && validStr(data.id, 2, 100)
+        && validStr(data.periodLabel, 2, 120)
+        && data.totalRevenue is number && data.totalRevenue >= 0
+        && data.expenses is number && data.expenses >= 0
+        && data.netProfit is number
+        && data.raedPercentLocked is number && data.mohamedPercentLocked is number
+        && data.raedPercentLocked + data.mohamedPercentLocked == 100
+        && data.status in ['closed', 'open']
+        && validOptNum(data, 'raedShare', -100000000, 100000000)
+        && validOptNum(data, 'mohamedShare', -100000000, 100000000)
+        && validOptStr(data, 'closedAt', 40)
+        && validOptBool(data, 'isDemoData');
+    }
+
+    // =========================================================================
+    // Operational State Machine Helpers
+    // =========================================================================
+
+    function isValidRestaurantKitchenTransition(fromStatus, toStatus) {
+      return (fromStatus == 'new' && toStatus in ['preparing', 'cancelled'])
+        || (fromStatus == 'preparing' && toStatus in ['ready', 'cancelled']);
+    }
+
+    function isValidDeliveryRideProgression(fromStatus, toStatus) {
+      return (fromStatus == 'accepted' && toStatus in ['picked_up', 'cancelled'])
+        || (fromStatus == 'picked_up' && toStatus in ['on_the_way', 'cancelled'])
+        || (fromStatus == 'on_the_way' && toStatus == 'delivered');
+    }
+
+    // =========================================================================
+    // Collection Rules
+    // =========================================================================
+
+    // 1. Admins & Partner Assignments Registry
+    match /admins/{uid} {
+      allow get: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin());
+      allow list: if isSuperAdmin();
+      allow create, update: if isSuperAdmin() && isValidAdminDoc(incoming());
+      allow delete: if isSuperAdmin() && uid != request.auth.uid;
+    }
+
+    // 2. Public Directory Catalog Collections (Read: Public, Write: Admin Writers ONLY — Auditor is read-only)
+    match /categories/{id} {
+      allow get, list: if true;
+      allow create, update: if isAdminWriter() && isValidCategory(incoming());
+      allow delete: if isAdminWriter();
+    }
+
+    match /promo_filters/{id} {
+      allow get, list: if true;
+      allow create, update: if isAdminWriter() && isValidPromoFilter(incoming());
+      allow delete: if isAdminWriter();
+    }
+
+    match /places/{id} {
+      allow get, list: if true;
+      allow create, update: if isAdminWriter() && isValidPlace(incoming());
+      allow delete: if isAdminWriter();
+    }
+
+    match /properties/{id} {
+      allow get, list: if true;
+      allow create, update: if isAdminWriter() && isValidProperty(incoming());
+      allow delete: if isAdminWriter();
+    }
+
+    match /agencies/{id} {
+      allow get, list: if true;
+      allow create, update: if isAdminWriter() && isValidAgency(incoming());
+      allow delete: if isAdminWriter();
+    }
+
+    match /offers/{id} {
+      allow get, list: if true;
+      allow create, update: if isAdminWriter() && isValidOffer(incoming());
+      allow delete: if isAdminWriter();
+    }
+
+    match /campaigns/{id} {
+      allow get, list: if true;
+      allow create, update: if isAdminWriter() && isValidCampaign(incoming());
+      allow delete: if isAdminWriter();
+    }
+
+    match /emergency_contacts/{id} {
+      allow get, list: if true;
+      allow create, update: if isAdminWriter() && isValidEmergency(incoming());
+      allow delete: if isAdminWriter();
+    }
+
+    // 3. Public App Settings
+    match /settings/public {
+      allow get: if true;
+      allow list: if isAdminPanelReader();
+      allow create: if isAdminWriter() && isValidPublicSettings(incoming());
+      allow update: if (isAdminWriter() && isValidPublicSettings(incoming()))
+        || (
+          incoming().diff(existing()).affectedKeys().hasOnly(['visitsCount'])
+          && incoming().visitsCount is int
+          && incoming().visitsCount == existing().visitsCount + 1
+        );
+      allow delete: if false;
+    }
+
+    // 4. Live Clinic Queues (Public non-PII board; atomic citizen booking linked to clinic_tickets)
+    match /clinic_queues/{doctorId} {
+      allow get, list: if true;
+      allow create: if (isAdminWriter() || isClinicPartnerFor(doctorId))
+        && isValidClinicQueue(incoming())
+        && incoming().doctorId == doctorId;
+      allow update: if isValidClinicQueue(incoming())
+        && incoming().doctorId == existing().doctorId
+        && (
+          isAdminWriter()
+          || isClinicPartnerFor(doctorId)
+          || (
+            // Citizen atomic booking: clinic MUST be open, and ticket MUST be created in the same transaction
+            existing().status == 'open'
+            && incoming().status == existing().status
+            && incoming().doctorName == existing().doctorName
+            && incoming().lastTicketId is string
+            && isStrongToken(incoming().lastTicketId)
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'lastTicketNumber', 'currentNumber', 'sessionDate', 'lastTicketId', 'updatedAt'
+            ])
+            && (
+              (
+                // Same-day sequential increment
+                incoming().sessionDate == existing().sessionDate
+                && incoming().currentNumber == existing().currentNumber
+                && incoming().lastTicketNumber == existing().lastTicketNumber + 1
+              )
+              || (
+                // Clean Cairo day rollover
+                incoming().sessionDate > existing().sessionDate
+                && incoming().currentNumber == 0
+                && incoming().lastTicketNumber == 1
+              )
+            )
+            && existsAfter(/databases/$(database)/documents/clinic_tickets/$(incoming().lastTicketId))
+            && getAfter(/databases/$(database)/documents/clinic_tickets/$(incoming().lastTicketId)).data.doctorId == doctorId
+            && getAfter(/databases/$(database)/documents/clinic_tickets/$(incoming().lastTicketId)).data.ticketNumber == incoming().lastTicketNumber
+            && getAfter(/databases/$(database)/documents/clinic_tickets/$(incoming().lastTicketId)).data.sessionDate == incoming().sessionDate
+          )
+        );
+      allow delete: if isAdminWriter();
+    }
+
+    // 5. Clinic Booking Tickets (Strictly isolated per assigned clinic partner; atomic queue binding)
+    match /clinic_tickets/{ticketId} {
+      allow get: if isAdminPanelReader()
+        || isClinicPartnerFor(existing().doctorId)
+        || isStrongToken(ticketId);
+      allow list: if isAdminPanelReader()
+        || isClinicPartnerFor(existing().doctorId);
+      allow create: if isValidClinicTicket(incoming())
+        && incoming().id == ticketId
+        && isStrongToken(ticketId)
+        && incoming().status == 'waiting'
+        && existsAfter(/databases/$(database)/documents/clinic_queues/$(incoming().doctorId))
+        && getAfter(/databases/$(database)/documents/clinic_queues/$(incoming().doctorId)).data.lastTicketId == ticketId
+        && getAfter(/databases/$(database)/documents/clinic_queues/$(incoming().doctorId)).data.lastTicketNumber == incoming().ticketNumber
+        && getAfter(/databases/$(database)/documents/clinic_queues/$(incoming().doctorId)).data.sessionDate == incoming().sessionDate;
+      allow update: if (isAdminWriter() || isClinicPartnerFor(existing().doctorId))
+        && isValidClinicTicket(incoming())
+        && incoming().id == existing().id
+        && incoming().ticketCode == existing().ticketCode
+        && incoming().ticketNumber == existing().ticketNumber
+        && incoming().sessionDate == existing().sessionDate
+        && incoming().doctorId == existing().doctorId
+        && incoming().patientName == existing().patientName
+        && incoming().patientPhone == existing().patientPhone;
+      allow delete: if isAdminWriter();
+    }
+
+    // 6. Restaurant Orders (Server-verified pricing in rules + strict Restaurant/Captain isolation)
+    match /restaurant_orders/{orderId} {
+      allow get: if isAdminPanelReader()
+        || isRestaurantPartnerFor(existing().restaurantId)
+        || (isCaptainPartner() && (existing().status == 'ready' || (('captainUid' in existing()) && existing().captainUid == request.auth.uid)))
+        || isStrongToken(orderId);
+      allow list: if isAdminPanelReader()
+        || isRestaurantPartnerFor(existing().restaurantId)
+        || (isCaptainPartner() && (existing().status == 'ready' || (('captainUid' in existing()) && existing().captainUid == request.auth.uid)));
+      allow create: if isValidRestaurantOrder(incoming())
+        && incoming().id == orderId
+        && isStrongToken(orderId)
+        && incoming().status == 'new'
+        && !('captainUid' in incoming())
+        && verifyOrderAgainstCatalog(incoming());
+      allow update: if isValidRestaurantOrder(incoming())
+        && incoming().id == existing().id
+        && incoming().orderCode == existing().orderCode
+        && incoming().restaurantId == existing().restaurantId
+        && incoming().restaurantName == existing().restaurantName
+        && incoming().customerName == existing().customerName
+        && incoming().customerPhone == existing().customerPhone
+        && incoming().deliveryAddress == existing().deliveryAddress
+        && incoming().items == existing().items
+        && incoming().subtotal == existing().subtotal
+        && incoming().deliveryFee == existing().deliveryFee
+        && incoming().total == existing().total
+        && (
+          isAdminWriter()
+          || (
+            // Restaurant partner: ONLY kitchen status transitions for their own restaurant
+            isRestaurantPartnerFor(existing().restaurantId)
+            && isValidRestaurantKitchenTransition(existing().status, incoming().status)
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          )
+          || (
+            // Captain atomic claim of a ready, unclaimed order
+            isCaptainPartner()
+            && existing().status == 'ready'
+            && !('captainUid' in existing())
+            && incoming().status == 'on_the_way'
+            && incoming().captainUid == request.auth.uid
+            && validStr(incoming().captainName, 2, 120)
+            && validStr(incoming().captainPhone, 6, 40)
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'captainUid', 'captainName', 'captainPhone', 'updatedAt'])
+          )
+          || (
+            // Assigned captain completing delivery
+            isCaptainPartner()
+            && ('captainUid' in existing())
+            && existing().captainUid == request.auth.uid
+            && incoming().captainUid == existing().captainUid
+            && existing().status == 'on_the_way'
+            && incoming().status == 'delivered'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          )
+        );
+      allow delete: if isAdminWriter();
+    }
+
+    // 7. Point-to-Point Delivery Rides (Strict Captain isolation + atomic anti-double-claim)
+    match /delivery_rides/{rideId} {
+      allow get: if isAdminPanelReader()
+        || (isCaptainPartner() && (existing().status == 'pending' || (('captainUid' in existing()) && existing().captainUid == request.auth.uid)))
+        || isStrongToken(rideId);
+      allow list: if isAdminPanelReader()
+        || (isCaptainPartner() && (existing().status == 'pending' || (('captainUid' in existing()) && existing().captainUid == request.auth.uid)));
+      allow create: if isValidDeliveryRide(incoming())
+        && incoming().id == rideId
+        && isStrongToken(rideId)
+        && incoming().status == 'pending'
+        && !('captainUid' in incoming());
+      allow update: if isValidDeliveryRide(incoming())
+        && incoming().id == existing().id
+        && incoming().rideCode == existing().rideCode
+        && incoming().pickupArea == existing().pickupArea
+        && incoming().dropoffArea == existing().dropoffArea
+        && incoming().itemDescription == existing().itemDescription
+        && incoming().customerName == existing().customerName
+        && incoming().customerPhone == existing().customerPhone
+        && (
+          isAdminWriter()
+          || (
+            // Captain atomic claim of a pending, unclaimed ride
+            isCaptainPartner()
+            && existing().status == 'pending'
+            && !('captainUid' in existing())
+            && incoming().status == 'accepted'
+            && incoming().captainUid == request.auth.uid
+            && validStr(incoming().captainName, 2, 120)
+            && validStr(incoming().captainPhone, 6, 40)
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'captainUid', 'captainName', 'captainPhone', 'updatedAt'])
+          )
+          || (
+            // Assigned captain advancing ride status (cannot overwrite captainUid)
+            isCaptainPartner()
+            && ('captainUid' in existing())
+            && existing().captainUid == request.auth.uid
+            && incoming().captainUid == existing().captainUid
+            && isValidDeliveryRideProgression(existing().status, incoming().status)
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          )
+        );
+      allow delete: if isAdminWriter();
+    }
+
+    // 8. Citizen Submissions
+    match /submissions/{token} {
+      allow get: if isAdminPanelReader() || isStrongToken(token);
+      allow list: if isAdminPanelReader();
+      allow create: if isValidSubmission(incoming())
+        && incoming().id == token
+        && incoming().trackingToken == token
+        && isStrongToken(token)
+        && incoming().status == 'received'
+        && !('applied' in incoming())
+        && !('publishedTargetId' in incoming())
+        && !('reviewedByUid' in incoming());
+      allow update: if isAdminWriter()
+        && isValidSubmission(incoming())
+        && incoming().id == existing().id
+        && incoming().trackingToken == existing().trackingToken
+        && incoming().type == existing().type;
+      allow delete: if isAdminWriter();
+    }
+
+    // 9. WhatsApp Notification Queue
+    match /whatsapp_queue/{id} {
+      allow get, list: if isAdminPanelReader();
+      allow create, update: if isAdminWriter() && isValidWhatsappQueue(incoming());
+      allow delete: if isAdminWriter();
+    }
+
+    // 10. Private Analytics Events
+    match /analytics_events/{id} {
+      allow get, list: if isAdminPanelReader();
+      allow create: if isValidAnalyticsEvent(incoming());
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // 11. Confidential Partner Finance Ledger (Super Admin write; Auditor read-only)
+    match /finance_config/{docId} {
+      allow get, list: if isSuperAdmin() || isAuditor();
+      allow create, update: if isSuperAdmin() && isValidFinanceConfig(incoming());
+      allow delete: if false;
+    }
+
+    match /finance_settlements/{id} {
+      allow get, list: if isSuperAdmin() || isAuditor();
+      allow create, update: if isSuperAdmin() && isValidFinanceSettlement(incoming());
+      allow delete: if isSuperAdmin();
+    }
+
+    // Default Deny Everything Else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

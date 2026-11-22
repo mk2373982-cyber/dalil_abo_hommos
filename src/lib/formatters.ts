@@ -1,4 +1,5 @@
 import type { Offer, Place } from '../types';
+import { normalizeArabicDigits } from './arabicSearch';
 
 const TOKEN_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
 
@@ -21,29 +22,111 @@ export function generateSecureToken(prefix: string, length = 20): string {
   return `${prefix}-${body}`;
 }
 
+export interface PhoneValidationResult {
+  valid: boolean;
+  normalized: string;
+  displayLocal: string;
+  error?: string;
+}
+
 /**
- * Normalizes Egyptian local/international phone numbers into wa.me international digits format (e.g. 2010xxxxxxxx).
+ * Normalizes Egyptian local/international phone numbers (including Arabic-Indic ٠-٩ and Persian ۰-۹ digits)
+ * into wa.me international digits format (e.g. 201012345678 or 20452560110).
+ * Returns empty string for empty or invalid short inputs.
  */
 export function formatEgyptWhatsApp(raw?: string): string {
   if (!raw) return '';
-  let digits = raw.replace(/\D/g, '');
+  const ascii = normalizeArabicDigits(raw).trim();
+  let digits = ascii.replace(/\D/g, '');
   if (!digits) return '';
+
   if (digits.startsWith('00')) {
     digits = digits.slice(2);
   }
-  if (digits.startsWith('20') && digits.length >= 11) {
-    return digits;
+
+  // Already prefixed with Egypt country code 20
+  if (digits.startsWith('20')) {
+    // Handle common mistake: +20 010xxxxxxxx -> 20010xxxxxxxx
+    if (digits.startsWith('200') && digits.length === 13 && /^2001[0125]\d{8}$/.test(digits)) {
+      return `20${digits.slice(3)}`;
+    }
+    if (digits.startsWith('200') && digits.length >= 11 && digits.length <= 12) {
+      return `20${digits.slice(3)}`;
+    }
+    if (/^201[0125]\d{8}$/.test(digits)) {
+      return digits;
+    }
+    // Egyptian landlines with country code (e.g. 20452560110 or 202xxxxxxxx)
+    if (digits.length >= 10 && digits.length <= 12) {
+      return digits;
+    }
+    return '';
   }
-  if (digits.startsWith('01') && digits.length === 11) {
+
+  // Local Egyptian mobile: 010 / 011 / 012 / 015 (11 digits)
+  if (/^01[0125]\d{8}$/.test(digits)) {
     return `20${digits.slice(1)}`;
   }
-  if (digits.startsWith('0') && digits.length >= 9) {
-    return `20${digits.slice(1)}`;
-  }
-  if (digits.startsWith('1') && digits.length === 10) {
+
+  // Mobile without leading zero: 10 / 11 / 12 / 15 (10 digits)
+  if (/^1[0125]\d{8}$/.test(digits)) {
     return `20${digits}`;
   }
-  return digits;
+
+  // Egyptian landline with leading 0 (e.g., 0452560110 -> 20452560110, 9-10 digits)
+  if (/^0[2-9]\d{7,8}$/.test(digits)) {
+    return `20${digits.slice(1)}`;
+  }
+
+  return '';
+}
+
+/**
+ * Validates Egyptian mobile or landline phone input (supports Arabic-Indic digits, +20, 0020, 01x, landlines).
+ */
+export function validateEgyptPhone(
+  raw?: string,
+  options: { allowLandline?: boolean; allowHotline?: boolean } = {}
+): PhoneValidationResult {
+  const { allowLandline = true, allowHotline = false } = options;
+  if (!raw || !raw.trim()) {
+    return {
+      valid: false,
+      normalized: '',
+      displayLocal: '',
+      error: 'يرجى إدخال رقم هاتف مصري صحيح (مثال: 01012345678)',
+    };
+  }
+
+  const ascii = normalizeArabicDigits(raw).trim();
+  const digits = ascii.replace(/\D/g, '');
+
+  if (allowHotline && /^\d{3,5}$/.test(digits)) {
+    return { valid: true, normalized: digits, displayLocal: digits };
+  }
+
+  const normalized = formatEgyptWhatsApp(ascii);
+  if (!normalized) {
+    return {
+      valid: false,
+      normalized: '',
+      displayLocal: '',
+      error: 'رقم الهاتف غير صحيح. يرجى إدخال رقم موبايل مصري (010/011/012/015) أو خط أرضي صحيح.',
+    };
+  }
+
+  const isMobile = /^201[0125]\d{8}$/.test(normalized);
+  if (!isMobile && !allowLandline) {
+    return {
+      valid: false,
+      normalized: '',
+      displayLocal: '',
+      error: 'يرجى إدخال رقم موبايل مصري صالح يبدأ بـ 010 أو 011 أو 012 أو 015.',
+    };
+  }
+
+  const displayLocal = `0${normalized.slice(2)}`;
+  return { valid: true, normalized, displayLocal };
 }
 
 /**

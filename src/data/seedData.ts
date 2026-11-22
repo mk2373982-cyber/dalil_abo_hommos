@@ -14,6 +14,8 @@ import type {
   Submission,
   WhatsappQueueItem,
 } from '../types';
+import { buildPlaceMenuPriceMap } from '../lib/orderPricing';
+import { getCairoDateString } from '../lib/workingHours';
 
 export const IMG_DOCTOR = '/src/assets/images/doctor_pediatrician_1795249919252.jpg';
 export const IMG_GRILL = '/src/assets/images/egyptian_mixed_grill_1795249919090.jpg';
@@ -241,7 +243,7 @@ export const SEED_PROMO_FILTERS: PromoFilter[] = [
   },
 ];
 
-export const SEED_PLACES: Place[] = [
+const RAW_SEED_PLACES: Place[] = [
   {
     id: 'ahmed-mahmoud',
     name: 'د. أحمد محمود',
@@ -572,6 +574,12 @@ export const SEED_PLACES: Place[] = [
   },
 ];
 
+export const SEED_PLACES: Place[] = RAW_SEED_PLACES.map((p) => ({
+  ...p,
+  ...(p.menuItems && p.menuItems.length > 0 ? { menuPriceMap: buildPlaceMenuPriceMap(p.menuItems) } : {}),
+  isDemoData: true,
+}));
+
 export const SEED_AGENCIES: Agency[] = [
   {
     id: 'delta-realty',
@@ -785,8 +793,9 @@ export const SEED_CLINIC_QUEUES: ClinicQueue[] = [
     doctorName: 'د. أحمد محمود',
     specialty: 'استشاري طب وجراحة الأطفال وحديثي الولادة',
     clinicAddress: 'شارع بورسعيد الرئيسي، أعلى صيدلية الأمل',
-    currentNumber: 5,
-    lastTicketNumber: 8,
+    sessionDate: getCairoDateString(),
+    currentNumber: 0,
+    lastTicketNumber: 0,
     status: 'open',
     avgMinutesPerPatient: 10,
   },
@@ -795,8 +804,9 @@ export const SEED_CLINIC_QUEUES: ClinicQueue[] = [
     doctorName: 'د. منى عبد العزيز',
     specialty: 'استشارية أمراض النساء والتوليد',
     clinicAddress: 'برج الأطباء الطبي، ميدان المحطة',
-    currentNumber: 3,
-    lastTicketNumber: 6,
+    sessionDate: getCairoDateString(),
+    currentNumber: 0,
+    lastTicketNumber: 0,
     status: 'open',
     avgMinutesPerPatient: 15,
   },
@@ -805,8 +815,9 @@ export const SEED_CLINIC_QUEUES: ClinicQueue[] = [
     doctorName: 'د. طارق السعدني',
     specialty: 'أخصائي جراحة وتجميل الأسنان',
     clinicAddress: 'شارع المحطة، بجوار بنك مصر',
-    currentNumber: 2,
-    lastTicketNumber: 4,
+    sessionDate: getCairoDateString(),
+    currentNumber: 0,
+    lastTicketNumber: 0,
     status: 'open',
     avgMinutesPerPatient: 20,
   },
@@ -818,10 +829,11 @@ export const SEED_FINANCE_CONFIG: FinanceConfig = {
   history: [],
 };
 
+// Strictly demo-only sample settlements — NEVER seeded automatically into production!
 export const SEED_FINANCE_SETTLEMENTS: FinanceSettlement[] = [
   {
     id: 'settle-2026-09',
-    periodLabel: 'دورة سبتمبر 2026',
+    periodLabel: 'دورة سبتمبر 2026 (نموذج تجريبي)',
     totalRevenue: 18400,
     expenses: 3400,
     netProfit: 15000,
@@ -831,10 +843,11 @@ export const SEED_FINANCE_SETTLEMENTS: FinanceSettlement[] = [
     mohamedShare: 7500,
     status: 'closed',
     closedAt: '2026-09-30',
+    isDemoData: true,
   },
   {
     id: 'settle-2026-10',
-    periodLabel: 'دورة أكتوبر 2026',
+    periodLabel: 'دورة أكتوبر 2026 (نموذج تجريبي)',
     totalRevenue: 22600,
     expenses: 4100,
     netProfit: 18500,
@@ -844,6 +857,7 @@ export const SEED_FINANCE_SETTLEMENTS: FinanceSettlement[] = [
     mohamedShare: 8325,
     status: 'closed',
     closedAt: '2026-10-31',
+    isDemoData: true,
   },
 ];
 

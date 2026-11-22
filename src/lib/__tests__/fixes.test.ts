@@ -19,6 +19,14 @@ import { evaluateOpenStatus } from '../workingHours';
 import { findZoneForText, formatDistanceKm, haversineKm } from '../abuhomsGeo';
 import { buildMerchantWhatsAppReport, computePlacePerformance } from '../merchantReport';
 import type { AnalyticsEvent, Place, PromoFilter } from '../../types';
+import { SEED_PLACES } from '../../data/seedData';
+
+describe('seed catalog initialization', () => {
+  it('loads the public catalog without a module initialization error', () => {
+    assert.ok(SEED_PLACES.length > 0);
+    assert.ok(SEED_PLACES.some((place) => place.categorySlug === 'restaurants'));
+  });
+});
 
 describe('generateSecureToken', () => {
   it('produces URL-safe unguessable tokens fitting Firestore ID constraints', () => {

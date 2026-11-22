@@ -1,27 +1,91 @@
+import type { TimeSlot, WeekdayKey, WeeklySchedule } from '../types';
 import { normalizeArabic, normalizeArabicDigits } from './arabicSearch';
+
+export type OpenState = 'open' | 'closed' | 'unknown';
 
 export interface OpenStatusResult {
   isOpen: boolean;
+  state: OpenState;
   label: string;
   isAuto: boolean;
 }
 
-interface CairoClock {
-  dayIndex: number; // 0 = Sun ... 5 = Fri, 6 = Sat
-  minutesOfDay: number;
-}
+export const ORDERED_WEEKDAYS: WeekdayKey[] = ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'];
 
-const WEEKDAY_MAP: Record<string, number> = {
-  sun: 0,
-  mon: 1,
-  tue: 2,
-  wed: 3,
-  thu: 4,
-  fri: 5,
-  sat: 6,
+export const WEEKDAY_ARABIC_LABELS: Record<WeekdayKey, string> = {
+  sat: 'السبت',
+  sun: 'الأحد',
+  mon: 'الاثنين',
+  tue: 'الثلاثاء',
+  wed: 'الأربعاء',
+  thu: 'الخميس',
+  fri: 'الجمعة',
 };
 
+const JS_DAY_TO_KEY: WeekdayKey[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+const SHORT_EN_TO_KEY: Record<string, WeekdayKey> = {
+  sun: 'sun',
+  mon: 'mon',
+  tue: 'tue',
+  wed: 'wed',
+  thu: 'thu',
+  fri: 'fri',
+  sat: 'sat',
+};
+
+const ARABIC_DAY_PATTERNS: Array<{ key: WeekdayKey; aliases: string[] }> = [
+  { key: 'sat', aliases: ['السبت', 'سبت'] },
+  { key: 'sun', aliases: ['الاحد', 'احد'] },
+  { key: 'mon', aliases: ['الاثنين', 'اثنين', 'الاتنين', 'اتنين'] },
+  { key: 'tue', aliases: ['الثلاثاء', 'ثلاثاء', 'التلات', 'تلات'] },
+  { key: 'wed', aliases: ['الاربعاء', 'اربعاء', 'الاربع', 'اربع'] },
+  { key: 'thu', aliases: ['الخميس', 'خميس'] },
+  { key: 'fri', aliases: ['الجمعه', 'جمعه'] },
+];
+
+interface CairoClock {
+  dayKey: WeekdayKey;
+  prevDayKey: WeekdayKey;
+  minutesOfDay: number;
+  dateString: string;
+}
+
+/**
+ * Returns the current date string (YYYY-MM-DD) in Africa/Cairo timezone.
+ * Used to partition clinic queues & tickets cleanly by Cairo working day.
+ */
+export function getCairoDateString(now: Date = new Date()): string {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Africa/Cairo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(now);
+
+    const year = parts.find((p) => p.type === 'year')?.value;
+    const month = parts.find((p) => p.type === 'month')?.value;
+    const day = parts.find((p) => p.type === 'day')?.value;
+    if (year && month && day) {
+      return `${year}-${month}-${day}`;
+    }
+  } catch {
+    // fallback below
+  }
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function getPrevDayKey(key: WeekdayKey): WeekdayKey {
+  const idx = ORDERED_WEEKDAYS.indexOf(key);
+  return ORDERED_WEEKDAYS[(idx - 1 + 7) % 7];
+}
+
 function getCairoClock(now: Date): CairoClock {
+  const dateString = getCairoDateString(now);
   try {
     const parts = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Africa/Cairo',
@@ -35,17 +99,119 @@ function getCairoClock(now: Date): CairoClock {
     const hourRaw = Number(parts.find((p) => p.type === 'hour')?.value ?? now.getHours());
     const minuteRaw = Number(parts.find((p) => p.type === 'minute')?.value ?? now.getMinutes());
     const hour = hourRaw === 24 ? 0 : hourRaw;
+    const dayKey = SHORT_EN_TO_KEY[weekdayPart] ?? JS_DAY_TO_KEY[now.getDay()];
 
     return {
-      dayIndex: WEEKDAY_MAP[weekdayPart] ?? now.getDay(),
+      dayKey,
+      prevDayKey: getPrevDayKey(dayKey),
       minutesOfDay: hour * 60 + minuteRaw,
+      dateString,
     };
   } catch {
+    const dayKey = JS_DAY_TO_KEY[now.getDay()];
     return {
-      dayIndex: now.getDay(),
+      dayKey,
+      prevDayKey: getPrevDayKey(dayKey),
       minutesOfDay: now.getHours() * 60 + now.getMinutes(),
+      dateString,
     };
   }
+}
+
+function parse24hTime(hhmm: string): number | null {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (!Number.isFinite(h) || !Number.isFinite(min) || min < 0 || min > 59) return null;
+  if (h === 24 && min === 0) return 24 * 60;
+  if (h < 0 || h > 23) return null;
+  return h * 60 + min;
+}
+
+function format24hToArabic(hhmm: string): string {
+  const mins = parse24hTime(hhmm);
+  if (mins === null) return hhmm;
+  if (mins === 24 * 60 || mins === 0) return '12:00 منتصف الليل';
+  const h24 = Math.floor(mins / 60);
+  const m = mins % 60;
+  const minPart = m > 0 ? `:${String(m).padStart(2, '0')}` : '';
+  if (h24 === 12) return `12${minPart} ظ`;
+  if (h24 > 12) return `${h24 - 12}${minPart} م`;
+  return `${h24}${minPart} ص`;
+}
+
+/**
+ * Generates a concise human-readable Arabic summary string from a structured WeeklySchedule.
+ */
+export function formatWeeklyScheduleSummary(schedule?: WeeklySchedule, is24Hours?: boolean): string {
+  if (is24Hours) return 'مفتوح 24 ساعة طوال أيام الأسبوع';
+  if (!schedule) return '';
+
+  const dayStrings = ORDERED_WEEKDAYS.map((day) => {
+    const slots = schedule[day] || [];
+    if (slots.length === 0) return { day, sig: 'CLOSED' };
+    const sig = slots.map((s) => `${format24hToArabic(s.open)} - ${format24hToArabic(s.close)}`).join(' و ');
+    return { day, sig };
+  });
+
+  const activeGroups: Array<{ days: WeekdayKey[]; sig: string }> = [];
+  for (const entry of dayStrings) {
+    if (entry.sig === 'CLOSED') continue;
+    const prev = activeGroups[activeGroups.length - 1];
+    if (prev && prev.sig === entry.sig) {
+      prev.days.push(entry.day);
+    } else {
+      activeGroups.push({ days: [entry.day], sig: entry.sig });
+    }
+  }
+
+  if (activeGroups.length === 0) return 'مغلق طوال الأسبوع';
+
+  return activeGroups
+    .map((g) => {
+      if (g.days.length === 7) return `يومياً: ${g.sig}`;
+      if (g.days.length === 1) return `${WEEKDAY_ARABIC_LABELS[g.days[0]]}: ${g.sig}`;
+      return `${WEEKDAY_ARABIC_LABELS[g.days[0]]} إلى ${WEEKDAY_ARABIC_LABELS[g.days[g.days.length - 1]]}: ${g.sig}`;
+    })
+    .join(' | ');
+}
+
+function evaluateSlotsOnClock(
+  todaySlots: TimeSlot[] | undefined,
+  prevDaySlots: TimeSlot[] | undefined,
+  minutesOfDay: number
+): boolean {
+  // 1. Check today's slots (same-day range or start of overnight shift)
+  if (todaySlots && todaySlots.length > 0) {
+    for (const slot of todaySlots) {
+      const start = parse24hTime(slot.open);
+      const end = parse24hTime(slot.close);
+      if (start === null || end === null) continue;
+      if (end === 24 * 60) {
+        if (minutesOfDay >= start) return true;
+      } else if (end > start) {
+        if (minutesOfDay >= start && minutesOfDay < end) return true;
+      } else if (end < start) {
+        // Overnight shift starting today (e.g., 18:00 -> 02:00 next day)
+        if (minutesOfDay >= start) return true;
+      }
+    }
+  }
+
+  // 2. Check yesterday's overnight shifts carrying over into today's early morning
+  if (prevDaySlots && prevDaySlots.length > 0) {
+    for (const slot of prevDaySlots) {
+      const start = parse24hTime(slot.open);
+      const end = parse24hTime(slot.close);
+      if (start === null || end === null) continue;
+      if (end < start && end > 0) {
+        if (minutesOfDay < end) return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 function parseTimeToken(hourStr: string, minStr: string | undefined, periodRaw: string | undefined): number | null {
@@ -59,11 +225,16 @@ function parseTimeToken(hourStr: string, minStr: string | undefined, periodRaw: 
   if (period) {
     const isMidnight = period.includes('منتصف الليل');
     const isNoon = period.includes('ظهر');
-    const isPM = period === 'م' || period === 'pm' || period.includes('مساء') || period.includes('عصر') || period.includes('ليل');
+    const isPM =
+      period === 'م' ||
+      period === 'pm' ||
+      period.includes('مساء') ||
+      period.includes('عصر') ||
+      period.includes('ليل');
     const isAM = period === 'ص' || period === 'am' || period.includes('صباح') || period.includes('فجر');
 
     if (isMidnight && h === 12) {
-      h = 24; // end of day (00:00 next day)
+      h = 24;
     } else if (isNoon && h === 12) {
       h = 12;
     } else if (isPM) {
@@ -76,91 +247,258 @@ function parseTimeToken(hourStr: string, minStr: string | undefined, periodRaw: 
   return h * 60 + m;
 }
 
-/**
- * Evaluates live Open/Closed status from Arabic/English working hours strings in Africa/Cairo timezone.
- * 100% client-side, zero extra server calls. Falls back gracefully to fallbackOpenNow if unparseable.
- */
-export function evaluateOpenStatus(
-  hours?: string,
-  fallbackOpenNow = true,
-  now: Date = new Date()
-): OpenStatusResult {
-  const fallback: OpenStatusResult = {
-    isOpen: fallbackOpenNow,
-    label: fallbackOpenNow ? 'مفتوح الآن' : 'مغلق حالياً',
-    isAuto: false,
-  };
+function minutesToHHMM(mins: number): string {
+  if (mins >= 24 * 60) return '24:00';
+  const clamped = Math.max(0, Math.min(23 * 60 + 59, mins));
+  const h = Math.floor(clamped / 60);
+  const m = clamped % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
 
-  if (!hours || !hours.trim()) return fallback;
-
-  const normalized = normalizeArabic(normalizeArabicDigits(hours));
-
-  // 1. 24-hour patterns
-  if (
-    normalized.includes('24 ساعه') ||
-    normalized.includes('24/7') ||
-    normalized.includes('طوال اليوم') ||
-    normalized.includes('علي مدار الساعه')
-  ) {
-    return { isOpen: true, label: 'مفتوح 24 ساعة', isAuto: true };
-  }
-
-  const clock = getCairoClock(now);
-
-  // 2. Explicit Friday holiday checks
-  const fridayClosed =
-    normalized.includes('عدا الجمعه') ||
-    normalized.includes('ما عدا الجمعه') ||
-    normalized.includes('الجمعه اجازه') ||
-    normalized.includes('السبت الي الخميس') ||
-    normalized.includes('السبت - الخميس') ||
-    normalized.includes('السبت للخميس');
-
-  if (fridayClosed && clock.dayIndex === 5) {
-    return { isOpen: false, label: 'مغلق (إجازة الجمعة)', isAuto: true };
-  }
-
-  // 3. Parse one or more time ranges like:
-  // "9 صباحا - 10 مساء", "4:00 م - 9:00 م", "10 ص - 12 منتصف الليل", "09:00 - 22:00", "من 9 ص الي 5 م"
+function extractSlotsFromText(segmentNorm: string): TimeSlot[] {
   const periodGroup = '(?:منتصف الليل|صباحا|مساءا|مساء|ظهرا|عصرا|ليلا|فجرا|ص|م|am|pm)';
   const timePattern = `(\\d{1,2})(?::(\\d{2}))?\\s*(${periodGroup})?`;
   const rangeRegex = new RegExp(`${timePattern}\\s*(?:-|–|—|الي|حتي|ل)\\s*${timePattern}`, 'gi');
 
-  const ranges: Array<{ start: number; end: number }> = [];
+  const slots: TimeSlot[] = [];
   let match: RegExpExecArray | null;
-  while ((match = rangeRegex.exec(normalized)) !== null) {
+  while ((match = rangeRegex.exec(segmentNorm)) !== null) {
     const [, h1, m1, p1, h2, m2, p2] = match;
-    // Skip obvious date/day-only numbers without any colon or period if both lack indicators and values are weird
     if (!m1 && !p1 && !m2 && !p2 && (Number(h1) > 24 || Number(h2) > 24)) continue;
 
     const start = parseTimeToken(h1, m1, p1);
     let end = parseTimeToken(h2, m2, p2);
     if (start === null || end === null) continue;
 
-    // Heuristic: if second has no period and end <= start and start < 12*60 and end <= 12*60, assume PM for end
     if (!p2 && !m2 && end <= start && end <= 12 * 60 && start < 12 * 60) {
       end += 12 * 60;
     }
 
-    ranges.push({ start, end });
+    slots.push({
+      open: minutesToHHMM(start),
+      close: minutesToHHMM(end),
+    });
+  }
+  return slots;
+}
+
+function findMentionedDaysInOrder(textNorm: string): Array<{ key: WeekdayKey; index: number; length: number }> {
+  const found: Array<{ key: WeekdayKey; index: number; length: number }> = [];
+  for (const entry of ARABIC_DAY_PATTERNS) {
+    for (const alias of entry.aliases) {
+      const re = new RegExp(`(?:^|[\\s:|،,-])${alias}(?=$|[\\s:|،,-])`, 'g');
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(textNorm)) !== null) {
+        const startIdx = m.index + (m[0].length - alias.length);
+        if (!found.some((f) => Math.abs(f.index - startIdx) < 2)) {
+          found.push({ key: entry.key, index: startIdx, length: alias.length });
+        }
+      }
+    }
+  }
+  return found.sort((a, b) => a.index - b.index);
+}
+
+function expandDayRange(startKey: WeekdayKey, endKey: WeekdayKey): WeekdayKey[] {
+  const startIdx = ORDERED_WEEKDAYS.indexOf(startKey);
+  const endIdx = ORDERED_WEEKDAYS.indexOf(endKey);
+  if (startIdx === -1 || endIdx === -1) return [startKey];
+  const result: WeekdayKey[] = [];
+  let idx = startIdx;
+  for (let steps = 0; steps < 7; steps++) {
+    result.push(ORDERED_WEEKDAYS[idx]);
+    if (idx === endIdx) break;
+    idx = (idx + 1) % 7;
+  }
+  return result;
+}
+
+/**
+ * Attempts to parse a legacy Arabic/English hours string into a structured WeeklySchedule.
+ * Returns null if the string cannot be reliably parsed.
+ */
+export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySchedule; is24Hours?: boolean } | null {
+  if (!hours || !hours.trim()) return null;
+  const normalized = normalizeArabic(normalizeArabicDigits(hours));
+
+  if (
+    normalized.includes('24 ساعه') ||
+    normalized.includes('24/7') ||
+    normalized.includes('طوال اليوم') ||
+    normalized.includes('علي مدار الساعه')
+  ) {
+    return { schedule: {}, is24Hours: true };
   }
 
-  if (ranges.length === 0) return fallback;
+  // Split by pipe or semicolon or newline for multi-day schedules like:
+  // "السبت إلى الأربعاء: 4 م - 9 م | الخميس: 3 م - 8 م"
+  const rawSegments = normalized.split(/[|؛;\n]+/).map((s) => s.trim()).filter(Boolean);
 
-  const isOpenNow = ranges.some(({ start, end }) => {
-    if (end === 24 * 60) {
-      return clock.minutesOfDay >= start;
+  const schedule: WeeklySchedule = {};
+  let parsedAnySlot = false;
+  let hasExplicitDayScopedSegment = false;
+  const explicitlyClosedDays = new Set<WeekdayKey>();
+
+  // Detect global holiday exclusions like "عدا الجمعة" or "الجمعة إجازة"
+  const globalExcludeRegex = /(?:ما\s*)?عدا\s+([^\s،|]+)/g;
+  let exMatch: RegExpExecArray | null;
+  while ((exMatch = globalExcludeRegex.exec(normalized)) !== null) {
+    const dayMentions = findMentionedDaysInOrder(exMatch[1]);
+    dayMentions.forEach((d) => explicitlyClosedDays.add(d.key));
+  }
+
+  for (const segment of rawSegments) {
+    // Check if segment explicitly declares a holiday/closed day (e.g. "الجمعة إجازة" or "الجمعة مغلق")
+    if (/(?:اجازه|مغلق|عطله)/.test(segment) && extractSlotsFromText(segment).length === 0) {
+      const closedMentions = findMentionedDaysInOrder(segment);
+      closedMentions.forEach((d) => {
+        explicitlyClosedDays.add(d.key);
+        schedule[d.key] = [];
+      });
+      hasExplicitDayScopedSegment = hasExplicitDayScopedSegment || closedMentions.length > 0;
+      continue;
     }
-    if (end > start) {
-      return clock.minutesOfDay >= start && clock.minutesOfDay < end;
+
+    const slots = extractSlotsFromText(segment);
+    if (slots.length === 0) continue;
+    parsedAnySlot = true;
+
+    // Strip any "ما عدا <day>" suffix before determining active days for this segment
+    const segmentWithoutExcept = segment.replace(/(?:ما\s*)?عدا\s+[^\s،|:]+/g, ' ');
+    const isDaily =
+      segmentWithoutExcept.includes('يوميا') ||
+      segmentWithoutExcept.includes('كل يوم') ||
+      segmentWithoutExcept.includes('طوال الاسبوع');
+
+    const dayMentions = findMentionedDaysInOrder(segmentWithoutExcept);
+
+    if (dayMentions.length > 0) {
+      hasExplicitDayScopedSegment = true;
+      const daysForSegment = new Set<WeekdayKey>();
+
+      let i = 0;
+      while (i < dayMentions.length) {
+        const curr = dayMentions[i];
+        const next = dayMentions[i + 1];
+        if (next) {
+          const between = segmentWithoutExcept.slice(curr.index + curr.length, next.index).trim();
+          if (/^(?:الي|حتي|-|–|—|ل)$/.test(between) || between.includes('الي') || between.includes('حتي')) {
+            expandDayRange(curr.key, next.key).forEach((d) => daysForSegment.add(d));
+            i += 2;
+            continue;
+          }
+        }
+        daysForSegment.add(curr.key);
+        i += 1;
+      }
+
+      daysForSegment.forEach((d) => {
+        if (!explicitlyClosedDays.has(d)) {
+          schedule[d] = [...(schedule[d] || []), ...slots];
+        }
+      });
+    } else if (isDaily || rawSegments.length === 1) {
+      // Unscoped time range (e.g. "يومياً 9 ص - 10 م" or "4 م - 9 م") applies to all non-excluded days
+      ORDERED_WEEKDAYS.forEach((d) => {
+        if (!explicitlyClosedDays.has(d)) {
+          schedule[d] = [...(schedule[d] || []), ...slots];
+        }
+      });
     }
-    // Overnight range (e.g. 18:00 - 02:00)
-    return clock.minutesOfDay >= start || clock.minutesOfDay < end;
+  }
+
+  if (!parsedAnySlot) return null;
+
+  // Ensure every weekday key is explicitly present when day-scoped segments were parsed
+  // (e.g., if only Sat-Wed & Thu were defined, Friday is explicitly [] = closed!)
+  if (hasExplicitDayScopedSegment) {
+    ORDERED_WEEKDAYS.forEach((d) => {
+      if (!schedule[d]) {
+        schedule[d] = [];
+      }
+    });
+  }
+
+  explicitlyClosedDays.forEach((d) => {
+    schedule[d] = [];
   });
 
+  return { schedule };
+}
+
+/**
+ * Evaluates live Open / Closed / Unknown status in Africa/Cairo timezone.
+ * Priority:
+ *   1. Structured `is24Hours` / `workingSchedule` (per-day shifts + overnight carryover)
+ *   2. Parsed legacy `hours` string (including multi-segment Arabic schedules & holidays)
+ *   3. Unknown state (`غير مؤكد`) when missing or unparseable — never guesses "open"!
+ */
+export function evaluateOpenStatus(
+  hours?: string,
+  _fallbackOpenNow?: boolean,
+  now: Date = new Date(),
+  workingSchedule?: WeeklySchedule,
+  is24Hours?: boolean
+): OpenStatusResult {
+  if (is24Hours) {
+    return { isOpen: true, state: 'open', label: 'مفتوح 24 ساعة', isAuto: true };
+  }
+
+  const clock = getCairoClock(now);
+
+  // 1. Evaluate structured weeklySchedule when at least one weekday is configured
+  const hasStructuredSchedule =
+    workingSchedule &&
+    ORDERED_WEEKDAYS.some((d) => Array.isArray(workingSchedule[d]));
+
+  if (hasStructuredSchedule && workingSchedule) {
+    const todaySlots = workingSchedule[clock.dayKey] ?? [];
+    const prevSlots = workingSchedule[clock.prevDayKey] ?? [];
+    const isOpen = evaluateSlotsOnClock(todaySlots, prevSlots, clock.minutesOfDay);
+
+    if (isOpen) {
+      return { isOpen: true, state: 'open', label: 'مفتوح الآن', isAuto: true };
+    }
+    if (todaySlots.length === 0) {
+      return {
+        isOpen: false,
+        state: 'closed',
+        label: clock.dayKey === 'fri' ? 'مغلق (إجازة الجمعة)' : 'مغلق اليوم',
+        isAuto: true,
+      };
+    }
+    return { isOpen: false, state: 'closed', label: 'مغلق حالياً', isAuto: true };
+  }
+
+  // 2. Fallback to parsing legacy `hours` text
+  const parsed = parseHoursTextToSchedule(hours);
+  if (parsed?.is24Hours) {
+    return { isOpen: true, state: 'open', label: 'مفتوح 24 ساعة', isAuto: true };
+  }
+  if (parsed) {
+    const todaySlots = parsed.schedule[clock.dayKey] ?? [];
+    const prevSlots = parsed.schedule[clock.prevDayKey] ?? [];
+    const isOpen = evaluateSlotsOnClock(todaySlots, prevSlots, clock.minutesOfDay);
+
+    if (isOpen) {
+      return { isOpen: true, state: 'open', label: 'مفتوح الآن', isAuto: true };
+    }
+    if (todaySlots.length === 0) {
+      return {
+        isOpen: false,
+        state: 'closed',
+        label: clock.dayKey === 'fri' ? 'مغلق (إجازة الجمعة)' : 'مغلق اليوم',
+        isAuto: true,
+      };
+    }
+    return { isOpen: false, state: 'closed', label: 'مغلق حالياً', isAuto: true };
+  }
+
+  // 3. Unparseable or missing schedule -> explicit unknown state (never guess open!)
   return {
-    isOpen: isOpenNow,
-    label: isOpenNow ? 'مفتوح الآن' : 'مغلق حالياً',
-    isAuto: true,
+    isOpen: false,
+    state: 'unknown',
+    label: 'مواعيد غير مؤكدة',
+    isAuto: false,
   };
 }
