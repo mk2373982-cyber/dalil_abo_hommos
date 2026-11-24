@@ -388,16 +388,6 @@ export const ClinicConsolePage: React.FC = () => {
                                     onClick={async () => {
                                       try {
                                         await updateClinicTicketStatus(t.id, 'called');
-                                        if (activeQueue) {
-                                          await updateClinicQueueState(activeQueue.doctorId, {
-                                            currentNumber: t.ticketNumber,
-                                            lastTicketNumber: Math.max(
-                                              activeQueue.lastTicketNumber,
-                                              t.ticketNumber
-                                            ),
-                                            status: 'open',
-                                          });
-                                        }
                                       } catch {
                                         showToast('تعذر نداء المريض حالياً', 'error');
                                       }
@@ -528,8 +518,13 @@ export const KitchenKDSPage: React.FC = () => {
   const nextAction = (status: string) => {
     if (status === 'new') return { next: 'preparing' as const, label: 'بدء التجهيز بالمطبخ' };
     if (status === 'preparing') return { next: 'ready' as const, label: 'جاهز لاستلام الكابتن' };
-    if (status === 'ready') return { next: 'on_the_way' as const, label: 'تسليم للكابتن (في الطريق)' };
-    return { next: 'delivered' as const, label: 'تأكيد التسليم للعميل' };
+    if (isAdmin && !isAuditor && status === 'ready') {
+      return { next: 'on_the_way' as const, label: 'تسليم للكابتن (إشراف الإدارة)' };
+    }
+    if (isAdmin && !isAuditor && status === 'on_the_way') {
+      return { next: 'delivered' as const, label: 'تأكيد التسليم للعميل (إشراف الإدارة)' };
+    }
+    return null;
   };
 
   return (
@@ -687,16 +682,26 @@ export const KitchenKDSPage: React.FC = () => {
 
                       {!isAuditor && order.status !== 'delivered' && order.status !== 'cancelled' && (
                         <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void updateRestaurantOrderStatus(order.id, { status: action.next })
-                            }
-                            className="flex-1 min-h-[44px] bg-[#003820] text-white text-xs font-bold rounded-2xl flex items-center justify-center gap-1.5 active:scale-95"
-                          >
-                            {action.label}
-                            <ArrowLeft size={14} />
-                          </button>
+                          {action ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void updateRestaurantOrderStatus(order.id, { status: action.next })
+                              }
+                              className="flex-1 min-h-[44px] bg-[#003820] text-white text-xs font-bold rounded-2xl flex items-center justify-center gap-1.5 active:scale-95"
+                            >
+                              {action.label}
+                              <ArrowLeft size={14} />
+                            </button>
+                          ) : (
+                            <div className="flex-1 min-h-[44px] px-3 rounded-2xl bg-[#f1f4f2] text-[#404942] text-xs font-bold flex items-center justify-center">
+                              {order.status === 'ready'
+                                ? 'جاهز — بانتظار استلام كابتن التوصيل'
+                                : order.captainName
+                                  ? `في الطريق مع الكابتن ${order.captainName}`
+                                  : 'في الطريق للتوصيل'}
+                            </div>
+                          )}
                           {(order.status === 'new' || order.status === 'preparing') && (
                             <button
                               type="button"

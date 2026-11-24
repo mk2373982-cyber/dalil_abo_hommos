@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { AdminShell } from '../../components/SharedUI';
+import { PWAInstallModal } from '../../components/PWAInstallModal';
 import { FadeInUp, PageTransition } from '../../components/MotionEffects';
 
 export const AdminLoginPage: React.FC = () => {
@@ -350,6 +351,7 @@ export const AdminDashboardPage: React.FC = () => {
         ) : undefined
       }
     >
+      <PWAInstallModal context="admin" />
       <div className="space-y-6">
         {isDemoPreviewMode && (
           <div className="p-4 rounded-2xl bg-[#fef3c7] border border-[#f5d061] text-[#735c00] text-xs font-semibold flex flex-wrap items-center justify-between gap-3">

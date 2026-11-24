@@ -399,6 +399,7 @@ export interface PublicSettings {
   visitsCount: number;
   areas?: string[];
   demoMode?: boolean;
+  pwaInstallPromptEnabled?: boolean;
   updatedAt?: string;
 }
 

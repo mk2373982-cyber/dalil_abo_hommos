@@ -306,22 +306,48 @@ export const AdminPlacesPage: React.FC = () => {
       showToast('يرجى إدخال اسم النشاط والعنوان التفصيلي بشكل صحيح', 'error');
       return;
     }
-    const phoneCheck = validateEgyptPhone(form.phone);
+    const phoneCheck = validateEgyptPhone(form.phone, { allowLandline: true });
     if (!phoneCheck.valid) {
       showToast(phoneCheck.error || 'رقم الهاتف غير صالح', 'error');
       return;
     }
 
+    let normalizedWhatsapp = phoneCheck.displayLocal;
+    if (form.whatsapp?.trim()) {
+      const waCheck = validateEgyptPhone(form.whatsapp, { allowLandline: true });
+      if (!waCheck.valid) {
+        showToast(waCheck.error || 'رقم الواتساب غير صالح', 'error');
+        return;
+      }
+      normalizedWhatsapp = waCheck.displayLocal;
+    }
+
+    const isSafeUrl = (u: string): boolean =>
+      /^https?:\/\/\S+$/i.test(u) || u.startsWith('/');
+
+    if (form.imageUrl?.trim() && !isSafeUrl(form.imageUrl.trim())) {
+      showToast('رابط الصورة الرئيسية يجب أن يبدأ بـ https:// أو http://', 'error');
+      return;
+    }
+
     // Validate & clean nested arrays according to Firestore rules bounds
+    const usedMenuIds = new Set<string>();
     const cleanedMenu = (form.menuItems || [])
-      .map((m, idx) => ({
-        id: (m.id || `m-${idx + 1}`).trim(),
-        category: m.category.trim() || 'عام',
-        name: m.name.trim(),
-        price: Number(m.price),
-        description: (m.description || '').trim(),
-        ...(m.imageUrl?.trim() ? { imageUrl: m.imageUrl.trim() } : {}),
-      }))
+      .map((m, idx) => {
+        let baseId = (m.id || `m-${idx + 1}`).trim() || `m-${idx + 1}`;
+        while (usedMenuIds.has(baseId)) {
+          baseId = `${baseId}-${idx + 1}`;
+        }
+        usedMenuIds.add(baseId);
+        return {
+          id: baseId,
+          category: m.category.trim() || 'عام',
+          name: m.name.trim(),
+          price: Number(m.price),
+          description: (m.description || '').trim(),
+          ...(m.imageUrl?.trim() ? { imageUrl: m.imageUrl.trim() } : {}),
+        };
+      })
       .filter((m) => m.name.length > 0);
 
     if (cleanedMenu.length > MAX_MENU_ITEMS) {
@@ -331,6 +357,10 @@ export const AdminPlacesPage: React.FC = () => {
     for (const item of cleanedMenu) {
       if (!Number.isFinite(item.price) || item.price <= 0) {
         showToast(`يرجى إدخال سعر صحيح أكبر من صفر للصنف «${item.name}»`, 'error');
+        return;
+      }
+      if (item.imageUrl && !isSafeUrl(item.imageUrl)) {
+        showToast(`رابط صورة الصنف «${item.name}» غير صالح (يجب أن يبدأ بـ https://)`, 'error');
         return;
       }
     }
@@ -354,6 +384,13 @@ export const AdminPlacesPage: React.FC = () => {
       .filter((g) => g.imageUrl.length > 0)
       .slice(0, MAX_GALLERY_ITEMS);
 
+    for (const g of cleanedGallery) {
+      if (!isSafeUrl(g.imageUrl)) {
+        showToast(`رابط الصورة «${g.title}» في المعرض غير صالح (يجب أن يبدأ بـ https://)`, 'error');
+        return;
+      }
+    }
+
     const computedHours = form.is24Hours
       ? 'مفتوح 24 ساعة يومياً'
       : form.workingSchedule
@@ -367,10 +404,9 @@ export const AdminPlacesPage: React.FC = () => {
         ...form,
         name: form.name.trim(),
         address: form.address.trim(),
-        phone: phoneCheck.normalized,
-        whatsapp: form.whatsapp?.trim()
-          ? validateEgyptPhone(form.whatsapp).normalized || form.whatsapp.trim()
-          : phoneCheck.normalized,
+        imageUrl: form.imageUrl?.trim() || undefined,
+        phone: phoneCheck.displayLocal,
+        whatsapp: normalizedWhatsapp,
         categorySlug: chosenCat?.slug || form.categorySlug,
         hours: computedHours,
         menuItems: cleanedMenu.length > 0 ? cleanedMenu : undefined,
@@ -1229,14 +1265,23 @@ export const AdminPlacesPage: React.FC = () => {
                               <Trash2 size={14} />
                             </button>
                           </div>
-                          <input
-                            type="url"
-                            dir="ltr"
-                            value={item.imageUrl}
-                            onChange={(e) => updateGalleryItem(idx, { imageUrl: e.target.value })}
-                            placeholder="https://example.com/photo.jpg"
-                            className="w-full min-h-[36px] px-2.5 rounded-xl bg-white border border-[#d7dbd9] text-xs font-mono text-left"
-                          />
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <input
+                              type="url"
+                              dir="ltr"
+                              value={item.imageUrl}
+                              onChange={(e) => updateGalleryItem(idx, { imageUrl: e.target.value })}
+                              placeholder="https://example.com/photo.jpg"
+                              className="w-full min-h-[36px] px-2.5 rounded-xl bg-white border border-[#d7dbd9] text-xs font-mono text-left"
+                            />
+                            <input
+                              type="text"
+                              value={item.subtitle || ''}
+                              onChange={(e) => updateGalleryItem(idx, { subtitle: e.target.value })}
+                              placeholder="وصف مختصر للصورة (اختياري)"
+                              className="w-full min-h-[36px] px-2.5 rounded-xl bg-white border border-[#d7dbd9] text-xs"
+                            />
+                          </div>
                         </div>
                       ))}
                       {(form.gallery || []).length === 0 && (

@@ -1,7 +1,11 @@
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App.tsx';
+import { initPWAInstallListeners } from './hooks/usePWAInstall';
 import './index.css';
+
+// Capture beforeinstallprompt & appinstalled immediately before any lazy route mounts
+initPWAInstallListeners();
 
 // Google Maps Platform Tier-1 quota / auth failure listener (registered before React render)
 if (typeof window !== 'undefined') {

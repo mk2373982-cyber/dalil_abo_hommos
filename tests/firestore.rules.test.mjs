@@ -1,252 +1,559 @@
 /**
  * Firestore Security Rules Emulator Test Suite
  *
- * Requires Java 11+ and Firebase CLI Emulator:
- *   firebase emulators:exec --only firestore "node tests/firestore.rules.test.mjs"
+ * Covers:
+ * 1. Partner tenant isolation (Clinic A vs Clinic B, Restaurant A vs Restaurant B, Auditor read-only)
+ * 2. Authoritative order pricing validation (tampered price/subtotal/deliveryFee/snapshot rejected)
+ * 3. Clinic booking atomic integrity (closed clinic rejected, future-date rollover poisoning rejected, direct ticket without queue update rejected)
+ * 4. Captain anti-double-claim on delivery_rides and restaurant_orders
+ * 5. Location sharing invariant (locationShared: true requires valid deliveryCoords)
  *
- * Verifies:
- * 1. Cross-partner isolation (clinic A cannot read/write clinic B; restaurant A cannot read/write restaurant B).
- * 2. Auditor is strictly read-only across admin/operational collections.
- * 3. Tampered restaurant order price / foreign menuItemId is rejected by rules.
- * 4. Booking on a closed clinic queue or faking a ticket without atomic queue increment is rejected.
- * 5. Captain B cannot overwrite/claim a delivery ride already claimed by Captain A.
+ * Run locally with Java 11+ & Firebase CLI:
+ *   npm i -D @firebase/rules-unit-testing
+ *   firebase emulators:exec --only firestore "node tests/firestore.rules.test.mjs"
  */
-
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 
-async function run() {
-  let rulesTesting;
-  try {
-    rulesTesting = await import('@firebase/rules-unit-testing');
-  } catch {
-    console.error(
-      'Missing @firebase/rules-unit-testing. Install it as a devDependency and run inside `firebase emulators:exec --only firestore "node tests/firestore.rules.test.mjs"`.'
-    );
-    process.exit(1);
-  }
-
-  const { initializeTestEnvironment, assertSucceeds, assertFails } = rulesTesting;
-  const { doc, getDoc, setDoc, updateDoc, runTransaction } = await import('firebase/firestore');
-
-  const rules = fs.readFileSync(path.resolve('firestore.rules'), 'utf8');
-  const testEnv = await initializeTestEnvironment({
-    projectId: 'dalil-abuhoms-rules-test',
-    firestore: { rules, host: '127.0.0.1', port: 8080 },
-  });
-
-  try {
-    // Seed privileged fixtures
-    await testEnv.withSecurityRulesDisabled(async (ctx) => {
-      const db = ctx.firestore();
-      await setDoc(doc(db, 'admins', 'clinic-partner-a'), {
-        uid: 'clinic-partner-a',
-        email: 'clinic-a@test.local',
-        role: 'partner',
-        active: true,
-        partnerTypes: ['clinic'],
-        managedPlaceIds: ['clinic-a'],
-      });
-      await setDoc(doc(db, 'admins', 'clinic-partner-b'), {
-        uid: 'clinic-partner-b',
-        email: 'clinic-b@test.local',
-        role: 'partner',
-        active: true,
-        partnerTypes: ['clinic'],
-        managedPlaceIds: ['clinic-b'],
-      });
-      await setDoc(doc(db, 'admins', 'rest-partner-a'), {
-        uid: 'rest-partner-a',
-        email: 'rest-a@test.local',
-        role: 'partner',
-        active: true,
-        partnerTypes: ['restaurant'],
-        managedPlaceIds: ['rest-a'],
-      });
-      await setDoc(doc(db, 'admins', 'captain-a'), {
-        uid: 'captain-a',
-        email: 'cap-a@test.local',
-        role: 'partner',
-        active: true,
-        partnerTypes: ['captain'],
-        managedPlaceIds: [],
-      });
-      await setDoc(doc(db, 'admins', 'captain-b'), {
-        uid: 'captain-b',
-        email: 'cap-b@test.local',
-        role: 'partner',
-        active: true,
-        partnerTypes: ['captain'],
-        managedPlaceIds: [],
-      });
-      await setDoc(doc(db, 'admins', 'auditor-1'), {
-        uid: 'auditor-1',
-        email: 'auditor@test.local',
-        role: 'auditor',
-        active: true,
-      });
-
-      await setDoc(doc(db, 'places', 'rest-a'), {
-        id: 'rest-a',
-        name: 'مطعم أ',
-        categoryId: 'cat-restaurants',
-        categorySlug: 'restaurants',
-        area: 'شارع بورسعيد',
-        address: 'أبوحمص',
-        phone: '01012345678',
-        menuPriceMap: { 'item-1': 100 },
-        deliveryFeeInTown: 15,
-        deliveryFeeVillage: 25,
-      });
-
-      await setDoc(doc(db, 'clinic_queues', 'clinic-a'), {
-        doctorId: 'clinic-a',
-        doctorName: 'د. أ',
-        sessionDate: '2026-06-15',
-        currentNumber: 0,
-        lastTicketNumber: 0,
-        status: 'open',
-      });
-      await setDoc(doc(db, 'clinic_queues', 'clinic-b'), {
-        doctorId: 'clinic-b',
-        doctorName: 'د. ب',
-        sessionDate: '2026-06-15',
-        currentNumber: 0,
-        lastTicketNumber: 0,
-        status: 'closed',
-      });
-      await setDoc(doc(db, 'clinic_tickets', 'tkt-b-1'), {
-        id: 'tkt-b-1',
-        ticketCode: 'CLN-B1',
-        doctorId: 'clinic-b',
-        doctorName: 'د. ب',
-        sessionDate: '2026-06-15',
-        patientName: 'مريض ب',
-        patientPhone: '01011111111',
-        visitType: 'كشف جديد',
-        ticketNumber: 1,
-        status: 'waiting',
-      });
-      await setDoc(doc(db, 'delivery_rides', 'ride-1'), {
-        id: 'ride-1',
-        rideCode: 'DLV-001',
-        pickupArea: 'شارع بورسعيد',
-        pickupDetails: 'محل',
-        dropoffArea: 'شارع المحطة',
-        dropoffDetails: 'منزل',
-        itemDescription: 'طرد',
-        customerName: 'عميل',
-        customerPhone: '01022222222',
-        status: 'pending',
-      });
-    });
-
-    // 1. Cross-partner isolation
-    const clinicADb = testEnv.authenticatedContext('clinic-partner-a').firestore();
-    await assertSucceeds(updateDoc(doc(clinicADb, 'clinic_queues', 'clinic-a'), { currentNumber: 1 }));
-    await assertFails(updateDoc(doc(clinicADb, 'clinic_queues', 'clinic-b'), { currentNumber: 1 }));
-    await assertFails(updateDoc(doc(clinicADb, 'clinic_tickets', 'tkt-b-1'), { status: 'called' }));
-
-    // 2. Auditor strictly read-only
-    const auditorDb = testEnv.authenticatedContext('auditor-1').firestore();
-    await assertSucceeds(getDoc(doc(auditorDb, 'places', 'rest-a')));
-    await assertFails(updateDoc(doc(auditorDb, 'places', 'rest-a'), { name: 'Hacked' }));
-    await assertFails(updateDoc(doc(auditorDb, 'clinic_queues', 'clinic-a'), { status: 'closed' }));
-
-    // 3. Tampered restaurant order price rejected; exact catalog price allowed
-    const anonDb = testEnv.unauthenticatedContext().firestore();
-    await assertFails(
-      setDoc(doc(anonDb, 'restaurant_orders', 'ord-tampered'), {
-        id: 'ord-tampered',
-        orderCode: 'ORD-BAD1',
-        restaurantId: 'rest-a',
-        restaurantName: 'مطعم أ',
-        customerName: 'مهاجم',
-        customerPhone: '01033333333',
-        deliveryArea: 'شارع بورسعيد',
-        deliveryAddress: 'أبوحمص',
-        locationShared: false,
-        items: [{ menuItemId: 'item-1', name: 'وجبة', price: 1, quantity: 1 }],
-        subtotal: 1,
-        deliveryFee: 15,
-        total: 16,
-        status: 'new',
-      })
-    );
-    await assertSucceeds(
-      setDoc(doc(anonDb, 'restaurant_orders', 'ord-valid'), {
-        id: 'ord-valid',
-        orderCode: 'ORD-OK01',
-        restaurantId: 'rest-a',
-        restaurantName: 'مطعم أ',
-        customerName: 'عميل سليم',
-        customerPhone: '01033333333',
-        deliveryArea: 'شارع بورسعيد',
-        deliveryAddress: 'أبوحمص',
-        locationShared: false,
-        items: [{ menuItemId: 'item-1', name: 'وجبة', price: 100, quantity: 2 }],
-        subtotal: 200,
-        deliveryFee: 15,
-        total: 215,
-        status: 'new',
-      })
-    );
-
-    // 4. Closed clinic queue booking rejected
-    await assertFails(
-      runTransaction(anonDb, async (tx) => {
-        const qRef = doc(anonDb, 'clinic_queues', 'clinic-b');
-        const tRef = doc(anonDb, 'clinic_tickets', 'tkt-closed-1');
-        tx.update(qRef, { lastTicketNumber: 1, lastTicketId: 'tkt-closed-1' });
-        tx.set(tRef, {
-          id: 'tkt-closed-1',
-          ticketCode: 'CLN-NO',
-          doctorId: 'clinic-b',
-          doctorName: 'د. ب',
-          sessionDate: '2026-06-15',
-          patientName: 'مريض',
-          patientPhone: '01044444444',
-          visitType: 'كشف جديد',
-          ticketNumber: 1,
-          status: 'waiting',
-        });
-      })
-    );
-
-    // 5. Captain A claims ride; Captain B cannot overwrite or update it
-    const capADb = testEnv.authenticatedContext('captain-a').firestore();
-    const capBDb = testEnv.authenticatedContext('captain-b').firestore();
-    await assertSucceeds(
-      updateDoc(doc(capADb, 'delivery_rides', 'ride-1'), {
-        status: 'accepted',
-        captainUid: 'captain-a',
-        captainName: 'كابتن أ',
-        captainPhone: '01055555555',
-      })
-    );
-    await assertFails(
-      updateDoc(doc(capBDb, 'delivery_rides', 'ride-1'), {
-        status: 'accepted',
-        captainUid: 'captain-b',
-        captainName: 'كابتن ب',
-        captainPhone: '01066666666',
-      })
-    );
-    await assertFails(
-      updateDoc(doc(capBDb, 'delivery_rides', 'ride-1'), {
-        status: 'picked_up',
-      })
-    );
-
-    assert.ok(true);
-    console.log('All Firestore Security Rules emulator assertions passed.');
-  } finally {
-    await testEnv.cleanup();
-  }
+let rulesUnitTesting;
+try {
+  rulesUnitTesting = await import('@firebase/rules-unit-testing');
+} catch {
+  console.error(
+    'Missing @firebase/rules-unit-testing. Install it locally (npm i -D @firebase/rules-unit-testing) and run via: firebase emulators:exec --only firestore "node tests/firestore.rules.test.mjs"'
+  );
+  process.exit(1);
 }
 
-run().catch((err) => {
-  console.error(err);
-  process.exit(1);
+const { initializeTestEnvironment, assertFails, assertSucceeds } = rulesUnitTesting;
+const rules = fs.readFileSync(path.resolve('firestore.rules'), 'utf8');
+
+const testEnv = await initializeTestEnvironment({
+  projectId: 'dalil-abuhoms-rules-test',
+  firestore: { rules },
 });
+
+const todayCairo = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Africa/Cairo',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+}).format(new Date());
+
+// All citizen-facing operational document IDs satisfy isStrongToken (length >= 20, <= 64)
+const ORDER_VALID_ID = 'ORD-VALID-000000000001';
+const ORDER_TAMPER_PRICE_ID = 'ORD-TAMPER-PRICE-00001';
+const ORDER_TAMPER_FEE_ID = 'ORD-TAMPER-FEE-0000001';
+const ORDER_NO_SNAPSHOT_ID = 'ORD-NO-SNAPSHOT-000001';
+const ORDER_BAD_LOC_ID = 'ORD-BAD-LOC-0000000001';
+const ORDER_REST_A_ID = 'ORD-REST-A-00000000001';
+const ORDER_REST_B_ID = 'ORD-REST-B-00000000001';
+const ORDER_READY_CAP_ID = 'ORD-READY-CAP-00000001';
+const RIDE_CAP_ID = 'DLV-CONCURRENT-0000001';
+const TICKET_CLINIC_A_ID = 'TKT-CLINIC-A-000000001';
+const TICKET_CLINIC_B_ID = 'TKT-CLINIC-B-000000001';
+const TICKET_CLOSED_ID = 'TKT-CLOSED-00000000001';
+const TICKET_FUTURE_ID = 'TKT-FUTURE-00000000001';
+const TICKET_ORPHAN_ID = 'TKT-ORPHAN-00000000001';
+
+try {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+
+    // Partner accounts with verified UIDs & isolated scopes
+    await db.doc('admins/clinic-a-uid').set({
+      uid: 'clinic-a-uid',
+      email: 'clinic.a@test.local',
+      role: 'partner',
+      partnerTypes: ['clinic'],
+      managedPlaceIds: ['doc-a'],
+      active: true,
+    });
+    await db.doc('admins/clinic-b-uid').set({
+      uid: 'clinic-b-uid',
+      email: 'clinic.b@test.local',
+      role: 'partner',
+      partnerTypes: ['clinic'],
+      managedPlaceIds: ['doc-b'],
+      active: true,
+    });
+    await db.doc('admins/rest-a-uid').set({
+      uid: 'rest-a-uid',
+      email: 'rest.a@test.local',
+      role: 'partner',
+      partnerTypes: ['restaurant'],
+      managedPlaceIds: ['rest-a'],
+      active: true,
+    });
+    await db.doc('admins/rest-b-uid').set({
+      uid: 'rest-b-uid',
+      email: 'rest.b@test.local',
+      role: 'partner',
+      partnerTypes: ['restaurant'],
+      managedPlaceIds: ['rest-b'],
+      active: true,
+    });
+    await db.doc('admins/auditor-uid').set({
+      uid: 'auditor-uid',
+      email: 'auditor@test.local',
+      role: 'auditor',
+      active: true,
+    });
+    await db.doc('admins/cap-1-uid').set({
+      uid: 'cap-1-uid',
+      email: 'cap1@test.local',
+      role: 'partner',
+      partnerTypes: ['captain'],
+      active: true,
+    });
+    await db.doc('admins/cap-2-uid').set({
+      uid: 'cap-2-uid',
+      email: 'cap2@test.local',
+      role: 'partner',
+      partnerTypes: ['captain'],
+      active: true,
+    });
+
+    // Two restaurants with authoritative menuPriceMap
+    await db.doc('places/rest-a').set({
+      id: 'rest-a',
+      name: 'مطعم أ',
+      categoryId: 'cat-rest',
+      categorySlug: 'restaurants',
+      area: 'شارع المحطة',
+      address: 'أبوحمص',
+      phone: '01012345678',
+      deliveryFeeInTown: 15,
+      deliveryFeeVillage: 25,
+      menuPriceMap: { 'm-1': 100, 'm-2': 50 },
+    });
+    await db.doc('places/rest-b').set({
+      id: 'rest-b',
+      name: 'مطعم ب',
+      categoryId: 'cat-rest',
+      categorySlug: 'restaurants',
+      area: 'شارع بورسعيد',
+      address: 'أبوحمص',
+      phone: '01087654321',
+      deliveryFeeInTown: 20,
+      deliveryFeeVillage: 30,
+      menuPriceMap: { 'b-1': 80 },
+    });
+
+    // Clinic queues: doc-a open, doc-b closed
+    await db.doc('clinic_queues/doc-a').set({
+      doctorId: 'doc-a',
+      doctorName: 'د. أ',
+      sessionDate: todayCairo,
+      currentNumber: 0,
+      lastTicketNumber: 1,
+      lastTicketId: TICKET_CLINIC_A_ID,
+      status: 'open',
+    });
+    await db.doc('clinic_queues/doc-b').set({
+      doctorId: 'doc-b',
+      doctorName: 'د. ب',
+      sessionDate: todayCairo,
+      currentNumber: 0,
+      lastTicketNumber: 1,
+      lastTicketId: TICKET_CLINIC_B_ID,
+      status: 'closed',
+    });
+
+    // Clinic tickets
+    await db.doc(`clinic_tickets/${TICKET_CLINIC_A_ID}`).set({
+      id: TICKET_CLINIC_A_ID,
+      ticketCode: TICKET_CLINIC_A_ID,
+      ticketNumber: 1,
+      sessionDate: todayCairo,
+      doctorId: 'doc-a',
+      doctorName: 'د. أ',
+      patientName: 'مريض أ',
+      patientPhone: '01011111111',
+      status: 'waiting',
+      createdAt: new Date().toISOString(),
+    });
+    await db.doc(`clinic_tickets/${TICKET_CLINIC_B_ID}`).set({
+      id: TICKET_CLINIC_B_ID,
+      ticketCode: TICKET_CLINIC_B_ID,
+      ticketNumber: 1,
+      sessionDate: todayCairo,
+      doctorId: 'doc-b',
+      doctorName: 'د. ب',
+      patientName: 'مريض ب',
+      patientPhone: '01022222222',
+      status: 'waiting',
+      createdAt: new Date().toISOString(),
+    });
+
+    // Existing restaurant orders for tenant isolation + captain claim tests
+    const baseOrder = {
+      customerName: 'عميل تجريبي',
+      customerPhone: '01012345678',
+      deliveryArea: 'شارع المحطة',
+      deliveryAddress: 'عمارة 5',
+      items: [{ menuItemId: 'm-1', name: 'كباب', price: 100, quantity: 1 }],
+      subtotal: 100,
+      deliveryFee: 15,
+      total: 115,
+      pricingSnapshot: {
+        currency: 'EGP',
+        subtotal: 100,
+        deliveryFee: 15,
+        total: 115,
+        validatedAt: new Date().toISOString(),
+        pricingSource: 'firestore_catalog',
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await db.doc(`restaurant_orders/${ORDER_REST_A_ID}`).set({
+      ...baseOrder,
+      id: ORDER_REST_A_ID,
+      orderCode: ORDER_REST_A_ID,
+      restaurantId: 'rest-a',
+      restaurantName: 'مطعم أ',
+      status: 'new',
+    });
+    await db.doc(`restaurant_orders/${ORDER_REST_B_ID}`).set({
+      ...baseOrder,
+      id: ORDER_REST_B_ID,
+      orderCode: ORDER_REST_B_ID,
+      restaurantId: 'rest-b',
+      restaurantName: 'مطعم ب',
+      status: 'new',
+    });
+    await db.doc(`restaurant_orders/${ORDER_READY_CAP_ID}`).set({
+      ...baseOrder,
+      id: ORDER_READY_CAP_ID,
+      orderCode: ORDER_READY_CAP_ID,
+      restaurantId: 'rest-a',
+      restaurantName: 'مطعم أ',
+      status: 'ready',
+    });
+
+    // Pending delivery ride
+    await db.doc(`delivery_rides/${RIDE_CAP_ID}`).set({
+      id: RIDE_CAP_ID,
+      rideCode: RIDE_CAP_ID,
+      pickupArea: 'شارع المحطة',
+      dropoffArea: 'شارع بورسعيد',
+      itemDescription: 'أدوية',
+      customerName: 'محمد',
+      customerPhone: '01012345678',
+      estimatedFee: 20,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  });
+
+  // =========================================================================
+  // 1. Partner Tenant Isolation (Clinics, Restaurants, Auditor Read-Only)
+  // =========================================================================
+  const clinicADb = testEnv.authenticatedContext('clinic-a-uid', { email: 'clinic.a@test.local' }).firestore();
+  await assertSucceeds(
+    clinicADb.doc(`clinic_tickets/${TICKET_CLINIC_A_ID}`).update({
+      status: 'called',
+      updatedAt: new Date().toISOString(),
+    })
+  );
+  // Clinic A CANNOT update Clinic B's queue or tickets
+  await assertFails(clinicADb.doc('clinic_queues/doc-b').update({ currentNumber: 1 }));
+  await assertFails(
+    clinicADb.doc(`clinic_tickets/${TICKET_CLINIC_B_ID}`).update({
+      status: 'called',
+      updatedAt: new Date().toISOString(),
+    })
+  );
+  // Clinic A CANNOT query Clinic B's tickets
+  await assertFails(
+    clinicADb.collection('clinic_tickets').where('doctorId', '==', 'doc-b').get()
+  );
+
+  // Restaurant A can advance its own order new -> preparing, CANNOT touch Restaurant B, CANNOT claim ready -> on_the_way
+  const restADb = testEnv.authenticatedContext('rest-a-uid', { email: 'rest.a@test.local' }).firestore();
+  await assertSucceeds(
+    restADb.doc(`restaurant_orders/${ORDER_REST_A_ID}`).update({
+      status: 'preparing',
+      updatedAt: new Date().toISOString(),
+    })
+  );
+  await assertFails(
+    restADb.doc(`restaurant_orders/${ORDER_REST_B_ID}`).update({
+      status: 'preparing',
+      updatedAt: new Date().toISOString(),
+    })
+  );
+  await assertFails(
+    restADb.collection('restaurant_orders').where('restaurantId', '==', 'rest-b').get()
+  );
+  await assertFails(
+    restADb.doc(`restaurant_orders/${ORDER_READY_CAP_ID}`).update({
+      status: 'on_the_way',
+      updatedAt: new Date().toISOString(),
+    })
+  );
+
+  // Auditor is strictly read-only across catalog and operational collections
+  const auditorDb = testEnv.authenticatedContext('auditor-uid', { email: 'auditor@test.local' }).firestore();
+  await assertSucceeds(auditorDb.collection('restaurant_orders').limit(5).get());
+  await assertFails(auditorDb.doc('places/rest-a').update({ name: 'Hacked' }));
+  await assertFails(
+    auditorDb.doc(`restaurant_orders/${ORDER_REST_A_ID}`).update({
+      status: 'cancelled',
+      updatedAt: new Date().toISOString(),
+    })
+  );
+  await assertFails(auditorDb.doc('clinic_queues/doc-a').update({ status: 'closed' }));
+
+  // =========================================================================
+  // 2. Trusted Order Pricing Validation & Location Sharing Invariant
+  // =========================================================================
+  const anonDb = testEnv.unauthenticatedContext().firestore();
+  const validSnapshot = {
+    currency: 'EGP',
+    subtotal: 200,
+    deliveryFee: 15,
+    total: 215,
+    validatedAt: new Date().toISOString(),
+    pricingSource: 'firestore_catalog',
+  };
+
+  // Valid catalog-matched order -> SUCCEEDS
+  await assertSucceeds(
+    anonDb.doc(`restaurant_orders/${ORDER_VALID_ID}`).set({
+      id: ORDER_VALID_ID,
+      orderCode: ORDER_VALID_ID,
+      restaurantId: 'rest-a',
+      restaurantName: 'مطعم أ',
+      customerName: 'أحمد علي',
+      customerPhone: '01012345678',
+      deliveryArea: 'شارع المحطة',
+      deliveryAddress: 'عمارة 5',
+      locationShared: true,
+      deliveryCoords: { lat: 31.1, lng: 30.31, accuracy: 20 },
+      items: [{ menuItemId: 'm-1', name: 'كباب', price: 100, quantity: 2 }],
+      subtotal: 200,
+      deliveryFee: 15,
+      total: 215,
+      pricingSnapshot: validSnapshot,
+      status: 'new',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+  );
+
+  // Tampered unit price (1 EGP instead of 100 EGP) -> FAILS
+  await assertFails(
+    anonDb.doc(`restaurant_orders/${ORDER_TAMPER_PRICE_ID}`).set({
+      id: ORDER_TAMPER_PRICE_ID,
+      orderCode: ORDER_TAMPER_PRICE_ID,
+      restaurantId: 'rest-a',
+      restaurantName: 'مطعم أ',
+      customerName: 'مخترق',
+      customerPhone: '01012345678',
+      deliveryArea: 'شارع المحطة',
+      deliveryAddress: 'عمارة 5',
+      items: [{ menuItemId: 'm-1', name: 'كباب', price: 1, quantity: 2 }],
+      subtotal: 2,
+      deliveryFee: 15,
+      total: 17,
+      pricingSnapshot: { ...validSnapshot, subtotal: 2, total: 17 },
+      status: 'new',
+      createdAt: new Date().toISOString(),
+    })
+  );
+
+  // Tampered delivery fee (0 EGP instead of 15 EGP) -> FAILS
+  await assertFails(
+    anonDb.doc(`restaurant_orders/${ORDER_TAMPER_FEE_ID}`).set({
+      id: ORDER_TAMPER_FEE_ID,
+      orderCode: ORDER_TAMPER_FEE_ID,
+      restaurantId: 'rest-a',
+      restaurantName: 'مطعم أ',
+      customerName: 'مخترق',
+      customerPhone: '01012345678',
+      deliveryArea: 'شارع المحطة',
+      deliveryAddress: 'عمارة 5',
+      items: [{ menuItemId: 'm-1', name: 'كباب', price: 100, quantity: 2 }],
+      subtotal: 200,
+      deliveryFee: 0,
+      total: 200,
+      pricingSnapshot: { ...validSnapshot, deliveryFee: 0, total: 200 },
+      status: 'new',
+      createdAt: new Date().toISOString(),
+    })
+  );
+
+  // Missing pricingSnapshot -> FAILS
+  await assertFails(
+    anonDb.doc(`restaurant_orders/${ORDER_NO_SNAPSHOT_ID}`).set({
+      id: ORDER_NO_SNAPSHOT_ID,
+      orderCode: ORDER_NO_SNAPSHOT_ID,
+      restaurantId: 'rest-a',
+      restaurantName: 'مطعم أ',
+      customerName: 'عميل',
+      customerPhone: '01012345678',
+      deliveryArea: 'شارع المحطة',
+      deliveryAddress: 'عمارة 5',
+      items: [{ menuItemId: 'm-1', name: 'كباب', price: 100, quantity: 2 }],
+      subtotal: 200,
+      deliveryFee: 15,
+      total: 215,
+      status: 'new',
+      createdAt: new Date().toISOString(),
+    })
+  );
+
+  // locationShared: true WITHOUT deliveryCoords -> FAILS
+  await assertFails(
+    anonDb.doc(`restaurant_orders/${ORDER_BAD_LOC_ID}`).set({
+      id: ORDER_BAD_LOC_ID,
+      orderCode: ORDER_BAD_LOC_ID,
+      restaurantId: 'rest-a',
+      restaurantName: 'مطعم أ',
+      customerName: 'عميل',
+      customerPhone: '01012345678',
+      deliveryArea: 'شارع المحطة',
+      deliveryAddress: 'عمارة 5',
+      locationShared: true,
+      items: [{ menuItemId: 'm-1', name: 'كباب', price: 100, quantity: 2 }],
+      subtotal: 200,
+      deliveryFee: 15,
+      total: 215,
+      pricingSnapshot: validSnapshot,
+      status: 'new',
+      createdAt: new Date().toISOString(),
+    })
+  );
+
+  // =========================================================================
+  // 3. Clinic Booking Atomic Integrity & Closed / Rollover Poisoning Protection
+  // =========================================================================
+  // Booking on closed clinic -> FAILS
+  await assertFails(
+    anonDb.runTransaction(async (tx) => {
+      tx.set(anonDb.doc(`clinic_tickets/${TICKET_CLOSED_ID}`), {
+        id: TICKET_CLOSED_ID,
+        ticketCode: TICKET_CLOSED_ID,
+        ticketNumber: 2,
+        sessionDate: todayCairo,
+        doctorId: 'doc-b',
+        doctorName: 'د. ب',
+        patientName: 'مريض',
+        patientPhone: '01012345678',
+        status: 'waiting',
+      });
+      tx.update(anonDb.doc('clinic_queues/doc-b'), {
+        lastTicketNumber: 2,
+        lastTicketId: TICKET_CLOSED_ID,
+        updatedAt: new Date().toISOString(),
+      });
+    })
+  );
+
+  // Future-date rollover poisoning ("2099-12-31") -> FAILS
+  await assertFails(
+    anonDb.runTransaction(async (tx) => {
+      tx.set(anonDb.doc(`clinic_tickets/${TICKET_FUTURE_ID}`), {
+        id: TICKET_FUTURE_ID,
+        ticketCode: TICKET_FUTURE_ID,
+        ticketNumber: 1,
+        sessionDate: '2099-12-31',
+        doctorId: 'doc-a',
+        doctorName: 'د. أ',
+        patientName: 'مريض',
+        patientPhone: '01012345678',
+        status: 'waiting',
+      });
+      tx.update(anonDb.doc('clinic_queues/doc-a'), {
+        sessionDate: '2099-12-31',
+        currentNumber: 0,
+        lastTicketNumber: 1,
+        lastTicketId: TICKET_FUTURE_ID,
+        updatedAt: new Date().toISOString(),
+      });
+    })
+  );
+
+  // Direct ticket creation without atomic queue increment -> FAILS
+  await assertFails(
+    anonDb.doc(`clinic_tickets/${TICKET_ORPHAN_ID}`).set({
+      id: TICKET_ORPHAN_ID,
+      ticketCode: TICKET_ORPHAN_ID,
+      ticketNumber: 99,
+      sessionDate: todayCairo,
+      doctorId: 'doc-a',
+      doctorName: 'د. أ',
+      patientName: 'مريض',
+      patientPhone: '01012345678',
+      status: 'waiting',
+    })
+  );
+
+  // =========================================================================
+  // 4. Captain Anti-Double-Claim on Delivery Rides & Restaurant Orders
+  // =========================================================================
+  const cap1Db = testEnv.authenticatedContext('cap-1-uid', { email: 'cap1@test.local' }).firestore();
+  const cap2Db = testEnv.authenticatedContext('cap-2-uid', { email: 'cap2@test.local' }).firestore();
+
+  // Captain 1 claims delivery ride -> SUCCEEDS
+  await assertSucceeds(
+    cap1Db.doc(`delivery_rides/${RIDE_CAP_ID}`).update({
+      status: 'accepted',
+      captainUid: 'cap-1-uid',
+      captainName: 'كابتن 1',
+      captainPhone: '01011111111',
+      updatedAt: new Date().toISOString(),
+    })
+  );
+  // Captain 2 cannot steal or update Captain 1's ride -> FAILS
+  await assertFails(
+    cap2Db.doc(`delivery_rides/${RIDE_CAP_ID}`).update({
+      status: 'picked_up',
+      captainUid: 'cap-2-uid',
+      captainName: 'كابتن 2',
+      captainPhone: '01022222222',
+      updatedAt: new Date().toISOString(),
+    })
+  );
+  await assertFails(
+    cap2Db.doc(`delivery_rides/${RIDE_CAP_ID}`).update({
+      status: 'picked_up',
+      updatedAt: new Date().toISOString(),
+    })
+  );
+
+  // Captain 1 claims ready restaurant order -> SUCCEEDS
+  await assertSucceeds(
+    cap1Db.doc(`restaurant_orders/${ORDER_READY_CAP_ID}`).update({
+      status: 'on_the_way',
+      captainUid: 'cap-1-uid',
+      captainName: 'كابتن 1',
+      captainPhone: '01011111111',
+      updatedAt: new Date().toISOString(),
+    })
+  );
+  // Captain 2 cannot steal or deliver Captain 1's restaurant order -> FAILS
+  await assertFails(
+    cap2Db.doc(`restaurant_orders/${ORDER_READY_CAP_ID}`).update({
+      status: 'delivered',
+      updatedAt: new Date().toISOString(),
+    })
+  );
+  // Captain 1 completes delivery -> SUCCEEDS
+  await assertSucceeds(
+    cap1Db.doc(`restaurant_orders/${ORDER_READY_CAP_ID}`).update({
+      status: 'delivered',
+      updatedAt: new Date().toISOString(),
+    })
+  );
+
+  assert.ok(true);
+  console.log('All Firestore security rules tests passed!');
+} finally {
+  await testEnv.cleanup();
+}

@@ -235,10 +235,25 @@ service cloud.firestore {
         && validOptStr(data, 'uid', 128)
         && validOptStr(data, 'name', 120)
         && validOptList(data, 'partnerTypes', 3)
+        && (!('partnerTypes' in data) || data.partnerTypes.hasOnly(['clinic', 'restaurant', 'captain']))
         && validOptList(data, 'managedPlaceIds', 20)
         && validOptBool(data, 'active')
         && validOptStr(data, 'createdAt', 40)
         && validOptStr(data, 'updatedAt', 40);
+    }
+
+    function pad2(n) {
+      return n < 10 ? ('0' + string(n)) : string(n);
+    }
+
+    function formatUtcDate(ts) {
+      return string(ts.year()) + '-' + pad2(ts.month()) + '-' + pad2(ts.day());
+    }
+
+    // Africa/Cairo is strictly UTC+2 (standard) or UTC+3 (DST).
+    function isValidCairoSessionDate(dateStr) {
+      return dateStr == formatUtcDate(request.time + duration.value(2, 'h'))
+        || dateStr == formatUtcDate(request.time + duration.value(3, 'h'));
     }
 
     function isValidCategory(data) {
@@ -609,7 +624,7 @@ service cloud.firestore {
     function isValidPublicSettings(data) {
       return data.keys().hasOnly([
           'appName', 'disclaimer', 'supportPhone', 'supportWhatsapp',
-          'visitsCount', 'areas', 'demoMode', 'updatedAt'
+          'visitsCount', 'areas', 'demoMode', 'pwaInstallPromptEnabled', 'updatedAt'
         ])
         && validStr(data.appName, 2, 100)
         && validStr(data.disclaimer, 10, 1000)
@@ -618,6 +633,7 @@ service cloud.firestore {
         && validOptStr(data, 'supportWhatsapp', 40)
         && validOptList(data, 'areas', 50)
         && validOptBool(data, 'demoMode')
+        && validOptBool(data, 'pwaInstallPromptEnabled')
         && validOptStr(data, 'updatedAt', 40);
     }
 
@@ -782,8 +798,9 @@ service cloud.firestore {
                 && incoming().lastTicketNumber == existing().lastTicketNumber + 1
               )
               || (
-                // Clean Cairo day rollover (also supports legacy queue docs missing sessionDate)
+                // Clean Cairo day rollover (prevents future-date rollover poisoning via request.time)
                 (!('sessionDate' in existing()) || incoming().sessionDate > existing().sessionDate)
+                && isValidCairoSessionDate(incoming().sessionDate)
                 && incoming().currentNumber == 0
                 && incoming().lastTicketNumber == 1
               )
@@ -809,6 +826,7 @@ service cloud.firestore {
         && isStrongToken(ticketId)
         && incoming().status == 'waiting'
         && existsAfter(/databases/$(database)/documents/clinic_queues/$(incoming().doctorId))
+        && getAfter(/databases/$(database)/documents/clinic_queues/$(incoming().doctorId)).data.status == 'open'
         && getAfter(/databases/$(database)/documents/clinic_queues/$(incoming().doctorId)).data.lastTicketId == ticketId
         && getAfter(/databases/$(database)/documents/clinic_queues/$(incoming().doctorId)).data.lastTicketNumber == incoming().ticketNumber
         && getAfter(/databases/$(database)/documents/clinic_queues/$(incoming().doctorId)).data.sessionDate == incoming().sessionDate;
@@ -820,7 +838,8 @@ service cloud.firestore {
         && incoming().sessionDate == existing().sessionDate
         && incoming().doctorId == existing().doctorId
         && incoming().patientName == existing().patientName
-        && incoming().patientPhone == existing().patientPhone;
+        && incoming().patientPhone == existing().patientPhone
+        && (isAdminWriter() || incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes', 'updatedAt']));
       allow delete: if isAdminWriter();
     }
 
@@ -838,6 +857,10 @@ service cloud.firestore {
         && isStrongToken(orderId)
         && incoming().status == 'new'
         && !('captainUid' in incoming())
+        && ('pricingSnapshot' in incoming())
+        && incoming().pricingSnapshot.subtotal == incoming().subtotal
+        && incoming().pricingSnapshot.deliveryFee == incoming().deliveryFee
+        && incoming().pricingSnapshot.total == incoming().total
         && verifyOrderAgainstCatalog(incoming());
       allow update: if isValidRestaurantOrder(incoming())
         && incoming().id == existing().id
@@ -863,7 +886,7 @@ service cloud.firestore {
             // Captain atomic claim of a ready, unclaimed order
             isCaptainPartner()
             && existing().status == 'ready'
-            && !('captainUid' in existing())
+            && (!('captainUid' in existing()) || existing().captainUid == null || existing().captainUid == '')
             && incoming().status == 'on_the_way'
             && incoming().captainUid == request.auth.uid
             && validStr(incoming().captainName, 2, 120)
@@ -910,7 +933,7 @@ service cloud.firestore {
             // Captain atomic claim of a pending, unclaimed ride
             isCaptainPartner()
             && existing().status == 'pending'
-            && !('captainUid' in existing())
+            && (!('captainUid' in existing()) || existing().captainUid == null || existing().captainUid == '')
             && incoming().status == 'accepted'
             && incoming().captainUid == request.auth.uid
             && validStr(incoming().captainName, 2, 120)

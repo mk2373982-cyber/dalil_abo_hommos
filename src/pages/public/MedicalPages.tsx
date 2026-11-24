@@ -907,13 +907,20 @@ export const LiveQueuePage: React.FC = () => {
   }, [ticket?.doctorId]);
 
   const queue = liveQueue || clinicQueues.find((q) => q.doctorId === ticket?.doctorId);
-  const currentNum = queue?.currentNumber ?? 1;
-  const remaining = ticket ? Math.max(0, ticket.ticketNumber - currentNum) : 99;
+  const isStaleSession = Boolean(
+    ticket?.sessionDate && queue?.sessionDate && ticket.sessionDate !== queue.sessionDate
+  );
+  const currentNum = isStaleSession ? 0 : (queue?.currentNumber ?? 0);
+  const remaining = ticket && !isStaleSession ? Math.max(0, ticket.ticketNumber - currentNum) : 0;
   const isCancelled = ticket?.status === 'cancelled';
   const isCompleted = ticket?.status === 'completed';
-  const isTerminal = Boolean(isCancelled || isCompleted);
+  const isTerminal = Boolean(isCancelled || isCompleted || isStaleSession);
   const isMyTurn = Boolean(
-    ticket && !isTerminal && (ticket.status === 'called' || ticket.status === 'in_room' || remaining === 0)
+    ticket &&
+      !isTerminal &&
+      (ticket.status === 'called' ||
+        ticket.status === 'in_room' ||
+        (currentNum > 0 && remaining === 0))
   );
 
   // Zero-cost client-side turn alert (sound + vibration + optional browser notification)
@@ -1003,6 +1010,14 @@ export const LiveQueuePage: React.FC = () => {
       }
     >
       <div className="space-y-4 max-w-lg mx-auto">
+        {isStaleSession && (
+          <FadeInUp index={0} y={10}>
+            <div className="bg-[#fef3c7] border border-[#f5d061] text-[#735c00] rounded-3xl p-4 text-xs leading-relaxed">
+              <strong>تذكرة من جلسة سابقة ({ticket.sessionDate}):</strong> العيادة تعمل الآن على جلسة يوم{' '}
+              <span className="font-mono font-bold">{queue?.sessionDate}</span>. يرجى حجز دور جديد إذا كنت ترغب في الكشف اليوم.
+            </div>
+          </FadeInUp>
+        )}
         {!isTerminal && !isMyTurn && (
           <FadeInUp index={0} y={10}>
             <div className="bg-[#f7faf8] border border-[#d7ebe0] rounded-2xl px-3.5 py-2.5 flex items-center gap-2 text-[11px] text-[#003820]">

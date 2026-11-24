@@ -700,30 +700,66 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    const q = isAdmin
-      ? query(collection(db, 'clinic_tickets'), orderBy('createdAt', 'desc'), limit(clinicTicketsLimit))
-      : query(
-          collection(db, 'clinic_tickets'),
-          where('doctorId', 'in', managedPlaceIds.slice(0, 10)),
-          orderBy('createdAt', 'desc'),
-          limit(clinicTicketsLimit)
-        );
+    const unsubs: Array<() => void> = [];
+    const buckets = new Map<string, ClinicTicket[]>();
+    const streamHasMore = new Map<string, boolean>();
 
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        const list = snap.docs.map((d) => ({
-          ...(d.data() as ClinicTicket),
+    const syncMerged = () => {
+      const merged = new Map<string, ClinicTicket>();
+      buckets.forEach((arr) => arr.forEach((item) => merged.set(item.id, item)));
+      const sorted = Array.from(merged.values()).sort((a, b) =>
+        (b.createdAt || '').localeCompare(a.createdAt || '')
+      );
+      setClinicTickets(sorted);
+      setHasMoreClinicTickets(Array.from(streamHasMore.values()).some(Boolean));
+    };
+
+    const mapTickets = (snap: { docs: Array<{ id: string; data: () => unknown }> }): ClinicTicket[] =>
+      snap.docs.map((d) => {
+        const raw = d.data() as ClinicTicket;
+        return {
+          ...raw,
           id: d.id,
-          sessionDate: (d.data() as Partial<ClinicTicket>).sessionDate || (d.data().createdAt || '').slice(0, 10) || getCairoDateString(),
-        }));
-        setClinicTickets(list);
-        setHasMoreClinicTickets(snap.docs.length >= clinicTicketsLimit);
-      },
-      (error) => logFirestoreListenerError(error, OperationType.LIST, 'clinic_tickets')
-    );
+          sessionDate: raw.sessionDate || (raw.createdAt || '').slice(0, 10) || getCairoDateString(),
+        };
+      });
 
-    return () => unsub();
+    if (isAdmin) {
+      unsubs.push(
+        onSnapshot(
+          query(collection(db, 'clinic_tickets'), orderBy('createdAt', 'desc'), limit(clinicTicketsLimit)),
+          (snap) => {
+            buckets.set('admin', mapTickets(snap));
+            streamHasMore.set('admin', snap.docs.length >= clinicTicketsLimit);
+            syncMerged();
+          },
+          (error) => logFirestoreListenerError(error, OperationType.LIST, 'clinic_tickets')
+        )
+      );
+    } else {
+      // One equality-filtered listener per assigned clinic guarantees Firestore Rules provability
+      // against `resource.data.doctorId in get(admins/$(uid)).data.managedPlaceIds`.
+      for (const placeId of managedPlaceIds) {
+        unsubs.push(
+          onSnapshot(
+            query(
+              collection(db, 'clinic_tickets'),
+              where('doctorId', '==', placeId),
+              orderBy('createdAt', 'desc'),
+              limit(clinicTicketsLimit)
+            ),
+            (snap) => {
+              buckets.set(`clinic:${placeId}`, mapTickets(snap));
+              streamHasMore.set(`clinic:${placeId}`, snap.docs.length >= clinicTicketsLimit);
+              syncMerged();
+            },
+            (error) => logFirestoreListenerError(error, OperationType.LIST, `clinic_tickets:${placeId}`)
+          )
+        );
+      }
+    }
+
+    return () => unsubs.forEach((u) => u());
   }, [authReady, isAdmin, canAccessPartnerScope, managedPlaceIds, clinicTicketsLimit]);
 
   // Tenant-Isolated & Server-Ordered Restaurant Orders Stream (Admin / Restaurant Partner / Captain Partner)
@@ -739,6 +775,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const unsubs: Array<() => void> = [];
     const buckets = new Map<string, RestaurantOrder[]>();
+    const streamHasMore = new Map<string, boolean>();
 
     const syncMerged = () => {
       const merged = new Map<string, RestaurantOrder>();
@@ -749,6 +786,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         (b.createdAt || '').localeCompare(a.createdAt || '')
       );
       setRestaurantOrders(sorted);
+      setHasMoreOrders(Array.from(streamHasMore.values()).some(Boolean));
     };
 
     if (isAdmin) {
@@ -760,7 +798,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               'admin',
               snap.docs.map((d) => ({ ...(d.data() as RestaurantOrder), id: d.id }))
             );
-            setHasMoreOrders(snap.docs.length >= ordersLimit);
+            streamHasMore.set('admin', snap.docs.length >= ordersLimit);
             syncMerged();
           },
           (error) => logFirestoreListenerError(error, OperationType.LIST, 'restaurant_orders')
@@ -768,25 +806,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       );
     } else {
       if (canAccessPartnerScope('restaurant') && managedPlaceIds.length > 0) {
-        unsubs.push(
-          onSnapshot(
-            query(
-              collection(db, 'restaurant_orders'),
-              where('restaurantId', 'in', managedPlaceIds.slice(0, 10)),
-              orderBy('createdAt', 'desc'),
-              limit(ordersLimit)
-            ),
-            (snap) => {
-              buckets.set(
-                'restaurant',
-                snap.docs.map((d) => ({ ...(d.data() as RestaurantOrder), id: d.id }))
-              );
-              setHasMoreOrders((prev) => prev || snap.docs.length >= ordersLimit);
-              syncMerged();
-            },
-            (error) => logFirestoreListenerError(error, OperationType.LIST, 'restaurant_orders:restaurant')
-          )
-        );
+        // Equality filter per assigned restaurant for strict Firestore Rules provability
+        for (const placeId of managedPlaceIds) {
+          unsubs.push(
+            onSnapshot(
+              query(
+                collection(db, 'restaurant_orders'),
+                where('restaurantId', '==', placeId),
+                orderBy('createdAt', 'desc'),
+                limit(ordersLimit)
+              ),
+              (snap) => {
+                buckets.set(
+                  `restaurant:${placeId}`,
+                  snap.docs.map((d) => ({ ...(d.data() as RestaurantOrder), id: d.id }))
+                );
+                streamHasMore.set(`restaurant:${placeId}`, snap.docs.length >= ordersLimit);
+                syncMerged();
+              },
+              (error) =>
+                logFirestoreListenerError(error, OperationType.LIST, `restaurant_orders:${placeId}`)
+            )
+          );
+        }
       }
 
       if (canSeeCaptain && user?.uid) {
@@ -803,6 +845,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 'captain_ready',
                 snap.docs.map((d) => ({ ...(d.data() as RestaurantOrder), id: d.id }))
               );
+              streamHasMore.set('captain_ready', snap.docs.length >= ordersLimit);
               syncMerged();
             },
             (error) => logFirestoreListenerError(error, OperationType.LIST, 'restaurant_orders:ready')
@@ -821,7 +864,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 'captain_mine',
                 snap.docs.map((d) => ({ ...(d.data() as RestaurantOrder), id: d.id }))
               );
-              setHasMoreOrders((prev) => prev || snap.docs.length >= ordersLimit);
+              streamHasMore.set('captain_mine', snap.docs.length >= ordersLimit);
               syncMerged();
             },
             (error) => logFirestoreListenerError(error, OperationType.LIST, 'restaurant_orders:captain')
@@ -844,6 +887,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const unsubs: Array<() => void> = [];
     const buckets = new Map<string, DeliveryRide[]>();
+    const streamHasMore = new Map<string, boolean>();
 
     const syncMerged = () => {
       const merged = new Map<string, DeliveryRide>();
@@ -852,6 +896,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         (b.createdAt || '').localeCompare(a.createdAt || '')
       );
       setDeliveryRides(sorted);
+      setHasMoreRides(Array.from(streamHasMore.values()).some(Boolean));
     };
 
     if (isAdmin) {
@@ -863,7 +908,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               'admin',
               snap.docs.map((d) => ({ ...(d.data() as DeliveryRide), id: d.id }))
             );
-            setHasMoreRides(snap.docs.length >= ridesLimit);
+            streamHasMore.set('admin', snap.docs.length >= ridesLimit);
             syncMerged();
           },
           (error) => logFirestoreListenerError(error, OperationType.LIST, 'delivery_rides')
@@ -883,6 +928,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               'pending',
               snap.docs.map((d) => ({ ...(d.data() as DeliveryRide), id: d.id }))
             );
+            streamHasMore.set('pending', snap.docs.length >= ridesLimit);
             syncMerged();
           },
           (error) => logFirestoreListenerError(error, OperationType.LIST, 'delivery_rides:pending')
@@ -901,7 +947,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               'mine',
               snap.docs.map((d) => ({ ...(d.data() as DeliveryRide), id: d.id }))
             );
-            setHasMoreRides(snap.docs.length >= ridesLimit);
+            streamHasMore.set('mine', snap.docs.length >= ridesLimit);
             syncMerged();
           },
           (error) => logFirestoreListenerError(error, OperationType.LIST, 'delivery_rides:mine')
@@ -988,7 +1034,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     unsubs.push(
       onSnapshot(
-        query(collection(db, 'finance_settlements'), limit(100)),
+        query(collection(db, 'finance_settlements'), orderBy('closedAt', 'desc'), limit(100)),
         (snap) => {
           const list = snap.docs.map((d) => ({ ...(d.data() as FinanceSettlement), id: d.id }));
           setFinanceSettlements(list);
@@ -1593,27 +1639,108 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         throw new Error(phoneCheck.error || 'يرجى إدخال رقم موبايل مصري صحيح');
       }
 
-      // Fetch authoritative restaurant document from Firestore before creating order
-      const placeSnap = await getDoc(doc(db, 'places', input.restaurantId));
-      const authoritativeRestaurant = placeSnap.exists()
-        ? ({ ...(placeSnap.data() as Place), id: placeSnap.id } as Place)
-        : places.find((p) => p.id === input.restaurantId);
-
       const now = new Date().toISOString();
-      const pricingResult = computeAuthoritativeOrder({
-        restaurant: authoritativeRestaurant,
-        draftItems: input.items.map((item) => ({
-          menuItemId: item.menuItemId,
-          quantity: item.quantity,
-          clientPrice: item.price,
-        })),
-        deliveryArea: input.deliveryArea,
-        pricingSource: 'firestore_catalog',
-        nowIso: now,
-      });
+      let authoritativeName = input.restaurantName;
+      let verifiedItems: CartItem[] | null = null;
+      let verifiedSubtotal = 0;
+      let verifiedDeliveryFee = 0;
+      let verifiedTotal = 0;
+      let verifiedSnapshot: RestaurantOrder['pricingSnapshot'] | undefined;
 
-      if (!pricingResult.ok) {
-        throw new Error(pricingResult.message);
+      // 1. Attempt trusted Cloudflare Pages Function server-side validator first (/api/orders/validate)
+      try {
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 4500);
+        const apiRes = await fetch('/api/orders/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            restaurantId: input.restaurantId,
+            deliveryArea: input.deliveryArea,
+            items: input.items.map((item) => ({
+              menuItemId: item.menuItemId,
+              quantity: item.quantity,
+              clientPrice: item.price,
+            })),
+            clientSubtotal: input.subtotal,
+            clientDeliveryFee: input.deliveryFee,
+            clientTotal: input.total,
+          }),
+        });
+        window.clearTimeout(timeoutId);
+
+        const contentType = apiRes.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const apiData = (await apiRes.json()) as {
+            ok?: boolean;
+            error?: string;
+            restaurantName?: string;
+            items?: CartItem[];
+            subtotal?: number;
+            deliveryFee?: number;
+            total?: number;
+            pricingSnapshot?: RestaurantOrder['pricingSnapshot'];
+          };
+          if (!apiRes.ok && apiRes.status >= 400 && apiRes.status < 500 && apiRes.status !== 404) {
+            throw new Error(apiData.error || 'تم رفض الطلب لعدم مطابقة الأسعار مع القائمة المعتمدة');
+          }
+          if (apiRes.ok && apiData.ok && Array.isArray(apiData.items) && apiData.pricingSnapshot) {
+            authoritativeName = apiData.restaurantName || authoritativeName;
+            verifiedItems = apiData.items;
+            verifiedSubtotal = apiData.subtotal ?? 0;
+            verifiedDeliveryFee = apiData.deliveryFee ?? 0;
+            verifiedTotal = apiData.total ?? 0;
+            verifiedSnapshot = apiData.pricingSnapshot;
+          }
+        }
+      } catch (apiErr) {
+        if (apiErr instanceof Error && apiErr.name !== 'AbortError' && !apiErr.message.includes('fetch')) {
+          // Propagate explicit validation/tampering rejections from the server validator
+          if (
+            apiErr.message.includes('تم رفض') ||
+            apiErr.message.includes('الكمية') ||
+            apiErr.message.includes('الصنف') ||
+            apiErr.message.includes('المطعم') ||
+            apiErr.message.includes('الحد الأقصى') ||
+            apiErr.message.includes('السلة')
+          ) {
+            throw apiErr;
+          }
+        }
+        // Otherwise (e.g., local Vite dev without Pages Functions), fall back to live Firestore catalog check
+        // while Firestore Security Rules enforce exact server-side menuPriceMap verification on commit.
+      }
+
+      // 2. Fallback / double-check against live Firestore catalog (enforced by Firestore Security Rules!)
+      if (!verifiedItems || !verifiedSnapshot) {
+        const placeSnap = await getDoc(doc(db, 'places', input.restaurantId));
+        const authoritativeRestaurant = placeSnap.exists()
+          ? ({ ...(placeSnap.data() as Place), id: placeSnap.id } as Place)
+          : places.find((p) => p.id === input.restaurantId);
+
+        const pricingResult = computeAuthoritativeOrder({
+          restaurant: authoritativeRestaurant,
+          draftItems: input.items.map((item) => ({
+            menuItemId: item.menuItemId,
+            quantity: item.quantity,
+            clientPrice: item.price,
+          })),
+          deliveryArea: input.deliveryArea,
+          pricingSource: 'firestore_catalog',
+          nowIso: now,
+        });
+
+        if (!pricingResult.ok) {
+          throw new Error(pricingResult.message);
+        }
+
+        authoritativeName = authoritativeRestaurant?.name || authoritativeName;
+        verifiedItems = pricingResult.items;
+        verifiedSubtotal = pricingResult.subtotal;
+        verifiedDeliveryFee = pricingResult.deliveryFee;
+        verifiedTotal = pricingResult.total;
+        verifiedSnapshot = pricingResult.pricingSnapshot;
       }
 
       const hasValidCoords =
@@ -1628,18 +1755,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         id: orderId,
         orderCode: orderId,
         restaurantId: input.restaurantId,
-        restaurantName: authoritativeRestaurant?.name || input.restaurantName,
+        restaurantName: authoritativeName,
         customerName: input.customerName.trim(),
         customerPhone: phoneCheck.displayLocal,
         deliveryArea: input.deliveryArea,
         deliveryAddress: input.deliveryAddress.trim(),
         locationShared: Boolean(input.locationShared && hasValidCoords),
         deliveryCoords: hasValidCoords ? input.deliveryCoords : undefined,
-        items: pricingResult.items,
-        subtotal: pricingResult.subtotal,
-        deliveryFee: pricingResult.deliveryFee,
-        total: pricingResult.total,
-        pricingSnapshot: pricingResult.pricingSnapshot,
+        items: verifiedItems,
+        subtotal: verifiedSubtotal,
+        deliveryFee: verifiedDeliveryFee,
+        total: verifiedTotal,
+        pricingSnapshot: verifiedSnapshot,
         status: 'new',
         notes: input.notes?.trim() || '',
         createdAt: now,
@@ -1664,7 +1791,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         type: 'order',
         code: orderId,
         title: `طلب من ${order.restaurantName}`,
-        subtitle: `${pricingResult.items.length} أصناف · ${pricingResult.total} ج.م`,
+        subtitle: `${verifiedItems.length} أصناف · ${verifiedTotal} ج.م`,
         route: `/orders/tracking/${orderId}`,
       });
       saveCitizenProfile({
@@ -1797,31 +1924,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateClinicQueueState = useCallback(
     async (doctorId: string, patch: Partial<ClinicQueue>) => {
-      const existingQueue = clinicQueues.find((q) => q.doctorId === doctorId);
       const place = places.find((p) => p.id === doctorId);
       const now = new Date().toISOString();
-      const updated: ClinicQueue = {
-        doctorId,
-        doctorName: existingQueue?.doctorName || place?.name || doctorId,
-        specialty: existingQueue?.specialty || place?.specialty || '',
-        clinicAddress: existingQueue?.clinicAddress || place?.address || '',
-        sessionDate: existingQueue?.sessionDate || getCairoDateString(),
-        currentNumber: existingQueue?.currentNumber ?? 0,
-        lastTicketNumber: existingQueue?.lastTicketNumber ?? 0,
-        status: existingQueue?.status || 'open',
-        avgMinutesPerPatient: existingQueue?.avgMinutesPerPatient ?? 15,
-        pausedReason: existingQueue?.pausedReason || '',
-        ...patch,
-        updatedAt: now,
-      };
       try {
-        await setDoc(doc(db, 'clinic_queues', doctorId), stripUndefined(updated as unknown as Record<string, unknown>));
+        await runTransaction(db, async (tx) => {
+          const qRef = doc(db, 'clinic_queues', doctorId);
+          const snap = await tx.get(qRef);
+          if (snap.exists()) {
+            const existing = snap.data() as ClinicQueue;
+            const merged: ClinicQueue = {
+              ...existing,
+              doctorId,
+              sessionDate: existing.sessionDate || getCairoDateString(),
+              ...patch,
+              updatedAt: now,
+            };
+            tx.set(qRef, stripUndefined(merged as unknown as Record<string, unknown>));
+          } else {
+            const created: ClinicQueue = {
+              doctorId,
+              doctorName: patch.doctorName || place?.name || doctorId,
+              specialty: patch.specialty ?? place?.specialty ?? '',
+              clinicAddress: patch.clinicAddress ?? place?.address ?? '',
+              sessionDate: patch.sessionDate || getCairoDateString(),
+              currentNumber: patch.currentNumber ?? 0,
+              lastTicketNumber: patch.lastTicketNumber ?? 0,
+              status: patch.status || 'open',
+              avgMinutesPerPatient: patch.avgMinutesPerPatient ?? 15,
+              pausedReason: patch.pausedReason || '',
+              updatedAt: now,
+            };
+            tx.set(qRef, stripUndefined(created as unknown as Record<string, unknown>));
+          }
+        });
         showToast('تم تحديث حالة طابور العيادة لحظياً', 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.UPDATE, `clinic_queues/${doctorId}`);
       }
     },
-    [clinicQueues, places, showToast]
+    [places, showToast]
   );
 
   const resetClinicDaySession = useCallback(
@@ -1830,6 +1971,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         sessionDate: getCairoDateString(),
         currentNumber: 0,
         lastTicketNumber: 0,
+        lastTicketId: '',
         status: 'open',
         pausedReason: '',
       });
@@ -1898,21 +2040,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const target = clinicTickets.find((t) => t.id === ticketId);
       if (!target) return;
       const now = new Date().toISOString();
+      const targetSession = target.sessionDate || getCairoDateString();
+      const otherActive =
+        status === 'called' || status === 'in_room'
+          ? clinicTickets.filter(
+              (t) =>
+                t.id !== ticketId &&
+                t.doctorId === target.doctorId &&
+                (t.sessionDate || targetSession) === targetSession &&
+                (t.status === 'called' || t.status === 'in_room')
+            )
+          : [];
       try {
         await runTransaction(db, async (tx) => {
           const tRef = doc(db, 'clinic_tickets', ticketId);
           const qRef = doc(db, 'clinic_queues', target.doctorId);
-          const qSnap = await tx.get(qRef);
+          const [tSnap, qSnap] = await Promise.all([tx.get(tRef), tx.get(qRef)]);
+          if (!tSnap.exists()) throw new Error('التذكرة غير موجودة');
+          const liveTicket = tSnap.data() as ClinicTicket;
+          if (
+            (status === 'called' || status === 'in_room') &&
+            (liveTicket.status === 'cancelled' || liveTicket.status === 'completed')
+          ) {
+            throw new Error('لا يمكن نداء تذكرة ملغاة أو منتهية');
+          }
+          for (const activeT of otherActive) {
+            tx.update(doc(db, 'clinic_tickets', activeT.id), {
+              status: 'completed',
+              updatedAt: now,
+            });
+          }
           tx.update(tRef, { status, updatedAt: now });
           if (qSnap.exists() && (status === 'called' || status === 'in_room')) {
+            const liveQueue = qSnap.data() as ClinicQueue;
             tx.update(qRef, {
-              currentNumber: target.ticketNumber,
+              currentNumber: liveTicket.ticketNumber,
+              lastTicketNumber: Math.max(liveQueue.lastTicketNumber ?? 0, liveTicket.ticketNumber),
+              sessionDate: liveTicket.sessionDate || targetSession,
               updatedAt: now,
             });
           }
         });
         showToast('تم تحديث حالة المريض ومزامنة الطابور فوراً', 'success');
       } catch (error) {
+        showToast(error instanceof Error ? error.message : 'تعذر تحديث حالة التذكرة', 'error');
         handleFirestoreError(error, OperationType.UPDATE, `clinic_tickets/${ticketId}`);
       }
     },
@@ -2402,7 +2573,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           for (const [key, value] of Object.entries(payload)) {
             if (!CORRECTION_ALLOWLIST.has(key)) continue;
             if (typeof value === 'string' && value.trim()) {
-              const cleanVal = value.trim();
+              let cleanVal = value.trim();
+              if (key === 'phone' || key === 'whatsapp') {
+                const phoneRes = validateEgyptPhone(cleanVal, { allowLandline: true });
+                if (!phoneRes.valid) {
+                  throw new Error(phoneRes.error || 'رقم الهاتف في البلاغ غير صالح للتطبيق');
+                }
+                cleanVal = phoneRes.displayLocal;
+              }
               const existingVal = (currentPlace as unknown as Record<string, unknown>)[key];
               if (typeof existingVal === 'string' || typeof existingVal === 'number' || typeof existingVal === 'boolean') {
                 prevSnapshot[key] = existingVal;

@@ -127,7 +127,7 @@ function getCairoClock(now: Date): CairoClock {
 }
 
 function parse24hTime(hhmm: string): number | null {
-  const m = /^\(\d{1,2}\):(\d{2})$/.exec(hhmm.trim());
+  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
   if (!m) return null;
   const h = Number(m[1]);
   const min = Number(m[2]);

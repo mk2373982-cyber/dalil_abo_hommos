@@ -37,7 +37,7 @@ import {
   sortPlacesByPromoPriority,
 } from '../../lib/promoFilters';
 import { ABU_HOMS_AREAS } from '../../data/seedData';
-import { buildWhatsAppUrl } from '../../lib/formatters';
+import { buildWhatsAppUrl, validateEgyptPhone } from '../../lib/formatters';
 import { readCitizenProfile } from '../../lib/citizenProfile';
 import { usePageSeo } from '../../lib/shareCard';
 import type { DeliveryRide } from '../../types';
@@ -214,8 +214,13 @@ export const HeroProfilePage: React.FC = () => {
 
   const handleInspectionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim().length < 2 || phone.trim().length < 8) {
-      showToast('يرجى إدخال الاسم ورقم الهاتف بشكل صحيح', 'error');
+    if (name.trim().length < 2) {
+      showToast('يرجى إدخال اسمك بشكل صحيح (حرفين على الأقل)', 'error');
+      return;
+    }
+    const phoneCheck = validateEgyptPhone(phone, { allowLandline: true });
+    if (!phoneCheck.valid) {
+      showToast(phoneCheck.error || 'يرجى إدخال رقم هاتف مصري صحيح', 'error');
       return;
     }
     setSending(true);
@@ -225,13 +230,16 @@ export const HeroProfilePage: React.FC = () => {
         targetPlaceId: hero.id,
         title: `طلب معاينة/تواصل مع ${hero.name}`,
         submitterName: name,
-        submitterPhone: phone,
+        submitterPhone: phoneCheck.displayLocal,
         payload: { heroName: hero.name, details },
       });
       setShowRequest(false);
       navigate(`/track/${sub.trackingToken}`);
-    } catch {
-      showToast('تعذر إرسال الطلب حالياً، يرجى المحاولة مرة أخرى', 'error');
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : 'تعذر إرسال الطلب حالياً، يرجى المحاولة مرة أخرى',
+        'error'
+      );
     } finally {
       setSending(false);
     }
@@ -437,12 +445,13 @@ export const DeliveryRequestPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      itemDescription.trim().length < 2 ||
-      customerName.trim().length < 2 ||
-      customerPhone.trim().length < 8
-    ) {
-      showToast('يرجى استكمال تفاصيل المشوار والاسم ورقم الهاتف بشكل صحيح', 'error');
+    if (itemDescription.trim().length < 2 || customerName.trim().length < 2) {
+      showToast('يرجى استكمال تفاصيل المشوار والاسم بشكل صحيح', 'error');
+      return;
+    }
+    const phoneCheck = validateEgyptPhone(customerPhone, { allowLandline: false });
+    if (!phoneCheck.valid) {
+      showToast(phoneCheck.error || 'يرجى إدخال رقم موبايل مصري صحيح', 'error');
       return;
     }
     setSubmitting(true);
@@ -454,12 +463,15 @@ export const DeliveryRequestPage: React.FC = () => {
         dropoffDetails,
         itemDescription,
         customerName,
-        customerPhone,
+        customerPhone: phoneCheck.displayLocal,
         estimatedFee,
       });
       navigate(`/delivery/tracking/${ride.id}`);
-    } catch {
-      showToast('تعذر إرسال طلب التوصيل حالياً، يرجى المحاولة مرة أخرى', 'error');
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : 'تعذر إرسال طلب التوصيل حالياً، يرجى المحاولة مرة أخرى',
+        'error'
+      );
     } finally {
       setSubmitting(false);
     }

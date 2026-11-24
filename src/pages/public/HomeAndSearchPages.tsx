@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { CivicImage, PublicRootLayout, StackLayout } from '../../components/SharedUI';
+import { PWAInstallModal } from '../../components/PWAInstallModal';
 import { AbuHomsAreaMap } from '../../components/AbuHomsAreaMap';
 import {
   AnimatedEmptyState,
@@ -142,6 +143,7 @@ export const HomePage: React.FC = () => {
 
   return (
     <PublicRootLayout>
+      <PWAInstallModal context="public" />
       <div className="space-y-6">
         {/* Active Live Order / Clinic Queue / Delivery Floating Widget (SCREEN_140) */}
         {activeTracker && (
@@ -179,46 +181,61 @@ export const HomePage: React.FC = () => {
           </FadeInUp>
         )}
 
-        {/* Hardcoded App Designer Promotional Banner (Static, Non-Editable) */}
-        <FadeInUp index={0} y={14}>
+        {/* Hardcoded App Designer Promotional Ribbon (Sculpted Gold Capsule — breaks stacked-box pattern) */}
+        <FadeInUp index={0} y={12}>
           <a
             href="https://wajha-mk2373982.pages.dev/"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="مصمم التطبيق - خدمات رقمية متكاملة - تصفح الآن"
-            className="group relative block w-full overflow-hidden rounded-2xl border border-[#cca730]/65 bg-[linear-gradient(108deg,#cca730_0%,#8f6f18_14%,#0a4a2b_42%,#003820_100%)] p-3.5 sm:px-5 sm:py-4 shadow-civic-2 transition-all duration-200 hover:border-[#ffe088] hover:shadow-lg active:scale-[0.98]"
+            className="group relative block w-full overflow-hidden rounded-[28px] sm:rounded-full border border-[#fff2b8]/90 bg-[linear-gradient(112deg,#fff3be_0%,#ffd863_34%,#f2bd2e_72%,#e09f14_100%)] px-3 py-2.5 sm:px-3.5 sm:py-2.5 shadow-[0_12px_28px_-8px_rgba(214,154,18,0.52),inset_0_1.5px_0_rgba(255,255,255,0.85)] transition-all duration-200 hover:shadow-[0_16px_34px_-8px_rgba(214,154,18,0.68),inset_0_1.5px_0_rgba(255,255,255,0.95)] hover:-translate-y-0.5 active:scale-[0.985]"
           >
-            {/* Subtle metallic sheen & soft highlight */}
+            {/* Soft luminous pearl highlight across upper arc */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_20%,rgba(255,224,136,0.28),transparent_48%),linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0)_55%)]"
+              className="pointer-events-none absolute inset-x-8 top-0 h-1/2 rounded-full bg-gradient-to-b from-white/45 to-transparent"
+            />
+
+            {/* Continuous gleaming gold reflection sweep (respects prefers-reduced-motion) */}
+            <div
+              aria-hidden="true"
+              className="studio-banner-sheen pointer-events-none absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/55 to-transparent"
             />
 
             <div className="relative flex items-center justify-between gap-2.5 sm:gap-4">
-              {/* Right Tech Icon */}
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#cca730]/20 border border-[#ffe088]/45 text-[#ffe088] flex items-center justify-center shrink-0 shadow-inner">
-                <Code2 size={22} strokeWidth={2.2} />
+              {/* Right Circular Obsidian Medallion (breaks rectangular geometry) */}
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#0c1015] text-[#ffd863] ring-2 ring-white/70 shadow-[0_6px_16px_-4px_rgba(12,16,21,0.45)] flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 group-hover:-rotate-6">
+                <Code2 size={21} strokeWidth={2.4} />
               </div>
 
-              {/* Center Content */}
-              <div className="min-w-0 flex-1 space-y-0.5">
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#cca730]/25 border border-[#ffe088]/40 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-[#ffe088]">
-                  <Sparkles size={10} />
-                  <span>مصمم التطبيق</span>
-                </span>
-                <h2 className="text-sm sm:text-base font-bold text-white leading-snug truncate">
+              {/* Center High-Contrast Ink Editorial Copy */}
+              <div className="min-w-0 flex-1">
+                <p className="text-[10.5px] sm:text-[11px] font-bold text-[#664400] leading-tight">
+                  مصمم التطبيق
+                </p>
+                <h2 className="text-[13.5px] sm:text-base font-extrabold text-[#0c1015] leading-snug truncate">
                   خدمات رقمية متكاملة
                 </h2>
-                <p className="text-[11px] sm:text-xs text-[#e6f4ec]/90 leading-snug line-clamp-2 sm:line-clamp-1">
+                <p className="text-[11px] sm:text-xs font-medium text-[#2d2104]/85 leading-snug line-clamp-1">
                   تصميم، برمجة، وحلول ذكية لأعمالك
                 </p>
               </div>
 
-              {/* Left CTA Button */}
-              <span className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-[#ffe088] group-hover:bg-[#fff0ba] px-2.5 py-2 sm:px-4 sm:py-2.5 text-[11px] sm:text-xs font-extrabold text-[#003820] shadow-xs whitespace-nowrap transition-colors">
-                <span>تصفح الآن</span>
-                <ExternalLink size={13} strokeWidth={2.4} />
-              </span>
+              {/* Left Pulsing Obsidian Pill CTA */}
+              <div className="relative shrink-0">
+                <span
+                  aria-hidden="true"
+                  className="pwa-cta-ring pointer-events-none absolute inset-0 rounded-full border-2 border-[#0c1015]/50 bg-[#0c1015]/15"
+                />
+                <span className="pwa-cta-pulse relative min-h-[42px] sm:min-h-[44px] inline-flex items-center gap-1.5 rounded-full bg-[#0c1015] group-hover:bg-[#18212b] px-3.5 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-[13px] font-extrabold text-[#ffe088] shadow-[0_8px_20px_-6px_rgba(12,16,21,0.55)] whitespace-nowrap transition-colors">
+                  <span>تصفح الآن</span>
+                  <ExternalLink
+                    size={13}
+                    strokeWidth={2.5}
+                    className="transition-transform duration-200 group-hover:-translate-x-0.5"
+                  />
+                </span>
+              </div>
             </div>
           </a>
         </FadeInUp>

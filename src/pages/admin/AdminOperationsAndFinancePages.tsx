@@ -30,7 +30,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import { AdminShell } from '../../components/SharedUI';
 import { AnimatedFilterChip, FadeInUp } from '../../components/MotionEffects';
-import { buildWhatsAppUrl, parseCsvLine } from '../../lib/formatters';
+import { buildWhatsAppUrl, parseCsvLine, validateEgyptPhone } from '../../lib/formatters';
 import { buildMerchantWhatsAppReport, computePlacePerformance } from '../../lib/merchantReport';
 import type { AdminRole, AdminUser, Campaign, FinanceSettlement, Offer, PartnerScope, Place } from '../../types';
 
@@ -1062,9 +1062,7 @@ export const AdminFinancePage: React.FC = () => {
 export const AdminImportPage: React.FC = () => {
   const { categories, isAuditor, savePlace, showToast } = useApp();
   const [targetCatId, setTargetCatId] = useState(categories[0]?.id || 'cat-general');
-  const [csvText, setCsvText] = useState(
-    'الاسم,التخصص,المنطقة,العنوان,الهاتف\nصيدلية الشفاء الجديدة,صيدلية 24 ساعة,شارع المحطة,أمام محطة قطار أبوحمص,01012345678\nمعمل البرج الحديث,تحاليل طبية,شارع بورسعيد,بجوار البنك الأهلي,01087654321'
-  );
+  const [csvText, setCsvText] = useState('');
   const [importing, setImporting] = useState(false);
 
   const { parsedRows, skippedRowsCount } = useMemo(() => {
@@ -1075,16 +1073,19 @@ export const AdminImportPage: React.FC = () => {
     if (lines.length <= 1) return { parsedRows: [], skippedRowsCount: 0 };
     const all = lines.slice(1).map((line) => {
       const cols = parseCsvLine(line);
+      const rawPhone = cols[4] || '';
+      const phoneCheck = validateEgyptPhone(rawPhone, { allowLandline: true });
       return {
         name: cols[0] || '',
         specialty: cols[1] || '',
         area: cols[2] || 'أبوحمص',
         address: cols[3] || 'مركز أبوحمص',
-        phone: cols[4] || '',
+        phone: phoneCheck.valid ? phoneCheck.displayLocal : '',
+        phoneValid: phoneCheck.valid,
       };
     });
     const valid = all.filter(
-      (r) => r.name.length >= 2 && r.address.length >= 2 && r.phone.length >= 3
+      (r) => r.name.length >= 2 && r.address.length >= 2 && r.phoneValid
     );
     return { parsedRows: valid, skippedRowsCount: all.length - valid.length };
   }, [csvText]);
@@ -1178,13 +1179,27 @@ export const AdminImportPage: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#181c1c]">
-              محتوى CSV (الأعمدة: الاسم,التخصص,المنطقة,العنوان,الهاتف)
-            </label>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="text-xs font-bold text-[#181c1c]">
+                محتوى CSV (الأعمدة: الاسم,التخصص,المنطقة,العنوان,الهاتف)
+              </label>
+              <button
+                type="button"
+                onClick={() =>
+                  setCsvText(
+                    'الاسم,التخصص,المنطقة,العنوان,الهاتف\nمثال نشاط,تخصص النشاط,شارع المحطة,أمام محطة قطار أبوحمص,01012345678'
+                  )
+                }
+                className="text-[11px] font-bold text-[#0f5132] hover:underline"
+              >
+                إدراج قالب CSV توضيحي
+              </button>
+            </div>
             <textarea
               rows={5}
               value={csvText}
               onChange={(e) => setCsvText(e.target.value)}
+              placeholder={'الاسم,التخصص,المنطقة,العنوان,الهاتف\n...'}
               className="w-full p-3.5 rounded-2xl bg-[#f1f4f2] font-mono text-xs outline-none"
             />
           </div>
@@ -1194,18 +1209,22 @@ export const AdminImportPage: React.FC = () => {
               الصفوف الجاهزة للنشر: {parsedRows.length} صف
               {skippedRowsCount > 0 && (
                 <span className="text-[#ba1a1a] mr-2">
-                  (تم تخطي {skippedRowsCount} صفوف ناقصة البيانات)
+                  (تم تخطي {skippedRowsCount} صفوف ناقصة البيانات أو بأرقام هواتف غير صالحة)
                 </span>
               )}
             </span>
             <button
               type="button"
-              disabled={importing || parsedRows.length === 0}
+              disabled={importing || isAuditor || parsedRows.length === 0}
               onClick={handleImportAll}
               className="min-h-[46px] px-6 rounded-2xl bg-[#003820] disabled:opacity-50 text-white text-sm font-bold flex items-center gap-2"
             >
               <FileSpreadsheet size={17} />
-              {importing ? 'جارٍ النشر في Firestore...' : `استيراد ونشر (${parsedRows.length}) مكان`}
+              {isAuditor
+                ? 'للقراءة فقط (مراجع)'
+                : importing
+                  ? 'جارٍ النشر في Firestore...'
+                  : `استيراد ونشر (${parsedRows.length}) مكان`}
             </button>
           </div>
         </div>
@@ -1493,6 +1512,7 @@ export const AdminSettingsPage: React.FC = () => {
     settings,
     places,
     isSuperAdmin,
+    isAuditor,
     adminsList,
     saveAdminUser,
     deleteAdminUser,
@@ -1508,6 +1528,9 @@ export const AdminSettingsPage: React.FC = () => {
   const [supportPhone, setSupportPhone] = useState(settings.supportPhone || '');
   const [supportWhatsapp, setSupportWhatsapp] = useState(settings.supportWhatsapp || '');
   const [visitsCount, setVisitsCount] = useState(String(settings.visitsCount || 0));
+  const [pwaInstallPromptEnabled, setPwaInstallPromptEnabled] = useState(
+    settings.pwaInstallPromptEnabled !== false
+  );
   const [saving, setSaving] = useState(false);
   const [opsBusy, setOpsBusy] = useState(false);
   const syncedKeyRef = useRef<string>('');
@@ -1534,7 +1557,7 @@ export const AdminSettingsPage: React.FC = () => {
   );
 
   useEffect(() => {
-    const syncKey = `${settings.appName}|${settings.disclaimer}|${settings.supportPhone ?? ''}|${settings.supportWhatsapp ?? ''}|${settings.visitsCount}|${settings.updatedAt ?? ''}`;
+    const syncKey = `${settings.appName}|${settings.disclaimer}|${settings.supportPhone ?? ''}|${settings.supportWhatsapp ?? ''}|${settings.visitsCount}|${settings.pwaInstallPromptEnabled ?? true}|${settings.updatedAt ?? ''}`;
     if (syncKey === syncedKeyRef.current) return;
     syncedKeyRef.current = syncKey;
     setAppName(settings.appName);
@@ -1542,6 +1565,7 @@ export const AdminSettingsPage: React.FC = () => {
     setSupportPhone(settings.supportPhone || '');
     setSupportWhatsapp(settings.supportWhatsapp || '');
     setVisitsCount(String(settings.visitsCount || 0));
+    setPwaInstallPromptEnabled(settings.pwaInstallPromptEnabled !== false);
   }, [settings]);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -1556,6 +1580,7 @@ export const AdminSettingsPage: React.FC = () => {
         supportPhone: supportPhone.trim(),
         supportWhatsapp: supportWhatsapp.trim(),
         visitsCount: !Number.isNaN(parsedVisits) && parsedVisits >= 0 ? parsedVisits : settings.visitsCount,
+        pwaInstallPromptEnabled,
       });
     } catch {
       showToast('تعذر حفظ الإعدادات حالياً، تأكد من الصلاحيات وحاول مجدداً', 'error');
@@ -1700,12 +1725,30 @@ export const AdminSettingsPage: React.FC = () => {
               />
             </div>
 
+            <label className="flex items-start justify-between gap-4 p-4 rounded-2xl bg-[#f7faf8] border border-[#e4ece7] cursor-pointer">
+              <div className="space-y-0.5">
+                <span className="text-xs sm:text-sm font-bold text-[#003820] block">
+                  إظهار نافذة تثبيت التطبيق التلقائية (PWA Install Modal)
+                </span>
+                <span className="text-[11px] text-[#404942] leading-relaxed block">
+                  تظهر تلقائياً عند أول فتح للصفحة الرئيسية ولوحة الإدارة على الأجهزة غير المثبتة، وتختفي نهائياً بعد التثبيت.
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                disabled={isAuditor}
+                checked={pwaInstallPromptEnabled}
+                onChange={(e) => setPwaInstallPromptEnabled(e.target.checked)}
+                className="w-5 h-5 mt-0.5 accent-[#0f5132] shrink-0"
+              />
+            </label>
+
             <button
               type="submit"
-              disabled={saving}
-              className="min-h-[46px] px-6 rounded-2xl bg-[#003820] text-white text-sm font-bold flex items-center gap-2"
+              disabled={saving || isAuditor}
+              className="min-h-[46px] px-6 rounded-2xl bg-[#003820] disabled:opacity-50 text-white text-sm font-bold flex items-center gap-2"
             >
-              <Check size={17} /> {saving ? 'جارٍ الحفظ...' : 'حفظ الإعدادات ومزامنتها'}
+              <Check size={17} /> {isAuditor ? 'للقراءة فقط (مراجع)' : saving ? 'جارٍ الحفظ...' : 'حفظ الإعدادات ومزامنتها'}
             </button>
           </form>
         </FadeInUp>

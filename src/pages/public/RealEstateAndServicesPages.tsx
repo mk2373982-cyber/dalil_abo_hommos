@@ -38,7 +38,7 @@ import {
   sortPlacesByPromoPriority,
 } from '../../lib/promoFilters';
 import { ABU_HOMS_AREAS } from '../../data/seedData';
-import { buildWhatsAppUrl } from '../../lib/formatters';
+import { buildWhatsAppUrl, validateEgyptPhone } from '../../lib/formatters';
 import { matchesArabicQuery } from '../../lib/arabicSearch';
 import { evaluateOpenStatus } from '../../lib/workingHours';
 import { readCitizenProfile } from '../../lib/citizenProfile';
@@ -389,8 +389,13 @@ export const PropertyInspectionPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim().length < 2 || phone.trim().length < 8) {
-      showToast('يرجى إدخال اسمك ورقم الهاتف بشكل صحيح', 'error');
+    if (name.trim().length < 2) {
+      showToast('يرجى إدخال اسمك بشكل صحيح', 'error');
+      return;
+    }
+    const phoneCheck = validateEgyptPhone(phone, { allowLandline: true });
+    if (!phoneCheck.valid) {
+      showToast(phoneCheck.error || 'يرجى إدخال رقم هاتف مصري صحيح', 'error');
       return;
     }
     setSubmitting(true);
@@ -400,7 +405,7 @@ export const PropertyInspectionPage: React.FC = () => {
         targetPlaceId: property.id,
         title: `طلب معاينة: ${property.title}`,
         submitterName: name,
-        submitterPhone: phone,
+        submitterPhone: phoneCheck.displayLocal,
         payload: {
           propertyTitle: property.title,
           preferredDate,
@@ -408,8 +413,11 @@ export const PropertyInspectionPage: React.FC = () => {
         },
       });
       navigate(`/track/${sub.trackingToken}`);
-    } catch {
-      showToast('تعذر تسجيل طلب المعاينة حالياً، يرجى المحاولة مرة أخرى', 'error');
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : 'تعذر تسجيل طلب المعاينة حالياً، يرجى المحاولة مرة أخرى',
+        'error'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -519,10 +527,14 @@ export const AgencyProfileAndAddPropertyPage: React.FC = () => {
       numericPrice <= 0 ||
       !Number.isFinite(numericArea) ||
       numericArea <= 0 ||
-      contactName.trim().length < 2 ||
-      contactPhone.trim().length < 8
+      contactName.trim().length < 2
     ) {
-      showToast('يرجى استكمال عنوان العقار (4 أحرف على الأقل)، السعر، المساحة، وبيانات التواصل', 'error');
+      showToast('يرجى استكمال عنوان العقار (4 أحرف على الأقل)، السعر، المساحة، واسم المعلن', 'error');
+      return;
+    }
+    const phoneCheck = validateEgyptPhone(contactPhone, { allowLandline: true });
+    if (!phoneCheck.valid) {
+      showToast(phoneCheck.error || 'يرجى إدخال رقم هاتف مصري صحيح', 'error');
       return;
     }
     setSubmitting(true);
@@ -531,7 +543,7 @@ export const AgencyProfileAndAddPropertyPage: React.FC = () => {
         type: 'add_property',
         title: `إضافة عقار: ${title.trim()}`,
         submitterName: contactName,
-        submitterPhone: contactPhone,
+        submitterPhone: phoneCheck.displayLocal,
         payload: {
           title: title.trim(),
           advertiserRole,
@@ -545,8 +557,11 @@ export const AgencyProfileAndAddPropertyPage: React.FC = () => {
         },
       });
       navigate(`/track/${sub.trackingToken}`);
-    } catch {
-      showToast('تعذر إرسال إعلان العقار حالياً، يرجى المحاولة مرة أخرى', 'error');
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : 'تعذر إرسال إعلان العقار حالياً، يرجى المحاولة مرة أخرى',
+        'error'
+      );
     } finally {
       setSubmitting(false);
     }

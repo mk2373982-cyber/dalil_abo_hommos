@@ -554,3 +554,162 @@ describe('merchantReport (zero-extra-read WhatsApp reports)', () => {
   });
 });
 
+describe('Cloudflare Pages Function: /api/orders/validate', () => {
+  it('verifies authoritative menu prices, rejects tampered prices (422), and rejects invalid items/quantities (400)', async () => {
+    const { onRequestPost } = await import('../../../functions/api/orders/validate');
+
+    const mockFirestoreDoc = {
+      fields: {
+        name: { stringValue: 'مشويات البركة' },
+        categorySlug: { stringValue: 'restaurants' },
+        deliveryFeeInTown: { integerValue: '15' },
+        deliveryFeeVillage: { integerValue: '25' },
+        menuItems: {
+          arrayValue: {
+            values: [
+              {
+                mapValue: {
+                  fields: {
+                    id: { stringValue: 'm-1' },
+                    name: { stringValue: 'كباب مشوي' },
+                    price: { integerValue: '120' },
+                  },
+                },
+              },
+            ],
+          },
+        },
+        menuPriceMap: {
+          mapValue: {
+            fields: {
+              'm-1': { integerValue: '120' },
+            },
+          },
+        },
+      },
+    };
+
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify(mockFirestoreDoc), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })) as typeof fetch;
+
+    try {
+      // 1. Valid order returns 200 + aligned OrderPricingSnapshot
+      const okReq = new Request('https://example.pages.dev/api/orders/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: 'rest-baraka',
+          deliveryArea: 'قرية بركة غطاس',
+          items: [{ menuItemId: 'm-1', quantity: 2, clientPrice: 120 }],
+          clientSubtotal: 240,
+          clientDeliveryFee: 25,
+          clientTotal: 265,
+        }),
+      });
+      const okRes = await onRequestPost({ request: okReq, env: {} });
+      assert.equal(okRes.status, 200);
+      const okJson = (await okRes.json()) as {
+        ok: boolean;
+        subtotal: number;
+        deliveryFee: number;
+        total: number;
+        pricingSnapshot: {
+          currency: string;
+          subtotal: number;
+          deliveryFee: number;
+          total: number;
+          pricingSource: string;
+          validatedAt: string;
+        };
+      };
+      assert.equal(okJson.ok, true);
+      assert.equal(okJson.subtotal, 240);
+      assert.equal(okJson.deliveryFee, 25);
+      assert.equal(okJson.total, 265);
+      assert.equal(okJson.pricingSnapshot.currency, 'EGP');
+      assert.equal(okJson.pricingSnapshot.pricingSource, 'api_validator');
+      assert.equal(okJson.pricingSnapshot.total, 265);
+
+      // 2. Tampered client unit price returns 422 with tampered: true
+      const tamperReq = new Request('https://example.pages.dev/api/orders/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: 'rest-baraka',
+          deliveryArea: 'شارع المحطة',
+          items: [{ menuItemId: 'm-1', quantity: 2, clientPrice: 5 }],
+          clientSubtotal: 10,
+          clientDeliveryFee: 15,
+          clientTotal: 25,
+        }),
+      });
+      const tamperRes = await onRequestPost({ request: tamperReq, env: {} });
+      assert.equal(tamperRes.status, 422);
+      const tamperJson = (await tamperRes.json()) as {
+        ok: boolean;
+        tampered: boolean;
+        code: string;
+        expected: { total: number };
+      };
+      assert.equal(tamperJson.ok, false);
+      assert.equal(tamperJson.tampered, true);
+      assert.equal(tamperJson.code, 'PRICE_MISMATCH');
+      assert.equal(tamperJson.expected.total, 255);
+
+      // 3. Unknown menu item rejected with 400
+      const unknownReq = new Request('https://example.pages.dev/api/orders/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: 'rest-baraka',
+          items: [{ menuItemId: 'fake-item', quantity: 1 }],
+        }),
+      });
+      const unknownRes = await onRequestPost({ request: unknownReq, env: {} });
+      assert.equal(unknownRes.status, 400);
+
+      // 4. Invalid restaurantId path traversal rejected with 400
+      const badIdReq = new Request('https://example.pages.dev/api/orders/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: '../admins/secret',
+          items: [{ menuItemId: 'm-1', quantity: 1 }],
+        }),
+      });
+      const badIdRes = await onRequestPost({ request: badIdReq, env: {} });
+      assert.equal(badIdRes.status, 400);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+
+describe('workingHours exact boundary & holiday checks', () => {
+  it('handles exact open boundary (open) and exact close boundary (closed) in Africa/Cairo', () => {
+    const schedule = {
+      sat: [{ open: '16:00', close: '21:00' }],
+    };
+    // Saturday 16:00 Cairo (14:00 UTC in winter) -> OPEN
+    assert.equal(
+      evaluateOpenStatus(undefined, undefined, new Date('2025-01-11T14:00:00Z'), schedule).state,
+      'open'
+    );
+    // Saturday 21:00 Cairo (19:00 UTC in winter) -> CLOSED
+    assert.equal(
+      evaluateOpenStatus(undefined, undefined, new Date('2025-01-11T19:00:00Z'), schedule).state,
+      'closed'
+    );
+    // Unparseable text with no schedule -> UNKNOWN (never guesses open)
+    assert.equal(
+      evaluateOpenStatus('حسب الحجز المسبق', true, new Date('2025-01-11T15:00:00Z')).state,
+      'unknown'
+    );
+  });
+});
+
+

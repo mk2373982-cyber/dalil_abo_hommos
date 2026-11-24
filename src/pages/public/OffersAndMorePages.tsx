@@ -33,7 +33,12 @@ import {
 } from '../../components/MotionEffects';
 import { PWAInstallButton } from '../../components/PWAInstallButton';
 import { ABU_HOMS_AREAS } from '../../data/seedData';
-import { buildWhatsAppUrl, getPlaceDetailRoute, isOfferExpired } from '../../lib/formatters';
+import {
+  buildWhatsAppUrl,
+  getPlaceDetailRoute,
+  isOfferExpired,
+  validateEgyptPhone,
+} from '../../lib/formatters';
 import { evaluateOpenStatus } from '../../lib/workingHours';
 import { readCitizenProfile } from '../../lib/citizenProfile';
 import { usePageSeo } from '../../lib/shareCard';
@@ -366,6 +371,41 @@ export const MorePage: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Direct WhatsApp Button for App Management (Raed El-Naggar) */}
+        <FadeInUp delay={0.14} y={12}>
+          <a
+            href={buildWhatsAppUrl(
+              '01206694895',
+              'السلام عليكم أ/ رائد النجار، أتواصل مع حضرتك بخصوص تطبيق دليل أبوحمص.'
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="للتواصل مع إدارة التطبيق أ/ رائد النجار عبر واتساب 01206694895"
+            className="group w-full min-h-[68px] px-4 py-4 sm:px-5 rounded-3xl bg-gradient-to-l from-[#0f5132] via-[#146c43] to-[#1da851] hover:brightness-105 text-white shadow-civic-2 border border-[#25d366]/35 flex items-center justify-between gap-3.5 transition-all active:scale-[0.985]"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="w-12 h-12 rounded-2xl bg-white/15 ring-1 ring-white/25 text-white flex items-center justify-center shrink-0">
+                <MessageCircle size={23} strokeWidth={2.2} />
+              </div>
+              <div className="min-w-0 space-y-0.5">
+                <p className="text-sm sm:text-[15px] font-extrabold text-white leading-snug">
+                  للتواصل مع إدارة التطبيق أ/ رائد النجار اضغط هنا
+                </p>
+                <p className="text-xs text-white/90 font-semibold flex items-center gap-1.5">
+                  <span>واتساب مباشر</span>
+                  <span aria-hidden="true">·</span>
+                  <span dir="ltr" className="tabular-nums font-bold">
+                    01206694895
+                  </span>
+                </p>
+              </div>
+            </div>
+            <span className="shrink-0 w-9 h-9 rounded-xl bg-white/15 group-hover:bg-white/25 flex items-center justify-center transition-colors">
+              <ChevronLeft size={18} className="text-white transition-transform group-hover:-translate-x-0.5" />
+            </span>
+          </a>
+        </FadeInUp>
       </div>
     </PublicRootLayout>
   );
@@ -437,15 +477,28 @@ export const SuggestPlacePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (name.trim().length < 2 || address.trim().length < 2 || submitterName.trim().length < 2) {
+      showToast('يرجى استكمال اسم النشاط والعنوان واسمك بشكل صحيح', 'error');
+      return;
+    }
+    const placePhoneCheck = validateEgyptPhone(phone, { allowLandline: true });
+    if (!placePhoneCheck.valid) {
+      showToast(placePhoneCheck.error || 'رقم هاتف النشاط غير صالح', 'error');
+      return;
+    }
+    let normalizedWhatsapp = '';
+    if (whatsapp.trim()) {
+      const waCheck = validateEgyptPhone(whatsapp, { allowLandline: false });
+      if (!waCheck.valid) {
+        showToast(waCheck.error || 'رقم الواتساب غير صالح', 'error');
+        return;
+      }
+      normalizedWhatsapp = waCheck.displayLocal;
+    }
     const effectiveSubmitterPhone = (submitterPhone || phone).trim();
-    if (
-      name.trim().length < 2 ||
-      address.trim().length < 2 ||
-      phone.trim().length < 8 ||
-      submitterName.trim().length < 2 ||
-      effectiveSubmitterPhone.length < 8
-    ) {
-      showToast('يرجى استكمال الاسم والعنوان ورقم الهاتف (8 أرقام على الأقل) بشكل صحيح', 'error');
+    const submitterPhoneCheck = validateEgyptPhone(effectiveSubmitterPhone, { allowLandline: true });
+    if (!submitterPhoneCheck.valid) {
+      showToast(submitterPhoneCheck.error || 'رقم هاتفك للتأكيد غير صالح', 'error');
       return;
     }
     setSubmitting(true);
@@ -454,12 +507,23 @@ export const SuggestPlacePage: React.FC = () => {
         type: 'suggest_place',
         title: `اقتراح إضافة: ${name.trim()}`,
         submitterName,
-        submitterPhone: effectiveSubmitterPhone,
-        payload: { name: name.trim(), categorySlug, area, address: address.trim(), phone: phone.trim(), whatsapp: whatsapp.trim(), hours: hours.trim() },
+        submitterPhone: submitterPhoneCheck.displayLocal,
+        payload: {
+          name: name.trim(),
+          categorySlug,
+          area,
+          address: address.trim(),
+          phone: placePhoneCheck.displayLocal,
+          whatsapp: normalizedWhatsapp,
+          hours: hours.trim(),
+        },
       });
       navigate(`/track/${sub.trackingToken}`);
-    } catch {
-      showToast('تعذر إرسال الطلب حالياً، يرجى التحقق من البيانات والمحاولة مرة أخرى', 'error');
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : 'تعذر إرسال الطلب حالياً، يرجى التحقق من البيانات والمحاولة مرة أخرى',
+        'error'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -607,9 +671,23 @@ export const ReportPlacePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (reason.trim().length < 2 || submitterName.trim().length < 2 || submitterPhone.trim().length < 8) {
-      showToast('يرجى كتابة تفاصيل التعديل واسمك ورقم هاتفك بشكل صحيح', 'error');
+    if (reason.trim().length < 2 || submitterName.trim().length < 2) {
+      showToast('يرجى كتابة تفاصيل التعديل واسمك بشكل صحيح', 'error');
       return;
+    }
+    const submitterCheck = validateEgyptPhone(submitterPhone, { allowLandline: true });
+    if (!submitterCheck.valid) {
+      showToast(submitterCheck.error || 'رقم هاتفك غير صالح', 'error');
+      return;
+    }
+    let cleanedNewPhone = '';
+    if (newPhone.trim()) {
+      const newPhoneCheck = validateEgyptPhone(newPhone, { allowLandline: true });
+      if (!newPhoneCheck.valid) {
+        showToast(newPhoneCheck.error || 'رقم الهاتف المقترح غير صالح', 'error');
+        return;
+      }
+      cleanedNewPhone = newPhoneCheck.displayLocal;
     }
     setSubmitting(true);
     try {
@@ -618,13 +696,16 @@ export const ReportPlacePage: React.FC = () => {
         targetPlaceId: place?.id,
         title: place ? `تعديل بيانات: ${place.name}` : 'بلاغ تعديل بيانات مكان',
         submitterName,
-        submitterPhone,
+        submitterPhone: submitterCheck.displayLocal,
         previousData: place ? { phone: place.phone, hours: place.hours || '' } : undefined,
-        payload: { phone: newPhone, hours: newHours, reason },
+        payload: { phone: cleanedNewPhone, hours: newHours.trim(), reason: reason.trim() },
       });
       navigate(`/track/${sub.trackingToken}`);
-    } catch {
-      showToast('تعذر إرسال البلاغ حالياً، يرجى المحاولة مرة أخرى', 'error');
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : 'تعذر إرسال البلاغ حالياً، يرجى المحاولة مرة أخرى',
+        'error'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -849,8 +930,13 @@ export const AdvertisePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (businessName.trim().length < 2 || ownerName.trim().length < 2 || phone.trim().length < 8) {
-      showToast('يرجى استكمال بيانات النشاط والمسؤول ورقم الهاتف بشكل صحيح', 'error');
+    if (businessName.trim().length < 2 || ownerName.trim().length < 2) {
+      showToast('يرجى استكمال بيانات النشاط والمسؤول بشكل صحيح', 'error');
+      return;
+    }
+    const phoneCheck = validateEgyptPhone(phone, { allowLandline: true });
+    if (!phoneCheck.valid) {
+      showToast(phoneCheck.error || 'رقم الهاتف غير صالح', 'error');
       return;
     }
     setSubmitting(true);
@@ -859,12 +945,15 @@ export const AdvertisePage: React.FC = () => {
         type: 'advertise',
         title: `طلب إعلان تجاري: ${businessName.trim()}`,
         submitterName: ownerName,
-        submitterPhone: phone,
+        submitterPhone: phoneCheck.displayLocal,
         payload: { businessName: businessName.trim(), goal },
       });
       navigate(`/track/${sub.trackingToken}`);
-    } catch {
-      showToast('تعذر إرسال طلب الإعلان حالياً، يرجى المحاولة مرة أخرى', 'error');
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : 'تعذر إرسال طلب الإعلان حالياً، يرجى المحاولة مرة أخرى',
+        'error'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -985,9 +1074,21 @@ export const ContactPWAPage: React.FC = () => {
         <FadeInUp delay={0.08}>
           <div className="bg-white border border-[#e4ece7] rounded-3xl p-5 shadow-civic-1 space-y-3">
             <h3 className="text-sm font-bold text-[#003820]">قنوات الدعم المباشر</h3>
+            <a
+              href={buildWhatsAppUrl(
+                '01206694895',
+                'السلام عليكم أ/ رائد النجار، أتواصل مع حضرتك بخصوص تطبيق دليل أبوحمص.'
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full min-h-[54px] px-4 py-3 bg-gradient-to-l from-[#0f5132] via-[#146c43] to-[#1da851] hover:brightness-105 text-white text-xs sm:text-sm font-extrabold rounded-2xl flex items-center justify-center gap-2 shadow-civic-1 transition-all active:scale-[0.985]"
+            >
+              <MessageCircle size={18} />
+              <span>للتواصل مع إدارة التطبيق أ/ رائد النجار اضغط هنا</span>
+            </a>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <a
-                href={buildWhatsAppUrl(settings.supportWhatsapp || '201001234567')}
+                href={buildWhatsAppUrl(settings.supportWhatsapp || '01206694895')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="min-h-[48px] bg-[#003820] text-white text-xs font-bold rounded-2xl flex items-center justify-center gap-2"
@@ -996,7 +1097,7 @@ export const ContactPWAPage: React.FC = () => {
                 دعم واتساب دليل أبوحمص
               </a>
               <a
-                href={`tel:${settings.supportPhone || '01001234567'}`}
+                href={`tel:${settings.supportPhone || '01206694895'}`}
                 className="min-h-[48px] bg-[#e6f4ec] text-[#0f5132] text-xs font-bold rounded-2xl flex items-center justify-center gap-2"
               >
                 <Phone size={16} />

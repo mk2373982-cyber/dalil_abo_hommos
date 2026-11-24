@@ -252,7 +252,7 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["orderCode", "restaurantId", "restaurantName", "customerName", "customerPhone", "deliveryAddress", "items", "subtotal", "deliveryFee", "total", "status"]
+      "required": ["orderCode", "restaurantId", "restaurantName", "customerName", "customerPhone", "deliveryAddress", "items", "subtotal", "deliveryFee", "total", "pricingSnapshot", "status"]
     },
     "DeliveryRide": {
       "title": "DeliveryRide",
@@ -377,6 +377,8 @@
         "supportPhone": { "type": "string", "maxLength": 24 },
         "supportWhatsapp": { "type": "string", "maxLength": 24 },
         "visitsCount": { "type": "number" },
+        "demoMode": { "type": "boolean" },
+        "pwaInstallPromptEnabled": { "type": "boolean" },
         "areas": { "type": "array" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
@@ -418,7 +420,7 @@
     "/finance_config/{configId}": { "schema": { "$ref": "#/entities/FinanceConfig" }, "description": "Partner profit-split config" },
     "/finance_settlements/{settlementId}": { "schema": { "$ref": "#/entities/FinanceSettlement" }, "description": "Historical locked settlements" },
     "/analytics_events/{eventId}": { "schema": { "$ref": "#/entities/AnalyticsEvent" }, "description": "Visits, clicks, and zero-result searches" },
-    "/settings/public": { "schema": { "$ref": "#/entities/PublicSettings" }, "description": "Global civic settings" },
+    "/public_settings/main": { "schema": { "$ref": "#/entities/PublicSettings" }, "description": "Global civic settings" },
     "/admins/{uid}": { "schema": { "$ref": "#/entities/AdminUser" }, "description": "Authorized admin & partner accounts" }
   }
 }
