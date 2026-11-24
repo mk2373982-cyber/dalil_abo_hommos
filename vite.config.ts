@@ -23,7 +23,7 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
+        includeAssets: ['logo.png'],
         manifest: {
           id: '/',
           name: 'دليل أبوحمص',
@@ -39,19 +39,19 @@ export default defineConfig(({mode}) => {
           scope: '/',
           icons: [
             {
-              src: 'pwa-192x192.png',
+              src: 'logo.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: 'pwa-512x512.png',
+              src: 'logo.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: 'pwa-maskable-512x512.png',
+              src: 'logo.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
@@ -82,168 +82,3 @@ export default defineConfig(({mode}) => {
                 cacheableResponse: {
                   statuses: [0, 200],
                 },
-              },
-            },
-            // 3. Same-origin scripts, styles & lazy chunks (production assets only)
-            {
-              urlPattern: ({ request, url, sameOrigin }) =>
-                sameOrigin &&
-                !url.pathname.startsWith('/@') &&
-                !url.pathname.startsWith('/__') &&
-                (request.destination === 'script' ||
-                  request.destination === 'style' ||
-                  request.destination === 'worker'),
-              handler: 'StaleWhileRevalidate',
-              options: {
-                cacheName: 'static-resources-cache',
-                expiration: {
-                  maxEntries: 80,
-                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-                  purgeOnQuotaError: true,
-                },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-              },
-            },
-            // 4. Public Firestore REST Document Reads (GET only; never intercepts Listen/Write channels)
-            {
-              urlPattern: /^https:\/\/firestore\.googleapis\.com\/v1\/projects\/.*\/documents\/.*/i,
-              method: 'GET',
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'firestore-documents-cache',
-                networkTimeoutSeconds: 4,
-                expiration: {
-                  maxEntries: 200,
-                  maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
-                  purgeOnQuotaError: true,
-                },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-              },
-            },
-            // 5. Same-origin API GET responses (if any)
-            {
-              urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/api/'),
-              method: 'GET',
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'api-data-cache',
-                networkTimeoutSeconds: 4,
-                expiration: {
-                  maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
-                  purgeOnQuotaError: true,
-                },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-              },
-            },
-            // 6. Google Fonts Stylesheets
-            {
-              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-              handler: 'StaleWhileRevalidate',
-              options: {
-                cacheName: 'google-fonts-stylesheets',
-                expiration: {
-                  maxEntries: 20,
-                  maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-                },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-              },
-            },
-            // 7. Google Fonts Webfonts
-            {
-              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'google-fonts-webfonts',
-                expiration: {
-                  maxEntries: 30,
-                  maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-                },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-              },
-            },
-          ],
-        },
-        devOptions: {
-          enabled: false,
-        },
-      }),
-      // Copies src/assets into dist/ so root-relative URLs like
-      // "/src/assets/images/..." (e.g. generate_image output) still resolve
-      // in production builds. Do not remove.
-      {
-        name: 'copy-unbundled-src-assets',
-        apply: 'build',
-        closeBundle(error?: Error): void {
-          if (error) {
-            return;
-          }
-          const rootDir = import.meta.dirname;
-          const distDir = path.resolve(rootDir, 'dist');
-          const srcAssets = path.resolve(rootDir, 'src/assets');
-          const distAssets = path.resolve(distDir, 'src/assets');
-          if (fs.existsSync(distDir) && fs.existsSync(srcAssets)) {
-            fs.cpSync(srcAssets, distAssets, {recursive: true, force: true});
-          }
-        },
-      },
-    ],
-    build: {
-      rolldownOptions: {
-        output: {
-          codeSplitting: {
-            groups: [
-              {
-                name: 'firebase-firestore',
-                test: /node_modules[\\/]@firebase[\\/]firestore/,
-                priority: 25,
-              },
-              {
-                name: 'firebase-auth',
-                test: /node_modules[\\/](firebase|@firebase)/,
-                priority: 20,
-              },
-              {
-                name: 'react-vendor',
-                test: /node_modules[\\/](react|react-dom|react-router|scheduler)/,
-                priority: 15,
-              },
-              {
-                name: 'motion-vendor',
-                test: /node_modules[\\/](motion|framer-motion)/,
-                priority: 10,
-              },
-              {
-                name: 'icons-vendor',
-                test: /node_modules[\\/]lucide-react/,
-                priority: 10,
-              },
-            ],
-          },
-        },
-      },
-    },
-    resolve: {
-      alias: {
-        '@': path.resolve(import.meta.dirname, '.'),
-      },
-    },
-    server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modify—file watching is disabled to prevent flickering during agent edits.
-      hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
-    },
-  };
-});

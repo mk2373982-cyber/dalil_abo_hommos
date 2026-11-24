@@ -32,7 +32,7 @@
       property="og:description"
       content="احجز دورك في العيادة، اطلب من مطاعم أبوحمص، ابحث عن عقار أو حرفي شاطر، وتابع التخفيضات وأرقام الطوارئ لحظة بلحظة."
     />
-    <meta property="og:image" content="https://dalil-abo-hommos.mk2373982.workers.dev/pwa-512x512.png" />
+    <meta property="og:image" content="https://dalil-abo-hommos.mk2373982.workers.dev/logo.png" />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
     <meta property="og:image:alt" content="شعار تطبيق دليل أبوحمص" />
@@ -43,15 +43,15 @@
       name="twitter:description"
       content="عيادات، صيدليات، مطاعم، حرفيين، عقارات، دليفري، وطوارئ 24 ساعة لأهالي أبوحمص والقرى المجاورة."
     />
-    <meta name="twitter:image" content="https://dalil-abo-hommos.mk2373982.workers.dev/pwa-512x512.png" />
+    <meta name="twitter:image" content="https://dalil-abo-hommos.mk2373982.workers.dev/logo.png" />
 
     <meta name="theme-color" content="#0f5132" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="دليل أبوحمص" />
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -60,6 +60,57 @@
       rel="stylesheet"
     />
 
+    <style>
+      #app-splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #f7faf8;
+        font-family: 'IBM Plex Sans Arabic', sans-serif;
+        z-index: 9999;
+      }
+      .splash-loader {
+        position: relative;
+        width: 128px;
+        height: 128px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .splash-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 4px solid #e2ece7;
+        border-top-color: #0f5132;
+        border-right-color: #e6b800;
+        animation: splash-spin 0.9s linear infinite;
+      }
+      .splash-logo {
+        width: 108px;
+        height: 108px;
+        border-radius: 50%;
+        object-fit: cover;
+        animation: splash-pulse 1.6s ease-in-out infinite;
+      }
+      .splash-text {
+        margin-top: 18px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #0f5132;
+      }
+      @keyframes splash-spin {
+        to { transform: rotate(360deg); }
+      }
+      @keyframes splash-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.04); }
+      }
+    </style>
+
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -67,7 +118,7 @@
         "name": "دليل أبوحمص",
         "alternateName": ["Dalil Abu Homs", "دليل أبو حمص", "دليل مركز أبوحمص"],
         "url": "https://dalil-abo-hommos.mk2373982.workers.dev/",
-        "image": "https://dalil-abo-hommos.mk2373982.workers.dev/pwa-512x512.png",
+        "image": "https://dalil-abo-hommos.mk2373982.workers.dev/logo.png",
         "description": "الدليل المجتمعي والخدمي الموحد لأهالي مركز ومدينة أبوحمص بمحافظة البحيرة — عيادات، مطاعم، عقارات، مكافحين، توصيل، وطوارئ 24 ساعة.",
         "applicationCategory": "LifestyleApplication",
         "operatingSystem": "Web, Android, iOS",
@@ -89,7 +140,15 @@
     </script>
   </head>
   <body class="bg-[#f7faf8] text-[#181c1c] antialiased selection:bg-[#9ff1bd] selection:text-[#003820]">
-    <div id="root"></div>
+    <div id="root">
+      <div id="app-splash">
+        <div class="splash-loader">
+          <div class="splash-ring"></div>
+          <img src="/logo.png" alt="دليل أبوحمص" class="splash-logo" />
+        </div>
+        <p class="splash-text">جاري تحميل دليل أبوحمص...</p>
+      </div>
+    </div>
     <noscript>
       <div style="padding: 20px; text-align: center; direction: rtl;">
         <h1>دليل أبوحمص — الدليل المجتمعي والخدمي الموحد لمركز ومدينة أبوحمص</h1>

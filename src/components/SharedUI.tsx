@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -18,7 +18,6 @@ import {
   Layers,
   LogIn,
   LogOut,
-  MapPin,
   Megaphone,
   Menu,
   MessageCircle,
@@ -82,6 +81,35 @@ export const PublicRootLayout: React.FC<{
 }> = ({ children, hideBottomBar = false }) => {
   const { settings } = useApp();
   const location = useLocation();
+  const navigate = useNavigate();
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (tapTimerRef.current) {
+        window.clearTimeout(tapTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleBrandClick = (e: React.MouseEvent) => {
+    tapCountRef.current += 1;
+    if (tapTimerRef.current) {
+      window.clearTimeout(tapTimerRef.current);
+    }
+
+    if (tapCountRef.current >= 5) {
+      e.preventDefault();
+      tapCountRef.current = 0;
+      navigate('/admin');
+      return;
+    }
+
+    tapTimerRef.current = window.setTimeout(() => {
+      tapCountRef.current = 0;
+    }, 2000);
+  };
 
   const navItems = [
     { to: '/home', label: 'الرئيسية', icon: Home },
@@ -100,14 +128,17 @@ export const PublicRootLayout: React.FC<{
       {/* Unified Dual Floating Pill Header (v3.1) */}
       <header className="sticky top-0 z-30 bg-[#f7faf8]/90 backdrop-blur-md border-b border-[#e4ece7]/70">
         <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
-          {/* Right Capsule: Brand Mark */}
+          {/* Right Capsule: Brand Mark (5 quick taps opens /admin) */}
           <Link
             to="/home"
+            onClick={handleBrandClick}
             className="flex items-center gap-2.5 bg-white border border-[#e4ece7] rounded-full px-3.5 py-2 shadow-civic-1 active:scale-95 transition-transform whitespace-nowrap shrink-0"
           >
-            <div className="w-8 h-8 rounded-full bg-[#0f5132] text-white flex items-center justify-center shrink-0">
-              <MapPin size={16} />
-            </div>
+            <img
+              src="/logo.png"
+              alt="دليل أبوحمص"
+              className="w-8 h-8 rounded-full object-cover shrink-0 border border-[#e4ece7]"
+            />
             <span className="text-sm sm:text-base font-bold text-[#003820] tracking-tight">
               دليل أبوحمص
             </span>
