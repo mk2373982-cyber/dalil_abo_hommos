@@ -25,17 +25,19 @@ import { CivicImage, QRCodeCard, StackLayout } from '../../components/SharedUI';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   AnimatedEmptyState,
-  AnimatedFilterChip,
   AnimatedListContainer,
   AnimatedListItem,
   FadeInUp,
 } from '../../components/MotionEffects';
 import {
-  isPlaceSubscribedToFilter,
   PlacePromoBadges,
-  PromoFilterChipsBar,
   sortPlacesByPromoPriority,
 } from '../../lib/promoFilters';
+import {
+  applyCategoryFilterSelection,
+  CategoryFilterChipsBar,
+  getEffectiveCategoryFilters,
+} from '../../lib/categoryFilters';
 import { ABU_HOMS_AREAS } from '../../data/seedData';
 import { buildWhatsAppUrl, validateEgyptPhone } from '../../lib/formatters';
 import { readCitizenProfile } from '../../lib/citizenProfile';
@@ -43,21 +45,36 @@ import { usePageSeo } from '../../lib/shareCard';
 import type { DeliveryRide } from '../../types';
 
 export const HeroesListPage: React.FC = () => {
-  const { places, activePromoFilters } = useApp();
-  const [selectedPromoId, setSelectedPromoId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'carpentry' | 'beauty'>('all');
+  const { categories, places, activePromoFilters } = useApp();
+  const [selectedFilterId, setSelectedFilterId] = useState<string | null>(null);
 
-  const baseHeroes = useMemo(() => places.filter((p) => p.categorySlug === 'heroes'), [places]);
+  const heroesCategory = useMemo(
+    () => categories.find((c) => c.slug === 'heroes'),
+    [categories]
+  );
+
+  const baseHeroes = useMemo(
+    () =>
+      places.filter(
+        (p) => p.categorySlug === 'heroes' || (heroesCategory && p.categoryId === heroesCategory.id)
+      ),
+    [places, heroesCategory]
+  );
+
+  const { filters: effectiveFilters } = useMemo(
+    () => getEffectiveCategoryFilters(heroesCategory, baseHeroes),
+    [heroesCategory, baseHeroes]
+  );
 
   const heroes = useMemo(() => {
-    let list = selectedPromoId
-      ? baseHeroes.filter((h) => isPlaceSubscribedToFilter(h, selectedPromoId))
-      : [...baseHeroes];
-    if (filter === 'carpentry') list = list.filter((h) => (h.specialty || '').includes('نجار'));
-    if (filter === 'beauty')
-      list = list.filter((h) => (h.specialty || '').includes('تجميل') || (h.specialty || '').includes('ميكب'));
+    const list = applyCategoryFilterSelection(
+      baseHeroes,
+      selectedFilterId,
+      effectiveFilters,
+      activePromoFilters
+    );
     return sortPlacesByPromoPriority(list, activePromoFilters);
-  }, [baseHeroes, selectedPromoId, filter, activePromoFilters]);
+  }, [baseHeroes, selectedFilterId, effectiveFilters, activePromoFilters]);
 
   return (
     <StackLayout
@@ -102,33 +119,15 @@ export const HeroesListPage: React.FC = () => {
           </div>
         </FadeInUp>
 
-        {/* Dynamic Admin Promo Filters */}
-        <PromoFilterChipsBar
-          promoFilters={activePromoFilters}
-          selectedFilterId={selectedPromoId}
-          onSelect={setSelectedPromoId}
+        {/* Dynamic Category Filters Bar (Fixed VIP & الأكثر تميزاً + Admin Custom / Auto Filters) */}
+        <CategoryFilterChipsBar
+          category={heroesCategory}
           placesPool={baseHeroes}
+          promoFilters={activePromoFilters}
+          selectedFilterId={selectedFilterId}
+          onSelect={setSelectedFilterId}
           allLabel="كل الحرفيين"
         />
-
-        {/* Specialty Filter */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-          {[
-            { id: 'all', label: 'الكل' },
-            { id: 'carpentry', label: 'نجارة وأثاث' },
-            { id: 'beauty', label: 'تجميل ومشاريع منزلية' },
-          ].map((t) => (
-            <AnimatedFilterChip
-              key={t.id}
-              onClick={() => setFilter(t.id as typeof filter)}
-              className={`min-h-[40px] px-4 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
-                filter === t.id ? 'bg-[#003820] text-white' : 'bg-white border border-[#e4ece7] text-[#404942]'
-              }`}
-            >
-              {t.label}
-            </AnimatedFilterChip>
-          ))}
-        </div>
 
         {/* Hero Cards */}
         {heroes.length === 0 ? (

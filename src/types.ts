@@ -27,6 +27,23 @@ export interface TimeSlot {
 
 export type WeeklySchedule = Partial<Record<WeekdayKey, TimeSlot[]>>;
 
+export type CategoryFilterMatchField =
+  | 'specialty'
+  | 'subCategory'
+  | 'area'
+  | 'tags'
+  | 'hasDelivery'
+  | 'is24Hours';
+
+export interface CategoryFilter {
+  id: string;
+  label: string;
+  matchField: CategoryFilterMatchField;
+  matchValue: string;
+  order: number;
+  enabled: boolean;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -39,6 +56,7 @@ export interface Category {
   order: number;
   active: boolean;
   description?: string;
+  categoryFilters?: CategoryFilter[];
   updatedAt?: string;
 }
 
@@ -85,6 +103,7 @@ export interface Place {
   categoryId: string;
   categorySlug: string;
   specialty?: string;
+  subCategory?: string;
   area: string;
   address: string;
   lat?: number;
@@ -101,6 +120,7 @@ export interface Place {
   hours?: string;
   workingSchedule?: WeeklySchedule;
   is24Hours?: boolean;
+  hasDelivery?: boolean;
   consultationFee?: number;
   experienceYears?: number;
   qrCode?: string;
@@ -177,6 +197,8 @@ export interface Offer {
   imageUrl?: string;
   active: boolean;
   featured?: boolean;
+  vip?: boolean;
+  tags?: string[];
   isDemoData?: boolean;
 }
 
@@ -398,6 +420,7 @@ export interface PublicSettings {
   supportWhatsapp?: string;
   visitsCount: number;
   areas?: string[];
+  offersFilters?: CategoryFilter[];
   demoMode?: boolean;
   pwaInstallPromptEnabled?: boolean;
   updatedAt?: string;

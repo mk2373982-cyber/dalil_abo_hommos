@@ -34,11 +34,14 @@ import {
   FadeInUp,
 } from '../../components/MotionEffects';
 import {
-  isPlaceSubscribedToFilter,
   PlacePromoBadges,
-  PromoFilterChipsBar,
   sortPlacesByPromoPriority,
 } from '../../lib/promoFilters';
+import {
+  applyCategoryFilterSelection,
+  CategoryFilterChipsBar,
+  getEffectiveCategoryFilters,
+} from '../../lib/categoryFilters';
 import { matchesArabicQuery } from '../../lib/arabicSearch';
 import { evaluateOpenStatus, formatWeeklyScheduleSummary, getCairoDateString } from '../../lib/workingHours';
 import { readCitizenProfile } from '../../lib/citizenProfile';
@@ -53,32 +56,39 @@ import { buildWhatsAppUrl, validateEgyptPhone } from '../../lib/formatters';
 import type { ClinicQueue, ClinicTicket } from '../../types';
 
 export const MedicalListPage: React.FC = () => {
-  const { places, activePromoFilters, clinicQueues, logAnalyticsEvent } = useApp();
+  const { categories, places, activePromoFilters, clinicQueues, logAnalyticsEvent } = useApp();
   const [search, setSearch] = useState('');
-  const [selectedPromoId, setSelectedPromoId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'pediatrics' | 'obgyn' | 'dental'>('all');
+  const [selectedFilterId, setSelectedFilterId] = useState<string | null>(null);
 
-  const baseDoctors = useMemo(() => places.filter((p) => p.categorySlug === 'medical'), [places]);
+  const medicalCategory = useMemo(
+    () => categories.find((c) => c.slug === 'medical'),
+    [categories]
+  );
+
+  const baseDoctors = useMemo(
+    () => places.filter((p) => p.categorySlug === 'medical' || (medicalCategory && p.categoryId === medicalCategory.id)),
+    [places, medicalCategory]
+  );
+
+  const { filters: effectiveFilters } = useMemo(
+    () => getEffectiveCategoryFilters(medicalCategory, baseDoctors),
+    [medicalCategory, baseDoctors]
+  );
 
   const doctors = useMemo(() => {
-    let list = [...baseDoctors];
-    if (selectedPromoId) {
-      list = list.filter((d) => isPlaceSubscribedToFilter(d, selectedPromoId));
-    }
-    if (filter === 'pediatrics') {
-      list = list.filter((d) => (d.specialty || '').includes('الأطفال'));
-    } else if (filter === 'obgyn') {
-      list = list.filter((d) => (d.specialty || '').includes('النساء'));
-    } else if (filter === 'dental') {
-      list = list.filter((d) => (d.specialty || '').includes('الأسنان'));
-    }
+    let list = applyCategoryFilterSelection(
+      baseDoctors,
+      selectedFilterId,
+      effectiveFilters,
+      activePromoFilters
+    );
     if (search.trim()) {
       list = list.filter((d) =>
-        matchesArabicQuery(`${d.name} ${d.specialty || ''} ${d.area} ${d.address}`, search)
+        matchesArabicQuery(`${d.name} ${d.specialty || ''} ${d.subCategory || ''} ${d.area} ${d.address}`, search)
       );
     }
     return sortPlacesByPromoPriority(list, activePromoFilters);
-  }, [baseDoctors, selectedPromoId, filter, search, activePromoFilters]);
+  }, [baseDoctors, selectedFilterId, effectiveFilters, search, activePromoFilters]);
 
   return (
     <StackLayout
@@ -123,36 +133,15 @@ export const MedicalListPage: React.FC = () => {
           </div>
         </FadeInUp>
 
-        {/* Dynamic Admin Promo Filters Bar */}
-        <PromoFilterChipsBar
-          promoFilters={activePromoFilters}
-          selectedFilterId={selectedPromoId}
-          onSelect={setSelectedPromoId}
+        {/* Dynamic Category Filters Bar (Fixed VIP & الأكثر تميزاً + Admin Custom / Auto Filters) */}
+        <CategoryFilterChipsBar
+          category={medicalCategory}
           placesPool={baseDoctors}
+          promoFilters={activePromoFilters}
+          selectedFilterId={selectedFilterId}
+          onSelect={setSelectedFilterId}
           allLabel="كل الأطباء"
         />
-
-        {/* Specialty Filter Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-          {[
-            { id: 'all', label: 'كل التخصصات' },
-            { id: 'pediatrics', label: 'أطفال وحديثي ولادة' },
-            { id: 'obgyn', label: 'نساء وتوليد' },
-            { id: 'dental', label: 'أسنان' },
-          ].map((tab) => (
-            <AnimatedFilterChip
-              key={tab.id}
-              onClick={() => setFilter(tab.id as typeof filter)}
-              className={`min-h-[38px] px-4 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
-                filter === tab.id
-                  ? 'bg-[#003820] text-white'
-                  : 'bg-white border border-[#e4ece7] text-[#404942]'
-              }`}
-            >
-              {tab.label}
-            </AnimatedFilterChip>
-          ))}
-        </div>
 
         {/* Doctor Cards */}
         {doctors.length === 0 ? (

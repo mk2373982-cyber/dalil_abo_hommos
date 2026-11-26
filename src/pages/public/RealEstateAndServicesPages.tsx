@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   BadgeCheck,
@@ -32,11 +32,16 @@ import {
 } from '../../components/MotionEffects';
 import { DynamicCategoryIcon } from '../../lib/icons';
 import {
-  isPlaceSubscribedToFilter,
   PlacePromoBadges,
-  PromoFilterChipsBar,
   sortPlacesByPromoPriority,
 } from '../../lib/promoFilters';
+import {
+  applyCategoryFilterSelection,
+  applyPropertyCategoryFilterSelection,
+  CategoryFilterChipsBar,
+  getEffectiveCategoryFilters,
+  PropertyCategoryFilterChipsBar,
+} from '../../lib/categoryFilters';
 import { ABU_HOMS_AREAS } from '../../data/seedData';
 import { buildWhatsAppUrl, validateEgyptPhone } from '../../lib/formatters';
 import { matchesArabicQuery } from '../../lib/arabicSearch';
@@ -45,14 +50,35 @@ import { readCitizenProfile } from '../../lib/citizenProfile';
 import { usePageSeo } from '../../lib/shareCard';
 
 export const RealEstateListPage: React.FC = () => {
-  const { properties, agencies } = useApp();
+  const { categories, properties, agencies } = useApp();
   const [listingType, setListingType] = useState<'all' | 'sale' | 'rent'>('all');
   const [propType, setPropType] = useState<'all' | 'apartment' | 'shop' | 'land'>('all');
+  const [selectedCategoryFilterId, setSelectedCategoryFilterId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
+  const realEstateCategory = useMemo(
+    () => categories.find((c) => c.slug === 'real-estate'),
+    [categories]
+  );
+
+  const approvedProperties = useMemo(
+    () => properties.filter((p) => p.status === 'approved'),
+    [properties]
+  );
+
+  const customRealEstateFilters = useMemo(() => {
+    const manual = realEstateCategory?.categoryFilters;
+    if (!Array.isArray(manual)) return [];
+    return [...manual].filter((f) => f.enabled).sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+  }, [realEstateCategory]);
+
   const filtered = useMemo(() => {
-    return properties.filter((p) => {
-      if (p.status !== 'approved') return false;
+    const afterCatFilter = applyPropertyCategoryFilterSelection(
+      approvedProperties,
+      selectedCategoryFilterId,
+      customRealEstateFilters
+    );
+    return afterCatFilter.filter((p) => {
       if (listingType !== 'all' && p.listingType !== listingType) return false;
       if (propType !== 'all' && p.propertyType !== propType) return false;
       if (search.trim()) {
@@ -60,7 +86,7 @@ export const RealEstateListPage: React.FC = () => {
       }
       return true;
     });
-  }, [properties, listingType, propType, search]);
+  }, [approvedProperties, selectedCategoryFilterId, customRealEstateFilters, listingType, propType, search]);
 
   return (
     <PublicRootLayout>
@@ -96,6 +122,13 @@ export const RealEstateListPage: React.FC = () => {
                 className="w-full min-h-[48px] pr-11 pl-4 rounded-2xl bg-white border border-[#e4ece7] text-sm focus:border-[#0f5132] focus:outline-none"
               />
             </div>
+
+            <PropertyCategoryFilterChipsBar
+              category={realEstateCategory}
+              propertiesPool={approvedProperties}
+              selectedFilterId={selectedCategoryFilterId}
+              onSelect={setSelectedCategoryFilterId}
+            />
 
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
               {[
@@ -771,25 +804,48 @@ export const GenericServiceCategoryPage: React.FC = () => {
   const { categorySlug } = useParams();
   const { categories, activePromoFilters, places, logAnalyticsEvent } = useApp();
   const [search, setSearch] = useState('');
-  const [selectedPromoId, setSelectedPromoId] = useState<string | null>(null);
+  const [selectedFilterId, setSelectedFilterId] = useState<string | null>(null);
 
-  const category = categories.find((c) => c.slug === categorySlug);
+  useEffect(() => {
+    setSelectedFilterId(null);
+    setSearch('');
+  }, [categorySlug]);
+
+  const category = useMemo(
+    () => categories.find((c) => c.slug === categorySlug),
+    [categories, categorySlug]
+  );
+
   const baseCategoryPlaces = useMemo(
-    () => places.filter((p) => p.categorySlug === categorySlug),
-    [places, categorySlug]
+    () =>
+      places.filter(
+        (p) => p.categorySlug === categorySlug || (category && p.categoryId === category.id)
+      ),
+    [places, categorySlug, category]
+  );
+
+  const { filters: effectiveFilters } = useMemo(
+    () => getEffectiveCategoryFilters(category, baseCategoryPlaces),
+    [category, baseCategoryPlaces]
   );
 
   const categoryPlaces = useMemo(() => {
-    let list = selectedPromoId
-      ? baseCategoryPlaces.filter((p) => isPlaceSubscribedToFilter(p, selectedPromoId))
-      : [...baseCategoryPlaces];
+    let list = applyCategoryFilterSelection(
+      baseCategoryPlaces,
+      selectedFilterId,
+      effectiveFilters,
+      activePromoFilters
+    );
     if (search.trim()) {
       list = list.filter((p) =>
-        matchesArabicQuery(`${p.name} ${p.specialty || ''} ${p.area} ${p.address}`, search)
+        matchesArabicQuery(
+          `${p.name} ${p.specialty || ''} ${p.subCategory || ''} ${p.area} ${p.address}`,
+          search
+        )
       );
     }
     return sortPlacesByPromoPriority(list, activePromoFilters);
-  }, [baseCategoryPlaces, selectedPromoId, search, activePromoFilters]);
+  }, [baseCategoryPlaces, selectedFilterId, effectiveFilters, search, activePromoFilters]);
 
   return (
     <StackLayout
@@ -817,7 +873,7 @@ export const GenericServiceCategoryPage: React.FC = () => {
                 </div>
               </div>
               <Link
-                to="/places/suggest"
+                to={`/places/suggest?category=${encodeURIComponent(category.slug)}`}
                 className="min-h-[40px] px-3.5 rounded-xl bg-[#e6f4ec] text-[#003820] text-xs font-bold inline-flex items-center gap-1 shrink-0"
               >
                 <Plus size={14} />
@@ -840,11 +896,12 @@ export const GenericServiceCategoryPage: React.FC = () => {
           </div>
         </FadeInUp>
 
-        <PromoFilterChipsBar
-          promoFilters={activePromoFilters}
-          selectedFilterId={selectedPromoId}
-          onSelect={setSelectedPromoId}
+        <CategoryFilterChipsBar
+          category={category}
           placesPool={baseCategoryPlaces}
+          promoFilters={activePromoFilters}
+          selectedFilterId={selectedFilterId}
+          onSelect={setSelectedFilterId}
           allLabel="الكل"
         />
 
@@ -852,13 +909,17 @@ export const GenericServiceCategoryPage: React.FC = () => {
           <AnimatedEmptyState className="bg-white border border-[#e4ece7] rounded-3xl p-8 text-center space-y-3">
             <Store size={32} className="mx-auto text-[#707971]" />
             <h3 className="text-sm font-bold text-[#181c1c]">
-              لا توجد منشآت مضافة في «{category?.name || categorySlug}» بعد
+              {selectedFilterId
+                ? 'لا توجد منشآت مطابقة للفلتر المختار حالياً'
+                : `لا توجد منشآت مضافة في «${category?.name || categorySlug}» بعد`}
             </h3>
             <p className="text-xs text-[#404942]">
-              يمكنك أن تكون أول من يضيف نشاطه مجاناً في هذا القسم ليظهر لأهالي أبوحمص.
+              {selectedFilterId
+                ? 'جرّب اختيار «الكل» أو فلتر آخر لعرض باقي الأنشطة في هذا القسم.'
+                : 'يمكنك أن تكون أول من يضيف نشاطه مجاناً في هذا القسم ليظهر لأهالي أبوحمص.'}
             </p>
             <Link
-              to="/places/suggest"
+              to={category ? `/places/suggest?category=${encodeURIComponent(category.slug)}` : '/places/suggest'}
               className="inline-flex min-h-[44px] px-5 items-center rounded-2xl bg-[#003820] text-white text-xs font-bold"
             >
               أضف مكاناً جديداً مجاناً

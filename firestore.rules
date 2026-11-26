@@ -259,7 +259,7 @@ service cloud.firestore {
     function isValidCategory(data) {
       return data.keys().hasOnly([
           'id', 'name', 'slug', 'iconKey', 'imageUrl', 'bgColor', 'iconColor',
-          'templateType', 'order', 'active', 'description', 'updatedAt'
+          'templateType', 'order', 'active', 'description', 'categoryFilters', 'updatedAt'
         ])
         && validStr(data.id, 2, 80)
         && validStr(data.name, 2, 100)
@@ -272,6 +272,7 @@ service cloud.firestore {
         && data.order is number && data.order >= 0 && data.order <= 999
         && data.active is bool
         && validOptStr(data, 'description', 400)
+        && (!('categoryFilters' in data) || (data.categoryFilters is list && data.categoryFilters.size() <= 40 && (data.categoryFilters.size() == 0 || data.categoryFilters[0] is map)))
         && validOptStr(data, 'updatedAt', 40);
     }
 
@@ -295,9 +296,9 @@ service cloud.firestore {
 
     function isValidPlace(data) {
       return data.keys().hasOnly([
-          'id', 'name', 'categoryId', 'categorySlug', 'specialty', 'area', 'address',
+          'id', 'name', 'categoryId', 'categorySlug', 'specialty', 'subCategory', 'area', 'address',
           'lat', 'lng', 'phone', 'whatsapp', 'description', 'imageUrl', 'rating', 'reviewCount',
-          'verified', 'featured', 'openNow', 'hours', 'workingSchedule', 'is24Hours',
+          'verified', 'featured', 'openNow', 'hours', 'workingSchedule', 'is24Hours', 'hasDelivery',
           'consultationFee', 'experienceYears', 'qrCode', 'tags', 'filterTags', 'filterExpirations',
           'services', 'menuItems', 'menuPriceMap', 'deliveryFeeInTown', 'deliveryFeeVillage',
           'gallery', 'isDemoData', 'createdAt', 'updatedAt'
@@ -312,6 +313,7 @@ service cloud.firestore {
         && validOptNum(data, 'lat', -90, 90)
         && validOptNum(data, 'lng', -180, 180)
         && validOptStr(data, 'specialty', 200)
+        && validOptStr(data, 'subCategory', 120)
         && validOptStr(data, 'whatsapp', 40)
         && validOptStr(data, 'description', 1500)
         && validOptStr(data, 'imageUrl', 600)
@@ -323,6 +325,7 @@ service cloud.firestore {
         && validOptStr(data, 'hours', 300)
         && validOptMap(data, 'workingSchedule', 7)
         && validOptBool(data, 'is24Hours')
+        && validOptBool(data, 'hasDelivery')
         && validOptNum(data, 'consultationFee', 0, 50000)
         && validOptNum(data, 'experienceYears', 0, 100)
         && validOptStr(data, 'qrCode', 120)
@@ -396,7 +399,7 @@ service cloud.firestore {
       return data.keys().hasOnly([
           'id', 'title', 'subtitle', 'placeId', 'placeName', 'categorySlug',
           'discountPercent', 'originalPrice', 'salePrice', 'couponCode',
-          'expiresAt', 'terms', 'imageUrl', 'active', 'featured', 'isDemoData'
+          'expiresAt', 'terms', 'imageUrl', 'active', 'featured', 'vip', 'tags', 'isDemoData'
         ])
         && validStr(data.id, 2, 100)
         && validStr(data.title, 2, 180)
@@ -413,6 +416,8 @@ service cloud.firestore {
         && validOptList(data, 'terms', 15)
         && validOptStr(data, 'imageUrl', 600)
         && validOptBool(data, 'featured')
+        && validOptBool(data, 'vip')
+        && validOptList(data, 'tags', 20)
         && validOptBool(data, 'isDemoData');
     }
 
@@ -624,7 +629,7 @@ service cloud.firestore {
     function isValidPublicSettings(data) {
       return data.keys().hasOnly([
           'appName', 'disclaimer', 'supportPhone', 'supportWhatsapp',
-          'visitsCount', 'areas', 'demoMode', 'pwaInstallPromptEnabled', 'updatedAt'
+          'visitsCount', 'areas', 'offersFilters', 'demoMode', 'pwaInstallPromptEnabled', 'updatedAt'
         ])
         && validStr(data.appName, 2, 100)
         && validStr(data.disclaimer, 10, 1000)
@@ -632,6 +637,7 @@ service cloud.firestore {
         && validOptStr(data, 'supportPhone', 40)
         && validOptStr(data, 'supportWhatsapp', 40)
         && validOptList(data, 'areas', 50)
+        && (!('offersFilters' in data) || (data.offersFilters is list && data.offersFilters.size() <= 40 && (data.offersFilters.size() == 0 || data.offersFilters[0] is map)))
         && validOptBool(data, 'demoMode')
         && validOptBool(data, 'pwaInstallPromptEnabled')
         && validOptStr(data, 'updatedAt', 40);

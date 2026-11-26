@@ -16,6 +16,10 @@
         "order": { "type": "number" },
         "active": { "type": "boolean" },
         "description": { "type": "string", "maxLength": 240 },
+        "categoryFilters": {
+          "type": "array",
+          "description": "Admin-managed custom filters for this category (id, label, matchField, matchValue, order, enabled)"
+        },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "slug", "iconKey", "bgColor", "iconColor", "templateType", "order", "active"]
@@ -29,6 +33,7 @@
         "categoryId": { "type": "string", "maxLength": 64 },
         "categorySlug": { "type": "string", "maxLength": 64 },
         "specialty": { "type": "string", "maxLength": 120 },
+        "subCategory": { "type": "string", "maxLength": 120 },
         "area": { "type": "string", "maxLength": 80 },
         "address": { "type": "string", "maxLength": 240 },
         "phone": { "type": "string", "maxLength": 32 },
@@ -43,6 +48,7 @@
         "hours": { "type": "string", "maxLength": 300 },
         "workingSchedule": { "type": "object", "description": "Structured weekly working hours per weekday key (sat..fri)" },
         "is24Hours": { "type": "boolean" },
+        "hasDelivery": { "type": "boolean" },
         "lat": { "type": "number" },
         "lng": { "type": "number" },
         "consultationFee": { "type": "number" },
@@ -147,7 +153,9 @@
         "terms": { "type": "array" },
         "imageUrl": { "type": "string", "maxLength": 500 },
         "active": { "type": "boolean" },
-        "featured": { "type": "boolean" }
+        "featured": { "type": "boolean" },
+        "vip": { "type": "boolean" },
+        "tags": { "type": "array", "description": "Optional filter tags for this offer (max 20)" }
       },
       "required": ["title", "placeName", "discountPercent", "salePrice", "couponCode", "active"]
     },
@@ -380,6 +388,10 @@
         "demoMode": { "type": "boolean" },
         "pwaInstallPromptEnabled": { "type": "boolean" },
         "areas": { "type": "array" },
+        "offersFilters": {
+          "type": "array",
+          "description": "Admin-managed custom filters for the Offers tab (id, label, matchField, matchValue, order, enabled)"
+        },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["appName", "disclaimer", "visitsCount"]

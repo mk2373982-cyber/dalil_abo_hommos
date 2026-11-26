@@ -31,11 +31,14 @@ import {
   FadeInUp,
 } from '../../components/MotionEffects';
 import {
-  isPlaceSubscribedToFilter,
   PlacePromoBadges,
-  PromoFilterChipsBar,
   sortPlacesByPromoPriority,
 } from '../../lib/promoFilters';
+import {
+  applyCategoryFilterSelection,
+  CategoryFilterChipsBar,
+  getEffectiveCategoryFilters,
+} from '../../lib/categoryFilters';
 import { ABU_HOMS_AREAS } from '../../data/seedData';
 import { buildWhatsAppUrl, validateEgyptPhone } from '../../lib/formatters';
 import { matchesArabicQuery } from '../../lib/arabicSearch';
@@ -46,26 +49,42 @@ import { usePageSeo } from '../../lib/shareCard';
 import type { DeliveryCoords, RestaurantOrder } from '../../types';
 
 export const RestaurantsListPage: React.FC = () => {
-  const { places, activePromoFilters } = useApp();
+  const { categories, places, activePromoFilters } = useApp();
   const [search, setSearch] = useState('');
-  const [selectedPromoId, setSelectedPromoId] = useState<string | null>(null);
+  const [selectedFilterId, setSelectedFilterId] = useState<string | null>(null);
+
+  const restaurantsCategory = useMemo(
+    () => categories.find((c) => c.slug === 'restaurants'),
+    [categories]
+  );
 
   const baseRestaurants = useMemo(
-    () => places.filter((p) => p.categorySlug === 'restaurants'),
-    [places]
+    () =>
+      places.filter(
+        (p) => p.categorySlug === 'restaurants' || (restaurantsCategory && p.categoryId === restaurantsCategory.id)
+      ),
+    [places, restaurantsCategory]
+  );
+
+  const { filters: effectiveFilters } = useMemo(
+    () => getEffectiveCategoryFilters(restaurantsCategory, baseRestaurants),
+    [restaurantsCategory, baseRestaurants]
   );
 
   const restaurants = useMemo(() => {
-    let list = selectedPromoId
-      ? baseRestaurants.filter((r) => isPlaceSubscribedToFilter(r, selectedPromoId))
-      : [...baseRestaurants];
+    let list = applyCategoryFilterSelection(
+      baseRestaurants,
+      selectedFilterId,
+      effectiveFilters,
+      activePromoFilters
+    );
     if (search.trim()) {
       list = list.filter((r) =>
-        matchesArabicQuery(`${r.name} ${r.specialty || ''} ${r.area} ${r.address}`, search)
+        matchesArabicQuery(`${r.name} ${r.specialty || ''} ${r.subCategory || ''} ${r.area} ${r.address}`, search)
       );
     }
     return sortPlacesByPromoPriority(list, activePromoFilters);
-  }, [baseRestaurants, selectedPromoId, search, activePromoFilters]);
+  }, [baseRestaurants, selectedFilterId, effectiveFilters, search, activePromoFilters]);
 
   return (
     <StackLayout
@@ -87,11 +106,12 @@ export const RestaurantsListPage: React.FC = () => {
           </div>
         </FadeInUp>
 
-        <PromoFilterChipsBar
-          promoFilters={activePromoFilters}
-          selectedFilterId={selectedPromoId}
-          onSelect={setSelectedPromoId}
+        <CategoryFilterChipsBar
+          category={restaurantsCategory}
           placesPool={baseRestaurants}
+          promoFilters={activePromoFilters}
+          selectedFilterId={selectedFilterId}
+          onSelect={setSelectedFilterId}
           allLabel="كل المطاعم"
         />
 

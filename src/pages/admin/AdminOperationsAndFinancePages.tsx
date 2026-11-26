@@ -222,6 +222,9 @@ export const AdminCampaignsPage: React.FC = () => {
   const [newOfferOriginal, setNewOfferOriginal] = useState('200');
   const [newOfferSale, setNewOfferSale] = useState('150');
   const [newOfferCode, setNewOfferCode] = useState('HOMOS25');
+  const [newOfferVip, setNewOfferVip] = useState(false);
+  const [newOfferFeatured, setNewOfferFeatured] = useState(true);
+  const [newOfferTags, setNewOfferTags] = useState('');
   const defaultExpiry = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() + 30);
@@ -247,6 +250,11 @@ export const AdminCampaignsPage: React.FC = () => {
     const discount = Math.max(0, Math.min(100, Number(newOfferDiscount) || 0));
     const originalPrice = Math.max(0, Number(newOfferOriginal) || 0);
     const salePrice = Math.max(0, Number(newOfferSale) || 0);
+    const parsedTags = newOfferTags
+      .split(/[,،|;]/)
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .slice(0, 20);
     const offer: Offer = {
       id: `off-${Date.now().toString(36)}`,
       title: newOfferTitle.trim(),
@@ -259,13 +267,18 @@ export const AdminCampaignsPage: React.FC = () => {
       couponCode: newOfferCode.trim().toUpperCase() || 'HOMOS20',
       expiresAt: newOfferExpiresAt || defaultExpiry,
       active: true,
-      featured: true,
+      featured: newOfferFeatured,
+      vip: newOfferVip ? true : undefined,
+      tags: parsedTags.length > 0 ? parsedTags : undefined,
     };
     try {
       await saveOffer(offer);
       setNewOfferTitle('');
       setSelectedOfferPlaceId('');
       setNewOfferPlace('');
+      setNewOfferTags('');
+      setNewOfferVip(false);
+      setNewOfferFeatured(true);
       setNewOfferExpiresAt(defaultExpiry);
     } catch {
       showToast('تعذر نشر التخفيض حالياً، يرجى مراجعة البيانات والمحاولة مجدداً', 'error');
@@ -431,6 +444,33 @@ export const AdminCampaignsPage: React.FC = () => {
               placeholder="HOMOS25"
               className="w-full min-h-[42px] px-3.5 rounded-2xl bg-[#f1f4f2] text-xs font-mono text-left outline-none"
             />
+            <input
+              type="text"
+              value={newOfferTags}
+              onChange={(e) => setNewOfferTags(e.target.value)}
+              placeholder="وسوم اختيارية للفلترة (مثال: توصيل، مشويات، عائلات)"
+              className="w-full min-h-[42px] px-3.5 rounded-2xl bg-[#f1f4f2] text-xs outline-none"
+            />
+            <div className="flex flex-wrap items-center gap-4 pt-1">
+              <label className="flex items-center gap-2 text-xs font-bold text-[#003820] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newOfferVip}
+                  onChange={(e) => setNewOfferVip(e.target.checked)}
+                  className="w-4 h-4 accent-[#0f5132]"
+                />
+                عرض VIP
+              </label>
+              <label className="flex items-center gap-2 text-xs font-bold text-[#92400e] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newOfferFeatured}
+                  onChange={(e) => setNewOfferFeatured(e.target.checked)}
+                  className="w-4 h-4 accent-[#0f5132]"
+                />
+                الأكثر تميزاً
+              </label>
+            </div>
               <button
                 type="submit"
                 disabled={isAuditor}
@@ -443,28 +483,59 @@ export const AdminCampaignsPage: React.FC = () => {
 
           <FadeInUp delay={0.06} className="lg:col-span-7">
             <div className="bg-white border border-[#e4ece7] rounded-3xl p-5 shadow-civic-1 space-y-3">
-            <h2 className="text-sm font-bold text-[#003820]">التخفيضات المنشورة ({offers.length})</h2>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-bold text-[#003820]">التخفيضات المنشورة ({offers.length})</h2>
+              <Link
+                to="/admin/taxonomy?tab=filters&scope=offers"
+                className="min-h-[36px] px-3 rounded-xl bg-[#e6f4ec] hover:bg-[#d1fae5] text-[#003820] text-xs font-bold inline-flex items-center gap-1.5"
+              >
+                <Settings size={14} />
+                إدارة فلاتر تبويب التخفيضات
+              </Link>
+            </div>
             <div className="divide-y divide-[#e4ece7]">
               {offers.map((off, idx) => (
                 <FadeInUp key={off.id} index={idx} y={12}>
-                  <div className="py-3 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
+                  <div className="py-3 flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold text-[#181c1c] truncate">{off.title}</p>
                       <p className="text-xs text-[#404942]">
                         {off.placeName} · كود <span className="font-mono font-bold text-[#0f5132]">{off.couponCode}</span> ·{' '}
                         {off.salePrice} ج.م (خصم {off.discountPercent}%)
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      disabled={isAuditor}
-                      onClick={() => void saveOffer({ ...off, active: !off.active })}
-                      className={`min-h-[36px] px-3 rounded-xl text-xs font-bold shrink-0 disabled:opacity-50 ${
-                        off.active ? 'bg-[#e6f4ec] text-[#0f5132]' : 'bg-[#f1f4f2] text-[#707971]'
-                      }`}
-                    >
-                      {off.active ? 'فعّال' : 'موقوف'}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        disabled={isAuditor}
+                        onClick={() => void saveOffer({ ...off, vip: !off.vip })}
+                        className={`min-h-[34px] px-2.5 rounded-xl text-[11px] font-bold disabled:opacity-50 ${
+                          off.vip ? 'bg-[#003820] text-[#ffe088]' : 'bg-[#f1f4f2] text-[#707971]'
+                        }`}
+                      >
+                        VIP
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isAuditor}
+                        onClick={() => void saveOffer({ ...off, featured: !off.featured })}
+                        className={`min-h-[34px] px-2.5 rounded-xl text-[11px] font-bold disabled:opacity-50 ${
+                          off.featured ? 'bg-[#fef3c7] text-[#92400e]' : 'bg-[#f1f4f2] text-[#707971]'
+                        }`}
+                      >
+                        الأكثر تميزاً
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isAuditor}
+                        onClick={() => void saveOffer({ ...off, active: !off.active })}
+                        className={`min-h-[34px] px-3 rounded-xl text-xs font-bold disabled:opacity-50 ${
+                          off.active ? 'bg-[#e6f4ec] text-[#0f5132]' : 'bg-[#f1f4f2] text-[#707971]'
+                        }`}
+                      >
+                        {off.active ? 'فعّال' : 'موقوف'}
+                      </button>
+                    </div>
                   </div>
                 </FadeInUp>
               ))}
@@ -1060,10 +1131,15 @@ export const AdminFinancePage: React.FC = () => {
 // 4. CSV BATCH IMPORT (SCREEN_42)
 // ============================================================
 export const AdminImportPage: React.FC = () => {
-  const { categories, isAuditor, savePlace, showToast } = useApp();
+  const { categories, activePromoFilters, isAuditor, savePlace, showToast } = useApp();
   const [targetCatId, setTargetCatId] = useState(categories[0]?.id || 'cat-general');
   const [csvText, setCsvText] = useState('');
   const [importing, setImporting] = useState(false);
+
+  const parseTruthyCell = (val?: string): boolean => {
+    const clean = (val || '').trim().toLowerCase();
+    return ['1', 'true', 'yes', 'y', 'نعم', 'متاح', 'vip', 'مميز', 'صحيح', '✓'].includes(clean);
+  };
 
   const { parsedRows, skippedRowsCount } = useMemo(() => {
     const lines = csvText
@@ -1071,17 +1147,51 @@ export const AdminImportPage: React.FC = () => {
       .map((l) => l.trim())
       .filter(Boolean);
     if (lines.length <= 1) return { parsedRows: [], skippedRowsCount: 0 };
+
+    const headers = parseCsvLine(lines[0]).map((h) => h.trim().toLowerCase());
+    const findCol = (aliases: string[], fallbackIndex: number): number => {
+      const idx = headers.findIndex((h) => aliases.some((a) => h.includes(a)));
+      return idx >= 0 ? idx : fallbackIndex;
+    };
+
+    const nameIdx = findCol(['الاسم', 'name'], 0);
+    const specIdx = findCol(['التخصص', 'specialty'], 1);
+    const areaIdx = findCol(['المنطقة', 'area'], 2);
+    const addrIdx = findCol(['العنوان', 'address'], 3);
+    const phoneIdx = findCol(['الهاتف', 'الموبايل', 'phone'], 4);
+    const subCatIdx = findCol(['التصنيف الفرعي', 'تصنيف', 'subcategory'], 5);
+    const tagsIdx = findCol(['الوسوم', 'وسوم', 'tags'], 6);
+    const deliveryIdx = findCol(['توصيل', 'دليفري', 'hasdelivery', 'delivery'], 7);
+    const is24Idx = findCol(['24', '٢٤', 'is24hours'], 8);
+    const vipIdx = findCol(['vip'], 9);
+    const featuredIdx = findCol(['مميز', 'الاكثر تميز', 'الأكثر تميز', 'featured'], 10);
+
     const all = lines.slice(1).map((line) => {
       const cols = parseCsvLine(line);
-      const rawPhone = cols[4] || '';
+      const rawPhone = cols[phoneIdx] || '';
       const phoneCheck = validateEgyptPhone(rawPhone, { allowLandline: true });
+      const rawTags = (cols[tagsIdx] || '')
+        .split(/[|;،]/)
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const isVip = parseTruthyCell(cols[vipIdx]);
+      const isFeatured = parseTruthyCell(cols[featuredIdx]);
+      const hasDelivery = parseTruthyCell(cols[deliveryIdx]);
+      const is24Hours = parseTruthyCell(cols[is24Idx]);
+
       return {
-        name: cols[0] || '',
-        specialty: cols[1] || '',
-        area: cols[2] || 'أبوحمص',
-        address: cols[3] || 'مركز أبوحمص',
+        name: (cols[nameIdx] || '').trim(),
+        specialty: (cols[specIdx] || '').trim(),
+        area: (cols[areaIdx] || 'أبوحمص').trim(),
+        address: (cols[addrIdx] || 'مركز أبوحمص').trim(),
         phone: phoneCheck.valid ? phoneCheck.displayLocal : '',
         phoneValid: phoneCheck.valid,
+        subCategory: (cols[subCatIdx] || '').trim(),
+        tags: rawTags,
+        hasDelivery,
+        is24Hours,
+        isVip,
+        isFeatured,
       };
     });
     const valid = all.filter(
@@ -1111,17 +1221,43 @@ export const AdminImportPage: React.FC = () => {
     let failedCount = 0;
     try {
       const cat = categories.find((c) => c.id === targetCatId) || categories[0];
+      const vipPromoId =
+        activePromoFilters.find((pf) => `${pf.id} ${pf.slug} ${pf.name}`.toLowerCase().includes('vip'))?.id ||
+        'promo-vip';
+      const featuredPromoId =
+        activePromoFilters.find((pf) => {
+          const s = `${pf.id} ${pf.slug} ${pf.name}`.toLowerCase();
+          return s.includes('featured') || s.includes('مميز');
+        })?.id || 'promo-featured';
+
       for (const row of parsedRows) {
+        const filterTags: string[] = [];
+        const tags = [...row.tags];
+        if (row.isVip) {
+          filterTags.push(vipPromoId);
+          if (!tags.some((t) => t.toLowerCase() === 'vip')) tags.push('VIP');
+        }
+        if (row.isFeatured) {
+          filterTags.push(featuredPromoId);
+        }
+
         const place: Place = {
           id: `imp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 5)}`,
           name: row.name,
           categoryId: cat?.id || 'cat-general',
           categorySlug: cat?.slug || 'general',
-          specialty: row.specialty,
+          specialty: row.specialty || undefined,
+          subCategory: row.subCategory || undefined,
           area: row.area,
           address: row.address,
           phone: row.phone,
           whatsapp: row.phone,
+          hours: row.is24Hours ? 'مفتوح 24 ساعة يومياً' : undefined,
+          is24Hours: row.is24Hours ? true : undefined,
+          hasDelivery: row.hasDelivery ? true : undefined,
+          featured: row.isFeatured ? true : undefined,
+          tags: tags.length > 0 ? tags.slice(0, 20) : undefined,
+          filterTags: filterTags.length > 0 ? filterTags : undefined,
           verified: false,
           openNow: true,
           qrCode: `ABH-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -1149,7 +1285,7 @@ export const AdminImportPage: React.FC = () => {
   return (
     <AdminShell
       title="استيراد جماعي للأماكن (CSV Import)"
-      subtitle="ارفع ملف CSV أو الصق البيانات لرفع عشرات الأماكن دفعة واحدة في ثوانٍ"
+      subtitle="ارفع ملف CSV أو الصق البيانات لرفع عشرات الأماكن دفعة واحدة مع التوافق التلقائي مع فلاتر الأقسام"
     >
       <div className="space-y-5 max-w-4xl">
         <FadeInUp delay={0.02}>
@@ -1181,25 +1317,28 @@ export const AdminImportPage: React.FC = () => {
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <label className="text-xs font-bold text-[#181c1c]">
-                محتوى CSV (الأعمدة: الاسم,التخصص,المنطقة,العنوان,الهاتف)
+                محتوى CSV (الأعمدة الأساسية + الاختيارية للفلاتر)
               </label>
               <button
                 type="button"
                 onClick={() =>
                   setCsvText(
-                    'الاسم,التخصص,المنطقة,العنوان,الهاتف\nمثال نشاط,تخصص النشاط,شارع المحطة,أمام محطة قطار أبوحمص,01012345678'
+                    'الاسم,التخصص,المنطقة,العنوان,الهاتف,التصنيف الفرعي,الوسوم,توصيل,24 ساعة,VIP,مميز\nمثال نشاط,مشويات بلدي,شارع المحطة,أمام محطة قطار أبوحمص,01012345678,مشويات,عائلات|حجز مسبق,نعم,لا,نعم,نعم'
                   )
                 }
                 className="text-[11px] font-bold text-[#0f5132] hover:underline"
               >
-                إدراج قالب CSV توضيحي
+                إدراج قالب CSV شامل للفلاتر
               </button>
             </div>
+            <p className="text-[11px] text-[#707971]">
+              الأعمدة الأساسية: الاسم، التخصص، المنطقة، العنوان، الهاتف. والأعمدة الاختيارية: التصنيف الفرعي، الوسوم (مفصولة بـ |)، توصيل، 24 ساعة، VIP، مميز — تندرج البطاقات تلقائياً تحت فلاتر القسم المطابقة.
+            </p>
             <textarea
               rows={5}
               value={csvText}
               onChange={(e) => setCsvText(e.target.value)}
-              placeholder={'الاسم,التخصص,المنطقة,العنوان,الهاتف\n...'}
+              placeholder={'الاسم,التخصص,المنطقة,العنوان,الهاتف,التصنيف الفرعي,الوسوم,توصيل,24 ساعة,VIP,مميز\n...'}
               className="w-full p-3.5 rounded-2xl bg-[#f1f4f2] font-mono text-xs outline-none"
             />
           </div>
@@ -1234,25 +1373,59 @@ export const AdminImportPage: React.FC = () => {
         {parsedRows.length > 0 && (
           <FadeInUp delay={0.08}>
             <div className="bg-white border border-[#e4ece7] rounded-3xl p-5 shadow-civic-1 overflow-x-auto">
-            <p className="text-xs font-bold text-[#003820] mb-3">معاينة الصفوف قبل الاعتماد</p>
+            <p className="text-xs font-bold text-[#003820] mb-3">معاينة الصفوف والخصائص قبل الاعتماد</p>
             <table className="w-full text-right text-xs">
               <thead>
                 <tr className="border-b border-[#e4ece7] text-[#707971]">
                   <th className="py-2 px-3">الاسم</th>
-                  <th className="py-2 px-3">التخصص</th>
+                  <th className="py-2 px-3">التخصص / التصنيف</th>
                   <th className="py-2 px-3">المنطقة</th>
-                  <th className="py-2 px-3">العنوان</th>
                   <th className="py-2 px-3">الهاتف</th>
+                  <th className="py-2 px-3">علامات الفلترة</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e4ece7]">
                 {parsedRows.map((r, idx) => (
                   <tr key={idx}>
                     <td className="py-2.5 px-3 font-bold">{r.name}</td>
-                    <td className="py-2.5 px-3">{r.specialty}</td>
+                    <td className="py-2.5 px-3">
+                      {r.specialty}
+                      {r.subCategory ? ` · ${r.subCategory}` : ''}
+                    </td>
                     <td className="py-2.5 px-3">{r.area}</td>
-                    <td className="py-2.5 px-3">{r.address}</td>
                     <td className="py-2.5 px-3 font-mono">{r.phone}</td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex flex-wrap gap-1">
+                        {r.isVip && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#003820] text-[#ffe088] text-[10px] font-bold">
+                            VIP
+                          </span>
+                        )}
+                        {r.isFeatured && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#fef3c7] text-[#92400e] text-[10px] font-bold">
+                            الأكثر تميزاً
+                          </span>
+                        )}
+                        {r.hasDelivery && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#e6f4ec] text-[#0f5132] text-[10px] font-bold">
+                            توصيل متاح
+                          </span>
+                        )}
+                        {r.is24Hours && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#e0f2fe] text-[#0369a1] text-[10px] font-bold">
+                            24 ساعة
+                          </span>
+                        )}
+                        {r.tags.map((t) => (
+                          <span
+                            key={t}
+                            className="px-2 py-0.5 rounded-full bg-[#f1f4f2] text-[#404942] text-[10px] font-semibold"
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

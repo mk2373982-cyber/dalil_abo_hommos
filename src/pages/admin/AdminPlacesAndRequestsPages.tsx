@@ -165,6 +165,7 @@ export const AdminPlacesPage: React.FC = () => {
       categoryId: firstCat?.id || 'cat-general',
       categorySlug: firstCat?.slug || 'general',
       specialty: '',
+      subCategory: '',
       area: settings.areas?.[0] || 'شارع بورسعيد',
       address: '',
       phone: '',
@@ -174,11 +175,13 @@ export const AdminPlacesPage: React.FC = () => {
       hours: '',
       workingSchedule: undefined,
       is24Hours: false,
+      hasDelivery: false,
       verified: false,
       featured: false,
       openNow: true,
       rating: undefined,
       reviewCount: undefined,
+      tags: [],
       menuItems: [],
       services: [],
       gallery: [],
@@ -400,15 +403,23 @@ export const AdminPlacesPage: React.FC = () => {
     setSaving(true);
     try {
       const chosenCat = categories.find((c) => c.id === form.categoryId);
+      const cleanedTags = (form.tags || [])
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0)
+        .slice(0, 20);
       await savePlace({
         ...form,
         name: form.name.trim(),
+        specialty: form.specialty?.trim() || undefined,
+        subCategory: form.subCategory?.trim() || undefined,
         address: form.address.trim(),
         imageUrl: form.imageUrl?.trim() || undefined,
         phone: phoneCheck.displayLocal,
         whatsapp: normalizedWhatsapp,
         categorySlug: chosenCat?.slug || form.categorySlug,
         hours: computedHours,
+        hasDelivery: form.hasDelivery ? true : undefined,
+        tags: cleanedTags.length > 0 ? cleanedTags : undefined,
         menuItems: cleanedMenu.length > 0 ? cleanedMenu : undefined,
         services: cleanedServices.length > 0 ? cleanedServices : undefined,
         gallery: cleanedGallery.length > 0 ? cleanedGallery : undefined,
@@ -689,6 +700,19 @@ export const AdminPlacesPage: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-1">
+                        <label className="text-xs font-bold">التصنيف الفرعي (لمطابقة فلاتر القسم)</label>
+                        <input
+                          type="text"
+                          value={form.subCategory || ''}
+                          onChange={(e) => setForm({ ...form, subCategory: e.target.value })}
+                          placeholder="مثال: أطفال، مشويات، كافيهات..."
+                          className="w-full min-h-[44px] px-3.5 rounded-2xl bg-[#f1f4f2] focus:bg-white border border-transparent focus:border-[#0f5132] outline-none text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
                         <label className="text-xs font-bold">المنطقة / القرية</label>
                         <select
                           value={form.area}
@@ -702,7 +726,73 @@ export const AdminPlacesPage: React.FC = () => {
                           ))}
                         </select>
                       </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold">وسوم الفلترة (مفصولة بفاصلة)</label>
+                        <input
+                          type="text"
+                          value={(form.tags || []).join('، ')}
+                          onChange={(e) =>
+                            setForm({
+                              ...form,
+                              tags: e.target.value
+                                .split(/[,،|;]/)
+                                .map((t) => t.trim())
+                                .filter(Boolean),
+                            })
+                          }
+                          placeholder="مثال: توصيل، عائلات، 24 ساعة"
+                          className="w-full min-h-[44px] px-3.5 rounded-2xl bg-[#f1f4f2] focus:bg-white border border-transparent focus:border-[#0f5132] outline-none text-sm"
+                        />
+                      </div>
                     </div>
+
+                    {/* Quick-match category filter chips */}
+                    {(() => {
+                      const activeCat = categories.find((c) => c.id === form.categoryId);
+                      const catFilters = (activeCat?.categoryFilters || []).filter((f) => f.enabled);
+                      if (catFilters.length === 0) return null;
+                      return (
+                        <div className="p-3 rounded-2xl bg-[#f7faf8] border border-[#e4ece7] space-y-2">
+                          <p className="text-[11px] font-bold text-[#003820]">
+                            تعيين سريع لفلاتر قسم «{activeCat?.name}» (اضغط لإدراج البطاقة تحت الفلتر):
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {catFilters.map((cf) => (
+                              <button
+                                key={cf.id}
+                                type="button"
+                                onClick={() => {
+                                  const val = (cf.matchValue || cf.label).trim();
+                                  if (cf.matchField === 'hasDelivery') {
+                                    setForm({ ...form, hasDelivery: !form.hasDelivery });
+                                  } else if (cf.matchField === 'is24Hours') {
+                                    setForm({
+                                      ...form,
+                                      is24Hours: !form.is24Hours,
+                                      hours: !form.is24Hours ? 'مفتوح 24 ساعة يومياً' : form.hours,
+                                    });
+                                  } else if (cf.matchField === 'subCategory') {
+                                    setForm({ ...form, subCategory: val });
+                                  } else if (cf.matchField === 'specialty') {
+                                    setForm({ ...form, specialty: val });
+                                  } else if (cf.matchField === 'area') {
+                                    setForm({ ...form, area: val });
+                                  } else {
+                                    const cur = form.tags || [];
+                                    if (!cur.includes(val)) {
+                                      setForm({ ...form, tags: [...cur, val].slice(0, 20) });
+                                    }
+                                  }
+                                }}
+                                className="px-2.5 py-1 rounded-xl bg-white border border-[#d7ebe0] hover:bg-[#e6f4ec] text-[#003820] text-[11px] font-bold"
+                              >
+                                + {cf.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     <div className="space-y-1">
                       <label className="text-xs font-bold">العنوان التفصيلي *</label>
@@ -868,6 +958,15 @@ export const AdminPlacesPage: React.FC = () => {
                           className="w-4 h-4 accent-[#0f5132]"
                         />
                         مفعل للتشغيل
+                      </label>
+                      <label className="flex items-center gap-2 text-xs font-bold cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(form.hasDelivery)}
+                          onChange={(e) => setForm({ ...form, hasDelivery: e.target.checked })}
+                          className="w-4 h-4 accent-[#0f5132]"
+                        />
+                        يتوفر توصيل (دليفري)
                       </label>
                     </div>
                   </>
@@ -1518,6 +1617,11 @@ export const AdminRequestsPage: React.FC = () => {
       const p = sub.payload || {};
       const catSlug = String(p.categorySlug || (sub.type === 'join_hero' ? 'heroes' : 'general'));
       const matchedCat = categories.find((c) => c.slug === catSlug || c.id === catSlug) || categories[0];
+      const parsedFee = p.consultationFee !== undefined ? Number(p.consultationFee) : NaN;
+      const parsedLat = p.lat !== undefined ? Number(p.lat) : NaN;
+      const parsedLng = p.lng !== undefined ? Number(p.lng) : NaN;
+      const cleanImageUrl = typeof p.imageUrl === 'string' ? p.imageUrl.trim().slice(0, 600) : '';
+      const cleanDescription = typeof p.description === 'string' ? p.description.trim().slice(0, 1500) : '';
       const newPlace: Place = {
         id: `plc-${Date.now().toString(36)}`,
         name: String(p.name || sub.title).trim(),
@@ -1529,6 +1633,13 @@ export const AdminRequestsPage: React.FC = () => {
         phone: String(p.phone || sub.submitterPhone),
         whatsapp: String(p.whatsapp || p.phone || sub.submitterPhone),
         hours: String(p.hours || ''),
+        ...(cleanDescription ? { description: cleanDescription } : {}),
+        ...(cleanImageUrl ? { imageUrl: cleanImageUrl } : {}),
+        ...(!Number.isNaN(parsedLat) && parsedLat >= -90 && parsedLat <= 90 ? { lat: parsedLat } : {}),
+        ...(!Number.isNaN(parsedLng) && parsedLng >= -180 && parsedLng <= 180 ? { lng: parsedLng } : {}),
+        ...(!Number.isNaN(parsedFee) && parsedFee >= 0 && parsedFee <= 50000
+          ? { consultationFee: parsedFee }
+          : {}),
         verified: false,
         openNow: true,
         qrCode: `ABH-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -1825,12 +1936,48 @@ export const AdminRequestsPage: React.FC = () => {
                     <div className="p-4 rounded-2xl bg-[#f7faf8] border border-[#e4ece7] space-y-2">
                       <p className="text-xs font-bold text-[#003820]">تفاصيل الطلب المرسلة</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {Object.entries(currentSub.payload || {}).map(([k, v]) => (
-                          <div key={k} className="bg-white rounded-xl px-3 py-2 border border-[#e4ece7] text-xs">
-                            <span className="text-[#707971] block text-[10px]">{k}</span>
-                            <span className="font-bold text-[#181c1c]">{String(v)}</span>
-                          </div>
-                        ))}
+                        {Object.entries(currentSub.payload || {}).map(([k, v]) => {
+                          const isImageField =
+                            (k === 'imageUrl' || k === 'menuImageUrl') &&
+                            typeof v === 'string' &&
+                            /^https?:\/\//i.test(v);
+                          const isMapsField =
+                            k === 'mapsUrl' &&
+                            typeof v === 'string' &&
+                            /^https?:\/\//i.test(v);
+                          return (
+                            <div key={k} className="bg-white rounded-xl px-3 py-2 border border-[#e4ece7] text-xs">
+                              <span className="text-[#707971] block text-[10px] mb-1">{k}</span>
+                              {isImageField ? (
+                                <a href={v} target="_blank" rel="noopener noreferrer" className="block space-y-1">
+                                  <img
+                                    src={v}
+                                    alt={k}
+                                    className="w-full h-32 object-cover rounded-lg border border-[#e4ece7]"
+                                  />
+                                  <span className="text-[11px] font-bold text-[#0f5132] underline">
+                                    فتح الصورة بالحجم الكامل
+                                  </span>
+                                </a>
+                              ) : isMapsField ? (
+                                <a
+                                  href={v}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 font-bold text-[#0f5132] hover:underline"
+                                >
+                                  <MapPin size={14} />
+                                  <span>فتح الموقع على خرائط جوجل</span>
+                                  <ExternalLink size={12} />
+                                </a>
+                              ) : (
+                                <span className="font-bold text-[#181c1c] whitespace-pre-line break-words">
+                                  {String(v)}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
