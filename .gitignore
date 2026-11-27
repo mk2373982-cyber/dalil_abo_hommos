@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Local tooling caches / design artifacts (not part of the app)
+.gmp_cache/
+public/assets/aistudio/

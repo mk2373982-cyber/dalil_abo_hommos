@@ -39,8 +39,8 @@ export const SEED_SETTINGS: PublicSettings = {
   appName: 'دليل أبوحمص',
   disclaimer:
     'دليل أبوحمص مبادرة مجتمعية أهلية مستقلة تماماً وغير تابعة لأي جهة حكومية، تهدف لتسهيل وصول أهالي مركز ومدينة أبوحمص وقراها للخدمات اليومية بمصداقية وشفافية.',
-  supportPhone: '01001234567',
-  supportWhatsapp: '201001234567',
+  supportPhone: '01000000001',
+  supportWhatsapp: '201000000001',
   visitsCount: 18540,
   areas: ABU_HOMS_AREAS,
 };
@@ -519,7 +519,7 @@ const RAW_SEED_PLACES: Place[] = [
     specialty: 'صرف روشتات • قياس ضغط وسكر • توصيل منزلي مجاني',
     area: 'بندر أبوحمص — شارع بورسعيد',
     address: 'شارع بورسعيد الرئيسي، أسفل عيادة د. أحمد محمود',
-    phone: '0452561122',
+    phone: '0450000002',
     whatsapp: '201009988112',
     description: 'صيدلية نوبتجية تعمل على مدار 24 ساعة مع توفر أدوية الأطفال والأمراض المزمنة وخدمة التوصيل السريع داخل البندر.',
     rating: 4.8,
@@ -782,9 +782,9 @@ export const SEED_EMERGENCY: EmergencyContact[] = [
   { id: 'em-3', name: 'الحماية المدنية والإطفاء', type: 'hotline', phone: '180', area: 'وحدة إطفاء أبوحمص', statusText: 'طوارئ حرائق وإنقاذ', is24h: true, priority: 3 },
   { id: 'em-4', name: 'طوارئ الكهرباء', type: 'hotline', phone: '121', area: 'هندسة كهرباء أبوحمص', statusText: 'بلاغات الأعطال', is24h: true, priority: 4 },
   { id: 'em-5', name: 'طوارئ الغاز الطبيعي', type: 'hotline', phone: '129', area: 'مركز أبوحمص', statusText: 'تسربات وصيانة فورية', is24h: true, priority: 5 },
-  { id: 'em-6', name: 'مستشفى أبوحمص المركزي (الطوارئ)', type: 'hospital', phone: '0452560110', area: 'بندر أبوحمص', address: 'طريق المستشفى العام، أبوحمص', statusText: 'استقبال طوارئ 24/7', is24h: true, priority: 6 },
-  { id: 'em-7', name: 'صيدلية الأمل الكبرى (نوبتجية)', type: 'pharmacy', phone: '0452561122', area: 'بندر أبوحمص — شارع بورسعيد', address: 'شارع بورسعيد الرئيسي', statusText: 'مفتوحة الآن 24 ساعة', is24h: true, priority: 7 },
-  { id: 'em-8', name: 'بنك الدم والتبرع الأهلي بأبوحمص', type: 'blood', phone: '01088776655', area: 'بندر أبوحمص والقرى', address: 'شبكة متطوعي التبرع بالدم السريع', statusText: 'فصائل نادرة متاحة', is24h: true, priority: 8 },
+  { id: 'em-6', name: 'مستشفى أبوحمص المركزي (الطوارئ)', type: 'hospital', phone: '0450000001', area: 'بندر أبوحمص', address: 'طريق المستشفى العام، أبوحمص', statusText: 'استقبال طوارئ 24/7', is24h: true, priority: 6 },
+  { id: 'em-7', name: 'صيدلية الأمل الكبرى (نوبتجية)', type: 'pharmacy', phone: '0450000002', area: 'بندر أبوحمص — شارع بورسعيد', address: 'شارع بورسعيد الرئيسي', statusText: 'مفتوحة الآن 24 ساعة', is24h: true, priority: 7 },
+  { id: 'em-8', name: 'بنك الدم والتبرع الأهلي بأبوحمص', type: 'blood', phone: '0100000002', area: 'بندر أبوحمص والقرى', address: 'شبكة متطوعي التبرع بالدم السريع', statusText: 'فصائل نادرة متاحة', is24h: true, priority: 8 },
 ];
 
 export const SEED_CLINIC_QUEUES: ClinicQueue[] = [
@@ -895,7 +895,7 @@ export const SEED_SUBMISSIONS: Submission[] = [
     title: 'تحديث رقم هاتف صيدلية الأمل الكبرى',
     submitterName: 'أحمد عبد الرحمن',
     submitterPhone: '01011223344',
-    previousData: { phone: '0452561122', hours: '8 ص - 12 م' },
+    previousData: { phone: '0450000002', hours: '8 ص - 12 م' },
     payload: { phone: '0452561199', hours: 'مفتوح 24 ساعة طوال أيام الأسبوع', reason: 'تمت إضافة خط أرضي جديد للرد السريع' },
     status: 'reviewing',
     adminNote: 'جارٍ التأكد الهاتفي مع الصيدلي المناوب',

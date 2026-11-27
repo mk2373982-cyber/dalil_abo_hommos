@@ -113,7 +113,9 @@ export default defineConfig(({mode}) => {
                 networkTimeoutSeconds: 4,
                 expiration: {
                   maxEntries: 200,
-                  maxAgeSeconds: 60 * 60 * 24 * 7,
+                  // Short TTL: Firestore docs (prices, clinic hours, schedules) change often.
+                  // A 7-day cache could serve week-old prices/hours on flaky connections.
+                  maxAgeSeconds: 600,
                   purgeOnQuotaError: true,
                 },
                 cacheableResponse: {

@@ -141,6 +141,59 @@ export function buildWhatsAppUrl(raw?: string, message?: string): string {
   return base;
 }
 
+export interface ImageUrlValidationResult {
+  valid: boolean;
+  url: string;
+  error?: string;
+}
+
+/**
+ * Validates a user-supplied image URL so only safe values are accepted:
+ * - empty string is valid (optional field)
+ * - same-origin relative paths (e.g. "/src/assets/...") are allowed for seeded content
+ * - absolute URLs MUST use https:// and carry a real hostname
+ * - javascript:, data:, vbscript:, and other non-https schemes are rejected
+ *
+ * This mirrors the Google Maps URL validator's strictness for user-generated links.
+ */
+export function validateImageUrl(raw?: string): ImageUrlValidationResult {
+  const trimmed = (raw || '').trim();
+  if (!trimmed) return { valid: true, url: '' };
+
+  // Same-origin relative asset paths are safe and used by seeded data.
+  if (trimmed.startsWith('/')) return { valid: true, url: trimmed };
+
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return {
+      valid: false,
+      url: '',
+      error: 'رابط الصورة غير صالح. يرجى استخدام رابط https:// صحيح أو رفع الصورة مباشرة.',
+    };
+  }
+
+  if (parsed.protocol !== 'https:') {
+    return {
+      valid: false,
+      url: '',
+      error: 'يجب أن يبدأ رابط الصورة بـ https:// (غير مسموح بـ javascript: أو data:).',
+    };
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  if (!host || !host.includes('.')) {
+    return {
+      valid: false,
+      url: '',
+      error: 'رابط الصورة غير صالح. يرجى استخدام رابط https:// صحيح.',
+    };
+  }
+
+  return { valid: true, url: trimmed };
+}
+
 /**
  * Determines whether an offer is expired based on its active flag and expiresAt ISO date/datetime.
  * Date-only values (YYYY-MM-DD) remain valid through the end of that day.

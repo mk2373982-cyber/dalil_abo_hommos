@@ -22,6 +22,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useClinicQueues } from '../../hooks/useClinicQueues';
 import { PartnerConsoleGate, StackLayout } from '../../components/SharedUI';
 import {
   AnimatedEmptyState,
@@ -37,7 +38,6 @@ import { getCairoDateString } from '../../lib/workingHours';
 /** 1. Clinic Secretary Live Queue Console (SCREEN_109 / SCREEN_107) */
 export const ClinicConsolePage: React.FC = () => {
   const {
-    clinicQueues,
     clinicTickets,
     isAdmin,
     isAuditor,
@@ -50,6 +50,8 @@ export const ClinicConsolePage: React.FC = () => {
     loadMoreClinicTickets,
     showToast,
   } = useApp();
+
+  const clinicQueues = useClinicQueues();
 
   const visibleQueues = useMemo(() => {
     if (isAdmin) return clinicQueues;

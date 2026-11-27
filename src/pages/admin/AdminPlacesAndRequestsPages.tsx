@@ -333,6 +333,17 @@ export const AdminPlacesPage: React.FC = () => {
       return;
     }
 
+    // Consistency check: a listing cannot be saved with a positive rating while
+    // claiming zero (or unset) reviews — that would fabricate trust signals.
+    if (
+      typeof form.rating === 'number' &&
+      form.rating > 0 &&
+      !(typeof form.reviewCount === 'number' && form.reviewCount > 0)
+    ) {
+      showToast('لا يمكن حفظ تقييم أعلى من صفر دون تحديد عدد المراجعات (يجب أن يكون عدد المراجعات أكبر من صفر)', 'error');
+      return;
+    }
+
     // Validate & clean nested arrays according to Firestore rules bounds
     const usedMenuIds = new Set<string>();
     const cleanedMenu = (form.menuItems || [])

@@ -43,10 +43,10 @@ import {
 import { useApp } from '../../context/AppContext';
 import { db } from '../../firebase';
 import { CivicImage, PublicRootLayout, StackLayout } from '../../components/SharedUI';
+import { ListingSeo } from '../../components/ListingSeo';
 import { PWAInstallButton } from '../../components/PWAInstallButton';
 import {
   AnimatedEmptyState,
-  AnimatedFilterChip,
   AnimatedListContainer,
   AnimatedListItem,
   FadeInUp,
@@ -59,6 +59,7 @@ import {
   getPlaceDetailRoute,
   isOfferExpired,
   validateEgyptPhone,
+  validateImageUrl,
 } from '../../lib/formatters';
 import {
   applyOfferFilterSelection,
@@ -225,10 +226,6 @@ function parseGoogleMapsInput(raw: string): {
 // ============================================================================
 export const OffersListPage: React.FC = () => {
   const { offers, places, categories, activePromoFilters, settings, showToast } = useApp();
-  usePageSeo(
-    'التخفيضات والكوبونات اليومية',
-    'أحدث خصومات وعروض محلات ومطاعم وعيادات مركز ومدينة أبوحمص بكوبونات فورية.'
-  );
 
   const [search, setSearch] = useState('');
   const [selectedFilterId, setSelectedFilterId] = useState<string | null>(null);
@@ -289,6 +286,12 @@ export const OffersListPage: React.FC = () => {
 
   return (
     <PublicRootLayout>
+      <ListingSeo
+        type="WebPage"
+        path="/offers"
+        title="التخفيضات والكوبونات اليومية"
+        description="أحدث خصومات وعروض محلات ومطاعم وعيادات مركز ومدينة أبوحمص بكوبونات فورية."
+      />
       <div className="space-y-5">
         {/* Hero Banner */}
         <FadeInUp delay={0.02}>
@@ -467,14 +470,15 @@ export const OfferDetailPage: React.FC = () => {
     [offer, places]
   );
 
-  usePageSeo(
-    offer ? `${offer.title} — ${offer.placeName}` : 'تفاصيل التخفيض',
-    offer?.subtitle || 'تفاصيل الكوبون والخصم في دليل أبوحمص.'
-  );
-
   if (!offer) {
     return (
       <StackLayout title="تفاصيل التخفيض" backTo="/offers">
+        <ListingSeo
+          type="WebPage"
+          path="/offers"
+          title="تفاصيل التخفيض"
+          description="تفاصيل الكوبون والخصم في دليل أبوحمص."
+        />
         <div className="bg-white border border-[#e4ece7] rounded-3xl p-8 text-center space-y-3 shadow-civic-1">
           <Tag size={36} className="mx-auto text-[#707971]" />
           <h2 className="text-base font-bold text-[#181c1c]">العرض غير متاح أو انتهت صلاحيته</h2>
@@ -516,6 +520,19 @@ export const OfferDetailPage: React.FC = () => {
 
   return (
     <StackLayout title="تفاصيل العرض والكوبون" subtitle={offer.placeName} backTo="/offers">
+      <ListingSeo
+        type="Product"
+        path={`/offers/${offer.id}`}
+        title={`${offer.title} — ${offer.placeName}`}
+        description={offer.subtitle || 'تفاصيل الكوبون والخصم في دليل أبوحمص.'}
+        area={linkedPlace?.area}
+        address={linkedPlace?.address}
+        phone={linkedPlace?.phone}
+        imageUrl={offer.imageUrl}
+        price={String(offer.salePrice)}
+        currency="EGP"
+        discountPercent={offer.discountPercent}
+      />
       <div className="space-y-4">
         <FadeInUp delay={0.02}>
           <div className="bg-white border border-[#e4ece7] rounded-3xl overflow-hidden shadow-civic-1">
@@ -1550,6 +1567,17 @@ export const SuggestPlacePage: React.FC = () => {
 
     if (!imageUrl) {
       showToast('رفع صورة واضحة للمكان أو اللوجو إلزامي لقبول الطلب', 'error');
+      return;
+    }
+
+    const mainImageCheck = validateImageUrl(imageUrl);
+    if (!mainImageCheck.valid) {
+      showToast(mainImageCheck.error || 'رابط الصورة غير صالح', 'error');
+      return;
+    }
+    const menuImageCheck = validateImageUrl(menuImageUrl);
+    if (!menuImageCheck.valid) {
+      showToast(menuImageCheck.error || 'رابط صورة المينيو غير صالح', 'error');
       return;
     }
 

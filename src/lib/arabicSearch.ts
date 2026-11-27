@@ -44,6 +44,39 @@ export function matchesArabicQuery(haystack: string, query: string): boolean {
   return tokens.every((token) => normHaystack.includes(token));
 }
 
+/**
+ * Filters a list with strict AND-token matching, then falls back to OR-token
+ * relevance matching (sorted by number of matched tokens) when the strict AND
+ * match returns zero results for a multi-word query.
+ *
+ * This keeps multi-word Arabic queries useful: a query like «مطعم شاورما أبوحمص»
+ * still surfaces a place that only mentions «مطعم شاورما» when nothing matches all tokens.
+ */
+export function filterByArabicQueryOrFallback<T>(
+  items: T[],
+  haystack: (item: T) => string,
+  query: string
+): T[] {
+  const normQuery = normalizeArabic(query);
+  if (!normQuery) return items;
+  const tokens = normQuery.split(' ').filter(Boolean);
+
+  const strict = items.filter((item) => matchesArabicQuery(haystack(item), query));
+  if (strict.length > 0 || tokens.length < 2) {
+    return strict;
+  }
+
+  return items
+    .map((item, index) => {
+      const normHaystack = normalizeArabic(haystack(item));
+      const matchedTokens = tokens.filter((token) => normHaystack.includes(token));
+      return { item, matchedTokens, index };
+    })
+    .filter((entry) => entry.matchedTokens.length > 0)
+    .sort((a, b) => b.matchedTokens.length - a.matchedTokens.length || a.index - b.index)
+    .map((entry) => entry.item);
+}
+
 export function getRecentSearches(): string[] {
   try {
     const raw = window.localStorage.getItem(RECENT_SEARCHES_KEY);

@@ -26,6 +26,8 @@ interface ValidateOrderRequest {
 interface Env {
   FIREBASE_PROJECT_ID?: string;
   FIRESTORE_DATABASE_ID?: string;
+  FIREBASE_CLIENT_EMAIL?: string;
+  FIREBASE_PRIVATE_KEY?: string;
 }
 
 interface FirestoreValue {
@@ -37,11 +39,12 @@ interface FirestoreValue {
   mapValue?: { fields?: Record<string, FirestoreValue> };
 }
 
-const DEFAULT_PROJECT_ID = 'teak-canto-3t86m';
-const DEFAULT_DATABASE_ID = 'ai-studio-bd327efc-a997-4475-a7c6-ee14154881c2';
 const VALID_ID_RE = /^[a-zA-Z0-9_-]{2,100}$/;
 const MAX_ITEMS = 15;
 const MAX_QTY = 20;
+const MAX_BODY_BYTES = 16 * 1024; // 16 KB hard cap on the JSON request body
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 30; // max validations per IP per window
 
 const JSON_HEADERS: Record<string, string> = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -65,6 +68,120 @@ function jsonResponse(payload: unknown, status = 200): Response {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Service-account authentication: signed JWT -> OAuth2 access token (cached in memory)
+// ---------------------------------------------------------------------------
+let tokenCache: { token: string; expiresAt: number } | null = null;
+
+function base64UrlFromBytes(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function pemToBytes(pem: string): ArrayBuffer {
+  const b64 = pem
+    .replace(/-----BEGIN [^-]+-----/g, '')
+    .replace(/-----END [^-]+-----/g, '')
+    .replace(/\s+/g, '');
+  const binary = atob(b64);
+  const buffer = new ArrayBuffer(binary.length);
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return buffer;
+}
+
+async function signServiceAccountJwt(clientEmail: string, privateKeyPem: string): Promise<string> {
+  const header = base64UrlFromBytes(
+    new TextEncoder().encode(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
+  );
+  const now = Math.floor(Date.now() / 1000);
+  const payload = base64UrlFromBytes(
+    new TextEncoder().encode(
+      JSON.stringify({
+        iss: clientEmail,
+        scope: 'https://www.googleapis.com/auth/datastore',
+        aud: 'https://oauth2.googleapis.com/token',
+        iat: now,
+        exp: now + 3600,
+      })
+    )
+  );
+  const signingInput = `${header}.${payload}`;
+  const key = await crypto.subtle.importKey(
+    'pkcs8',
+    pemToBytes(privateKeyPem),
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    key,
+    new TextEncoder().encode(signingInput)
+  );
+  return `${signingInput}.${base64UrlFromBytes(new Uint8Array(signature))}`;
+}
+
+async function getAccessToken(env: Env): Promise<string> {
+  const now = Date.now();
+  if (tokenCache && tokenCache.expiresAt > now + 30_000) {
+    return tokenCache.token;
+  }
+  const clientEmail = (env.FIREBASE_CLIENT_EMAIL || '').trim();
+  const privateKey = (env.FIREBASE_PRIVATE_KEY || '').trim();
+  if (!clientEmail || !privateKey) {
+    throw new Error('Firebase service account credentials are not configured.');
+  }
+  const assertion = await signServiceAccountJwt(clientEmail, privateKey);
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion,
+    }),
+  });
+  if (!tokenRes.ok) {
+    throw new Error(`Failed to obtain Firebase access token (${tokenRes.status}).`);
+  }
+  const tokenData = (await tokenRes.json()) as { access_token?: string; expires_in?: number };
+  const token = tokenData.access_token;
+  if (!token) throw new Error('Firebase access token missing from OAuth response.');
+  const expiresIn = Number(tokenData.expires_in) || 3600;
+  tokenCache = { token, expiresAt: Date.now() + expiresIn * 1000 };
+  return token;
+}
+
+// ---------------------------------------------------------------------------
+// Basic in-memory per-IP fixed-window rate limiting
+// ---------------------------------------------------------------------------
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIp(request: Request): string {
+  const cf = request.headers.get('cf-connecting-ip');
+  if (cf) return cf;
+  const xff = request.headers.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  return request.headers.get('x-real-ip') || 'unknown';
+}
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || entry.resetAt <= now) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    if (rateLimitMap.size > 5000) {
+      for (const [key, value] of rateLimitMap) {
+        if (value.resetAt <= now) rateLimitMap.delete(key);
+      }
+    }
+    return true;
+  }
+  entry.count += 1;
+  return entry.count <= RATE_LIMIT_MAX;
+}
+
 export const onRequestOptions = async (): Promise<Response> => {
   return new Response(null, {
     status: 204,
@@ -80,9 +197,60 @@ export const onRequestPost = async (context: {
   env: Env;
 }): Promise<Response> => {
   try {
+    // Fail closed: without explicit Firebase env config we cannot validate prices.
+    const projectId = (context.env.FIREBASE_PROJECT_ID || '').trim();
+    const databaseId = (context.env.FIRESTORE_DATABASE_ID || '').trim();
+    if (!projectId || !databaseId) {
+      return jsonResponse(
+        {
+          ok: false,
+          code: 'CONFIG_MISSING',
+          error: 'المتغيرات البيئية ل Firebase غير مُعرَّفة على الخادم.',
+        },
+        503
+      );
+    }
+
+    // Basic per-IP rate limiting to prevent abuse of this public endpoint.
+    if (!checkRateLimit(getClientIp(context.request))) {
+      return jsonResponse(
+        {
+          ok: false,
+          code: 'RATE_LIMITED',
+          error: 'الحد الأقصى لطلبات التحقق من الأسعار تم تجاوزه. حاول لاحقاً.',
+        },
+        429
+      );
+    }
+
+    // Enforce a hard cap on the request body size before parsing.
+    const contentLength = context.request.headers.get('content-length');
+    if (contentLength && Number(contentLength) > MAX_BODY_BYTES) {
+      return jsonResponse(
+        { ok: false, code: 'BODY_TOO_LARGE', error: 'حجم الطلب كبير جداً.' },
+        413
+      );
+    }
+
+    let rawText: string;
+    try {
+      rawText = await context.request.text();
+    } catch {
+      return jsonResponse(
+        { ok: false, code: 'INVALID_BODY', error: 'تعذر قراءة صيغة الطلب.' },
+        400
+      );
+    }
+    if (rawText.length > MAX_BODY_BYTES) {
+      return jsonResponse(
+        { ok: false, code: 'BODY_TOO_LARGE', error: 'حجم الطلب كبير جداً.' },
+        413
+      );
+    }
+
     let body: ValidateOrderRequest;
     try {
-      body = (await context.request.json()) as ValidateOrderRequest;
+      body = JSON.parse(rawText) as ValidateOrderRequest;
     } catch {
       return jsonResponse(
         { ok: false, code: 'INVALID_JSON', error: 'صيغة الطلب غير صالحة.' },
@@ -116,15 +284,30 @@ export const onRequestPost = async (context: {
       );
     }
 
-    const projectId = (context.env.FIREBASE_PROJECT_ID || DEFAULT_PROJECT_ID).trim();
-    const databaseId = (context.env.FIRESTORE_DATABASE_ID || DEFAULT_DATABASE_ID).trim();
     const docUrl = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(
       projectId
     )}/databases/${encodeURIComponent(databaseId)}/documents/places/${encodeURIComponent(
       restaurantId
     )}`;
 
-    const fsRes = await fetch(docUrl, { method: 'GET' });
+    // Authenticate the Firestore REST lookup with the service-account access token.
+    let accessToken: string;
+    try {
+      accessToken = await getAccessToken(context.env);
+    } catch {
+      return jsonResponse(
+        {
+          ok: false,
+          code: 'AUTH_UNAVAILABLE',
+          error: 'تعذر التحقق من الأسعار على الخادم حالياً.',
+        },
+        503
+      );
+    }
+    const fsRes = await fetch(docUrl, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
     if (fsRes.status === 404) {
       return jsonResponse(
         { ok: false, code: 'RESTAURANT_NOT_FOUND', error: 'المطعم غير موجود في الدليل.' },

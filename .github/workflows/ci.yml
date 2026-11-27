@@ -12,22 +12,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: 22
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm install
+
+      - name: Lint (ESLint + Firestore security rules)
+        run: npm run lint
 
       - name: TypeScript typecheck
-        run: bun run typecheck
-
-      - name: Lint Firestore security rules
-        run: bun run lint:rules
+        run: npm run typecheck
 
       - name: Run unit tests
-        run: bun run test
+        run: npm test
 
       - name: Production build
-        run: bun run build
+        run: npm run build
+
+  firestore-rules-emulator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Firestore rules emulator tests
+        run: npx firebase-tools emulators:exec --only firestore "node --test tests/firestore.rules.test.mjs"

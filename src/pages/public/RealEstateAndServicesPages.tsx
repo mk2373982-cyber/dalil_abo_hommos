@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { CivicImage, PublicRootLayout, QRCodeCard, StackLayout } from '../../components/SharedUI';
+import { ListingSeo } from '../../components/ListingSeo';
 import {
   AnimatedEmptyState,
   AnimatedFilterChip,
@@ -47,7 +48,6 @@ import { buildWhatsAppUrl, validateEgyptPhone } from '../../lib/formatters';
 import { matchesArabicQuery } from '../../lib/arabicSearch';
 import { evaluateOpenStatus } from '../../lib/workingHours';
 import { readCitizenProfile } from '../../lib/citizenProfile';
-import { usePageSeo } from '../../lib/shareCard';
 
 export const RealEstateListPage: React.FC = () => {
   const { categories, properties, agencies } = useApp();
@@ -90,6 +90,12 @@ export const RealEstateListPage: React.FC = () => {
 
   return (
     <PublicRootLayout>
+      <ListingSeo
+        type="WebPage"
+        path="/real-estate"
+        title="عقارات وأراضي أبوحمص"
+        description="إعلانات عقارية مراجَعة وموثقة من مكاتب وملاك مركز ومدينة أبوحمص: شقق، محلات، أراضي، ومخازن للبيع والإيجار."
+      />
       <div className="space-y-5">
         <FadeInUp delay={0.02}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -267,16 +273,16 @@ export const PropertyDetailPage: React.FC = () => {
 
   const property = properties.find((p) => p.id === propertyId);
   const agency = agencies.find((a) => a.id === property?.agencyId);
-  usePageSeo(
-    property?.title,
-    property
-      ? `${property.listingType === 'sale' ? 'للبيع' : 'للإيجار'} في ${property.area} — ${property.areaSqm} م²`
-      : undefined
-  );
 
   if (!property) {
     return (
       <StackLayout title="تفاصيل العقار" backTo="/real-estate">
+        <ListingSeo
+          type="WebPage"
+          path="/real-estate"
+          title="العقار غير متاح"
+          description="إعلانات عقارية مراجَعة وموثقة من مكاتب وملاك مركز ومدينة أبوحمص."
+        />
         <div className="bg-white rounded-3xl p-8 text-center">العقار غير متاح.</div>
       </StackLayout>
     );
@@ -284,6 +290,18 @@ export const PropertyDetailPage: React.FC = () => {
 
   return (
     <StackLayout title="تفاصيل إعلان العقار" subtitle={property.area} backTo="/real-estate">
+      <ListingSeo
+        type="Product"
+        path={`/real-estate/${property.id}`}
+        title={property.title}
+        description={`${property.listingType === 'sale' ? 'للبيع' : 'للإيجار'} في ${property.area} — ${property.areaSqm} م²`}
+        area={property.area}
+        address={property.address}
+        phone={property.phone}
+        imageUrl={property.imageUrl}
+        price={String(property.price)}
+        currency="EGP"
+      />
       <div className="space-y-4 pb-20">
         <FadeInUp delay={0.02}>
           <div className="bg-white border border-[#e4ece7] rounded-3xl overflow-hidden shadow-civic-1">
@@ -1009,13 +1027,15 @@ export const PlaceDetailPage: React.FC = () => {
   const { places, favorites, toggleFavorite, logAnalyticsEvent } = useApp();
 
   const place = places.find((p) => p.id === placeId);
-  usePageSeo(
-    place?.name,
-    place ? `${place.specialty || 'نشاط محلي'} في ${place.area} — ${place.address}` : undefined
-  );
   if (!place) {
     return (
       <StackLayout title="تفاصيل المكان" backTo="/home">
+        <ListingSeo
+          type="WebPage"
+          path="/home"
+          title="المكان غير متوفر"
+          description="دليل أبوحمص — الدليل والخدمات اليومية لأهالي أبوحمص."
+        />
         <div className="bg-white rounded-3xl p-8 text-center">لم يتم العثور على هذا المكان.</div>
       </StackLayout>
     );
@@ -1047,6 +1067,23 @@ export const PlaceDetailPage: React.FC = () => {
         </button>
       }
     >
+      <ListingSeo
+        type={place.categorySlug === 'restaurants' ? 'Restaurant' : place.categorySlug === 'medical' ? 'MedicalClinic' : 'LocalBusiness'}
+        path={`/places/${place.id}`}
+        title={place.name}
+        description={`${place.specialty || 'نشاط محلي'} في ${place.area} — ${place.address}`}
+        area={place.area}
+        address={place.address}
+        phone={place.phone}
+        imageUrl={place.imageUrl}
+        rating={place.rating}
+        reviewCount={place.reviewCount}
+        hours={place.hours}
+        workingSchedule={place.workingSchedule}
+        is24Hours={place.is24Hours}
+        lat={place.lat}
+        lng={place.lng}
+      />
       <div className="space-y-4">
         <FadeInUp delay={0.02}>
           <div className="bg-white border border-[#e4ece7] rounded-3xl p-5 shadow-civic-1 space-y-4">
