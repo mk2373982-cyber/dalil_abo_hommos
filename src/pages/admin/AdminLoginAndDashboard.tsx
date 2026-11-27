@@ -272,7 +272,6 @@ export const AdminDashboardPage: React.FC = () => {
     deliveryRides,
     whatsappQueue,
     financeConfig,
-    isCloudSeeded,
     isDemoPreviewMode,
     isSuperAdmin,
     adminRole,

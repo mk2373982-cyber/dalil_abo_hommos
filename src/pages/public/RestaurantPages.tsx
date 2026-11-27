@@ -21,6 +21,7 @@ import {
 import { db } from '../../firebase';
 import { useApp } from '../../context/AppContext';
 import { CivicImage, QRCodeCard, StackLayout } from '../../components/SharedUI';
+import { ListingSeo } from '../../components/ListingSeo';
 import { AnimatePresence } from 'motion/react';
 import {
   AnimatedEmptyState,
@@ -45,7 +46,6 @@ import { matchesArabicQuery } from '../../lib/arabicSearch';
 import { calculateDeliveryFee } from '../../lib/orderPricing';
 import { evaluateOpenStatus } from '../../lib/workingHours';
 import { readCitizenProfile } from '../../lib/citizenProfile';
-import { usePageSeo } from '../../lib/shareCard';
 import type { DeliveryCoords, RestaurantOrder } from '../../types';
 
 export const RestaurantsListPage: React.FC = () => {
@@ -92,6 +92,12 @@ export const RestaurantsListPage: React.FC = () => {
       subtitle="اطلب وجبتك أونلاين وتابع التجهيز والتوصيل لحظة بلحظة"
       backTo="/home"
     >
+      <ListingSeo
+        type="WebPage"
+        path="/restaurants"
+        title="المطاعم والكافيهات في أبوحمص"
+        description="اطلب وجبتك أونلاين من مطاعم وكافيهات مركز ومدينة أبوحمص، تابع التجهيز والتوصيل لحظة بلحظة عبر دليل أبوحمص."
+      />
       <div className="space-y-4">
         <FadeInUp index={0} y={14}>
           <div className="relative">
@@ -215,14 +221,16 @@ export const RestaurantProfilePage: React.FC = () => {
   const { restaurantId } = useParams();
   const { places, logAnalyticsEvent } = useApp();
   const restaurant = places.find((p) => p.id === restaurantId);
-  usePageSeo(
-    restaurant?.name,
-    restaurant ? `${restaurant.specialty || 'مطعم وكافيه'} في ${restaurant.area} — استعرض المنيو واطلب أونلاين عبر دليل أبوحمص.` : undefined
-  );
 
   if (!restaurant) {
     return (
       <StackLayout title="ملف المطعم" backTo="/restaurants">
+        <ListingSeo
+          type="WebPage"
+          path="/restaurants"
+          title="المطعم غير متوفر"
+          description="المطاعم والكافيهات في أبوحمص — استعرض المنيو واطلب أونلاين عبر دليل أبوحمص."
+        />
         <div className="bg-white rounded-3xl p-8 text-center">لم يتم العثور على المطعم.</div>
       </StackLayout>
     );
@@ -238,6 +246,23 @@ export const RestaurantProfilePage: React.FC = () => {
 
   return (
     <StackLayout title={restaurant.name} subtitle={restaurant.specialty} backTo="/restaurants">
+      <ListingSeo
+        type="Restaurant"
+        path={`/restaurants/${restaurant.id}`}
+        title={restaurant.name}
+        description={`${restaurant.specialty || 'مطعم وكافيه'} في ${restaurant.area} — استعرض المنيو واطلب أونلاين عبر دليل أبوحمص.`}
+        area={restaurant.area}
+        address={restaurant.address}
+        phone={restaurant.phone}
+        imageUrl={restaurant.imageUrl}
+        rating={restaurant.rating}
+        reviewCount={restaurant.reviewCount}
+        hours={restaurant.hours}
+        workingSchedule={restaurant.workingSchedule}
+        is24Hours={restaurant.is24Hours}
+        lat={restaurant.lat}
+        lng={restaurant.lng}
+      />
       <div className="space-y-4 pb-20">
         <FadeInUp index={0}>
           <div className="bg-white border border-[#e4ece7] rounded-3xl overflow-hidden shadow-civic-1">

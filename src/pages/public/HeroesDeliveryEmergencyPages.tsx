@@ -22,6 +22,7 @@ import {
 import { db } from '../../firebase';
 import { useApp } from '../../context/AppContext';
 import { CivicImage, QRCodeCard, StackLayout } from '../../components/SharedUI';
+import { ListingSeo } from '../../components/ListingSeo';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   AnimatedEmptyState,
@@ -41,7 +42,6 @@ import {
 import { ABU_HOMS_AREAS } from '../../data/seedData';
 import { buildWhatsAppUrl, validateEgyptPhone } from '../../lib/formatters';
 import { readCitizenProfile } from '../../lib/citizenProfile';
-import { usePageSeo } from '../../lib/shareCard';
 import type { DeliveryRide } from '../../types';
 
 export const HeroesListPage: React.FC = () => {
@@ -193,10 +193,6 @@ export const HeroProfilePage: React.FC = () => {
   const prefersReduced = useReducedMotion();
   const savedProfile = useMemo(() => readCitizenProfile(), []);
   const hero = places.find((p) => p.id === heroId);
-  usePageSeo(
-    hero?.name,
-    hero ? `${hero.specialty || 'حرفي ومشروع منزلي'} في ${hero.area} — ${hero.address}` : undefined
-  );
   const [showRequest, setShowRequest] = useState(false);
   const [name, setName] = useState(savedProfile.name || '');
   const [phone, setPhone] = useState(savedProfile.phone || '');
@@ -206,6 +202,12 @@ export const HeroProfilePage: React.FC = () => {
   if (!hero) {
     return (
       <StackLayout title="ملف المكافح" backTo="/heroes">
+        <ListingSeo
+          type="WebPage"
+          path="/heroes"
+          title="الملف غير متوفر"
+          description="حرفيون ومشاريع منزلية في مركز ومدينة أبوحمص — تواصل مباشر بدون عمولة عبر دليل أبوحمص."
+        />
         <div className="bg-white rounded-3xl p-8 text-center">لم يتم العثور على الملف المطلوب.</div>
       </StackLayout>
     );
@@ -246,6 +248,23 @@ export const HeroProfilePage: React.FC = () => {
 
   return (
     <StackLayout title={hero.name} subtitle="قسم المكافحين والمكافحات" backTo="/heroes">
+      <ListingSeo
+        type="LocalBusiness"
+        path={`/heroes/${hero.id}`}
+        title={hero.name}
+        description={`${hero.specialty || 'حرفي ومشروع منزلي'} في ${hero.area} — ${hero.address}`}
+        area={hero.area}
+        address={hero.address}
+        phone={hero.phone}
+        imageUrl={hero.imageUrl}
+        rating={hero.rating}
+        reviewCount={hero.reviewCount}
+        hours={hero.hours}
+        workingSchedule={hero.workingSchedule}
+        is24Hours={hero.is24Hours}
+        lat={hero.lat}
+        lng={hero.lng}
+      />
       <div className="space-y-4">
         <FadeInUp delay={0.02}>
           <div className="bg-white border border-[#e4ece7] rounded-3xl p-5 shadow-civic-1 space-y-4">

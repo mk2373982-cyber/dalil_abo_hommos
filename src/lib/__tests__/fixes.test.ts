@@ -1,5 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { generateKeyPairSync } from 'node:crypto';
 import {
   buildWhatsAppUrl,
   formatEgyptWhatsApp,
@@ -14,8 +15,14 @@ import {
   isPlaceSubscribedToFilter,
   sortPlacesByPromoPriority,
 } from '../promoFilters';
-import { readOfflineCatalog, writeOfflineCatalog } from '../offlineCache';
-import { matchesArabicQuery, normalizeArabic, normalizeArabicDigits } from '../arabicSearch';
+import { isOfflineCatalogFresh, readOfflineCatalog, writeOfflineCatalog } from '../offlineCache';
+import type { OfflineCatalogSnapshot } from '../offlineCache';
+import {
+  filterByArabicQueryOrFallback,
+  matchesArabicQuery,
+  normalizeArabic,
+  normalizeArabicDigits,
+} from '../arabicSearch';
 import {
   evaluateOpenStatus,
   formatWeeklyScheduleSummary,
@@ -258,6 +265,94 @@ describe('offlineCache (readOfflineCatalog / writeOfflineCatalog)', () => {
     assert.ok(snapshot.cachedAt);
   });
 
+  it('stores full catalog documents (TTL cache is the primary hydration source)', () => {
+    const map = new Map<string, string>();
+    const memoryStore = {
+      getItem: (k: string) => map.get(k) ?? null,
+      setItem: (k: string, v: string) => {
+        map.set(k, v);
+      },
+    };
+
+    const heavyPlaces: Place[] = Array.from({ length: 150 }, (_, idx) => ({
+      id: `p-${idx}`,
+      name: `مكان ${idx}`,
+      categoryId: 'cat-general',
+      categorySlug: 'general',
+      area: 'أبوحمص',
+      address: 'شارع المحطة',
+      phone: '01000000000',
+      description: 'نص وصف طويل يتم الاحتفاظ به كاملاً في نسخة TTL',
+      menuItems: [{ id: 'm-1', name: 'صنف', price: 10, description: 'x', category: 'y' }],
+      menuPriceMap: { 'm-1': 10 },
+      gallery: [{ title: 't', subtitle: 's', tag: 'g', imageUrl: 'https://x.test/a.png' }],
+      services: [{ name: 's', description: 'd', priceLabel: 'p' }],
+    }));
+
+    assert.equal(writeOfflineCatalog({ places: heavyPlaces }, memoryStore), true);
+    const snapshot = readOfflineCatalog(memoryStore);
+    assert.ok(snapshot);
+    // The TTL cache stores the full catalog so fresh hydration keeps every feature
+    // (restaurant menus, descriptions, galleries) working without a network fetch.
+    assert.equal(snapshot.places?.length, 150);
+    const first = snapshot.places?.[0];
+    assert.ok(first);
+    assert.equal(first.name, 'مكان 0');
+    assert.equal(first.phone, '01000000000');
+    assert.equal(first.description, 'نص وصف طويل يتم الاحتفاظ به كاملاً في نسخة TTL');
+    assert.ok(Array.isArray(first.menuItems));
+    assert.ok(first.menuPriceMap);
+    assert.ok(Array.isArray(first.gallery));
+    assert.ok(Array.isArray(first.services));
+  });
+
+  it('reports TTL freshness for cache-first hydration', () => {
+    const now = Date.now();
+    const mk = (cachedAt: string) => ({
+      places: [{ id: 'p-1' }],
+      cachedAt,
+    }) as unknown as OfflineCatalogSnapshot;
+    const fresh = mk(new Date(now - 60_000).toISOString());
+    const stale = mk(new Date(now - 8 * 60 * 60 * 1000).toISOString());
+    const justExpired = mk(new Date(now - 7_200_001).toISOString());
+
+    assert.equal(isOfflineCatalogFresh(fresh, now), true);
+    assert.equal(isOfflineCatalogFresh(stale, now), false);
+    assert.equal(isOfflineCatalogFresh(justExpired, now), false);
+    assert.equal(isOfflineCatalogFresh(null, now), false);
+    assert.equal(isOfflineCatalogFresh({ cachedAt: 'not-a-date' }, now), false);
+    assert.equal(isOfflineCatalogFresh({ places: [] } as unknown as OfflineCatalogSnapshot, now), false);
+  });
+
+  it('skips redundant writes when the serialized content is unchanged', () => {
+    const map = new Map<string, string>();
+    let setItemCalls = 0;
+    const memoryStore = {
+      getItem: (k: string) => map.get(k) ?? null,
+      setItem: (k: string, v: string) => {
+        setItemCalls += 1;
+        map.set(k, v);
+      },
+    };
+
+    const patch = {
+      campaigns: [
+        {
+          id: 'c-1',
+          slotNumber: 1,
+          title: 'بنر',
+          targetRoute: '/home',
+          active: true,
+        },
+      ],
+    };
+
+    assert.equal(writeOfflineCatalog(patch, memoryStore), true);
+    assert.equal(writeOfflineCatalog(patch, memoryStore), true);
+    // Second identical write is skipped — no localStorage churn on every snapshot tick.
+    assert.equal(setItemCalls, 1);
+  });
+
   it('recovers gracefully from corrupt storage or QuotaExceededError', () => {
     const corruptStore = {
       getItem: () => '{broken-json',
@@ -271,6 +366,23 @@ describe('offlineCache (readOfflineCatalog / writeOfflineCatalog)', () => {
       },
     };
     assert.equal(writeOfflineCatalog({ places: [] }, fullStore), false);
+  });
+
+  it('pauses writes after a quota failure to avoid thrashing storage', () => {
+    const quotaStore = {
+      getItem: () => null,
+      setItem: () => {
+        throw new Error('QuotaExceededError');
+      },
+    };
+    assert.equal(writeOfflineCatalog({ offers: [] }, quotaStore), false);
+
+    // Immediate retry, even against a healthy store, is skipped during the cooldown.
+    const healthyStore = {
+      getItem: () => null,
+      setItem: () => undefined,
+    };
+    assert.equal(writeOfflineCatalog({ offers: [] }, healthyStore), false);
   });
 });
 
@@ -288,6 +400,29 @@ describe('arabicSearch (normalizeArabic & matchesArabicQuery)', () => {
     assert.equal(matchesArabicQuery(haystack, 'بورسعيد د. احمد'), true);
     assert.equal(matchesArabicQuery(haystack, '٠١٠١٢٣٤٥٦٧٨'), true);
     assert.equal(matchesArabicQuery(haystack, 'احمد عظام'), false);
+  });
+
+  it('filterByArabicQueryOrFallback keeps strict AND results and falls back to OR relevance', () => {
+    const items = [
+      { id: 'a', text: 'مطعم شاورما أبوحمص' },
+      { id: 'b', text: 'مطعم مشويات بركة غطاس' },
+      { id: 'c', text: 'صيدلية الشفاء أبوحمص' },
+    ];
+
+    // Strict AND match exists -> no OR fallback, strict result returned.
+    const strict = filterByArabicQueryOrFallback(items, (i) => i.text, 'مطعم أبوحمص');
+    assert.deepEqual(strict.map((i) => i.id), ['a']);
+
+    // Zero AND matches -> OR fallback, ranked by number of matched tokens.
+    const fallback = filterByArabicQueryOrFallback(items, (i) => i.text, 'مطعم صيدلية شاورما');
+    assert.deepEqual(fallback.map((i) => i.id), ['a', 'b', 'c']);
+
+    // Single-token queries never use the OR fallback.
+    const single = filterByArabicQueryOrFallback(items, (i) => i.text, 'صيدلية');
+    assert.deepEqual(single.map((i) => i.id), ['c']);
+
+    // Empty query returns the full pool.
+    assert.deepEqual(filterByArabicQueryOrFallback(items, (i) => i.text, ''), items);
   });
 });
 
@@ -342,15 +477,17 @@ describe('evaluateOpenStatus (Africa/Cairo working hours)', () => {
     assert.match(res.label, /الجمعة/);
   });
 
-  it('returns explicit unknown state for unparseable text and never guesses open', () => {
+  it('returns unknown for unparseable text without openNow, and honors stored openNow fallback', () => {
     const resFalse = evaluateOpenStatus('بالحجز المسبق فقط', false, makeCairoDate('2026-06-15', 12, 0));
     assert.equal(resFalse.isOpen, false);
     assert.equal(resFalse.state, 'unknown');
     assert.equal(resFalse.isAuto, false);
 
+    // Stored openNow=true must surface valid open places instead of hiding them
+    // behind «مواعيد غير مؤكدة» when hours text cannot be parsed.
     const resTrueFallback = evaluateOpenStatus('بالحجز المسبق فقط', true, makeCairoDate('2026-06-15', 12, 0));
-    assert.equal(resTrueFallback.isOpen, false);
-    assert.equal(resTrueFallback.state, 'unknown');
+    assert.equal(resTrueFallback.isOpen, true);
+    assert.equal(resTrueFallback.state, 'open');
     assert.equal(resTrueFallback.isAuto, false);
   });
 
@@ -589,12 +726,30 @@ describe('Cloudflare Pages Function: /api/orders/validate', () => {
       },
     };
 
+    // Exercise the real service-account JWT signing path with a throwaway RSA key.
+    const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+    const privateKeyPem = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
+    const env = {
+      FIREBASE_PROJECT_ID: 'test-project',
+      FIRESTORE_DATABASE_ID: 'test-db',
+      FIREBASE_CLIENT_EMAIL: 'test@test-project.iam.gserviceaccount.com',
+      FIREBASE_PRIVATE_KEY: privateKeyPem,
+    };
+
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = (async () =>
-      new Response(JSON.stringify(mockFirestoreDoc), {
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('oauth2.googleapis.com/token')) {
+        return new Response(
+          JSON.stringify({ access_token: 'fake-access-token', expires_in: 3600 }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      return new Response(JSON.stringify(mockFirestoreDoc), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
-      })) as typeof fetch;
+      });
+    }) as typeof fetch;
 
     try {
       // 1. Valid order returns 200 + aligned OrderPricingSnapshot
@@ -610,7 +765,7 @@ describe('Cloudflare Pages Function: /api/orders/validate', () => {
           clientTotal: 265,
         }),
       });
-      const okRes = await onRequestPost({ request: okReq, env: {} });
+      const okRes = await onRequestPost({ request: okReq, env: env });
       assert.equal(okRes.status, 200);
       const okJson = (await okRes.json()) as {
         ok: boolean;
@@ -647,7 +802,7 @@ describe('Cloudflare Pages Function: /api/orders/validate', () => {
           clientTotal: 25,
         }),
       });
-      const tamperRes = await onRequestPost({ request: tamperReq, env: {} });
+      const tamperRes = await onRequestPost({ request: tamperReq, env: env });
       assert.equal(tamperRes.status, 422);
       const tamperJson = (await tamperRes.json()) as {
         ok: boolean;
@@ -669,7 +824,7 @@ describe('Cloudflare Pages Function: /api/orders/validate', () => {
           items: [{ menuItemId: 'fake-item', quantity: 1 }],
         }),
       });
-      const unknownRes = await onRequestPost({ request: unknownReq, env: {} });
+      const unknownRes = await onRequestPost({ request: unknownReq, env: env });
       assert.equal(unknownRes.status, 400);
 
       // 4. Invalid restaurantId path traversal rejected with 400
@@ -681,7 +836,7 @@ describe('Cloudflare Pages Function: /api/orders/validate', () => {
           items: [{ menuItemId: 'm-1', quantity: 1 }],
         }),
       });
-      const badIdRes = await onRequestPost({ request: badIdReq, env: {} });
+      const badIdRes = await onRequestPost({ request: badIdReq, env: env });
       assert.equal(badIdRes.status, 400);
     } finally {
       globalThis.fetch = originalFetch;
@@ -704,10 +859,15 @@ describe('workingHours exact boundary & holiday checks', () => {
       evaluateOpenStatus(undefined, undefined, new Date('2025-01-11T19:00:00Z'), schedule).state,
       'closed'
     );
-    // Unparseable text with no schedule -> UNKNOWN (never guesses open)
+    // Unparseable text with no schedule and no stored openNow -> UNKNOWN (never guesses open)
+    assert.equal(
+      evaluateOpenStatus('حسب الحجز المسبق', false, new Date('2025-01-11T15:00:00Z')).state,
+      'unknown'
+    );
+    // ... but a stored openNow=true is honored as an explicit open signal.
     assert.equal(
       evaluateOpenStatus('حسب الحجز المسبق', true, new Date('2025-01-11T15:00:00Z')).state,
-      'unknown'
+      'open'
     );
   });
 });

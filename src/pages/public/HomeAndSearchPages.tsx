@@ -1,24 +1,20 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowLeft,
   BadgeCheck,
-  Bike,
   ChevronLeft,
   Clock,
   Code2,
   Compass,
   ExternalLink,
-  Hammer,
-  HeartHandshake,
   History,
   MapPin,
   Navigation,
   Percent,
   Phone,
   Search,
-  ShieldAlert,
   Sparkles,
   Star,
   Store,
@@ -29,6 +25,8 @@ import { useApp } from '../../context/AppContext';
 import { CivicImage, PublicRootLayout, StackLayout } from '../../components/SharedUI';
 import { PWAInstallModal } from '../../components/PWAInstallModal';
 import { AbuHomsAreaMap } from '../../components/AbuHomsAreaMap';
+import { ListingSeo } from '../../components/ListingSeo';
+import { InfiniteScrollSentinel } from '../../components/InfiniteScrollSentinel';
 import {
   AnimatedEmptyState,
   AnimatedFilterChip,
@@ -39,8 +37,8 @@ import {
 import { DynamicCategoryIcon, hexToRgba } from '../../lib/icons';
 import {
   clearRecentSearches,
+  filterByArabicQueryOrFallback,
   getRecentSearches,
-  matchesArabicQuery,
   normalizeArabic,
   saveRecentSearch,
 } from '../../lib/arabicSearch';
@@ -96,14 +94,14 @@ export const HomePage: React.FC = () => {
   const heroSuggestions = useMemo(() => {
     const q = heroQuery.trim();
     if (q.length < 1) return [];
-    return places
-      .filter((p) =>
-        matchesArabicQuery(
-          `${p.name} ${p.specialty || ''} ${p.area} ${p.address} ${(p.tags || []).join(' ')}`,
-          q
-        )
-      )
-      .slice(0, 5);
+    return filterByArabicQueryOrFallback(
+      places,
+      (p) =>
+        `${p.name} ${p.specialty || ''} ${p.area} ${p.address} ${p.description || ''} ${(
+          p.tags || []
+        ).join(' ')}`,
+      q
+    ).slice(0, 5);
   }, [places, heroQuery]);
 
   const activeCampaigns = useMemo(() => campaigns.filter((c) => c.active), [campaigns]);
@@ -143,6 +141,12 @@ export const HomePage: React.FC = () => {
 
   return (
     <PublicRootLayout>
+      <ListingSeo
+        type="WebPage"
+        path="/home"
+        title="دليل أبوحمص — الدليل والخدمات اليومية لأهالي أبوحمص"
+        description="الدليل المجتمعي والخدمي الموحد لأهالي مركز ومدينة أبوحمص بمحافظة البحيرة: أطباء، صيدليات، مطاعم، حرفيين، عقارات، دليفري، وعروض يومية."
+      />
       <PWAInstallModal context="public" />
       <div className="space-y-6">
         {/* Active Live Order / Clinic Queue / Delivery Floating Widget (SCREEN_140) */}
@@ -804,6 +808,9 @@ export const HomePage: React.FC = () => {
   );
 };
 
+/** Incremental render batch size for search results (keeps typing cheap on large catalogs). */
+const SEARCH_PAGE_SIZE = 24;
+
 export const SearchPage: React.FC = () => {
   const { places, properties, offers, activeCategories, activePromoFilters, logAnalyticsEvent, showToast } =
     useApp();
@@ -819,7 +826,24 @@ export const SearchPage: React.FC = () => {
   const [recentSearches, setRecentSearches] = useState<string[]>(() => getRecentSearches());
   const [loggedZero, setLoggedZero] = useState<string>('');
 
-  const qNorm = normalizeArabic(query);
+  // Defer the query used for matching so fast typing does not re-render the whole
+  // results tree (and hundreds of DOM nodes) on every keystroke.
+  const deferredQuery = useDeferredValue(query);
+  const qNorm = normalizeArabic(deferredQuery);
+
+  const [placesShown, setPlacesShown] = useState<number>(SEARCH_PAGE_SIZE);
+  const [propsShown, setPropsShown] = useState<number>(SEARCH_PAGE_SIZE);
+  const [offersShown, setOffersShown] = useState<number>(SEARCH_PAGE_SIZE);
+
+  // Reset the incremental batches whenever the result set itself changes.
+  const resultsKey = `${qNorm}|${selectedCategory}|${selectedArea}|${openNowOnly}|${selectedPromoId}|${
+    userCoords ? '1' : '0'
+  }`;
+  useEffect(() => {
+    setPlacesShown(SEARCH_PAGE_SIZE);
+    setPropsShown(SEARCH_PAGE_SIZE);
+    setOffersShown(SEARCH_PAGE_SIZE);
+  }, [resultsKey]);
 
   const handleToggleNearest = () => {
     if (userCoords) {
@@ -849,7 +873,7 @@ export const SearchPage: React.FC = () => {
 
   const categoryPool = useMemo(() => {
     const selectedZone = selectedArea !== 'all' ? findZoneForText(selectedArea) : null;
-    return places.filter((p) => {
+    const structural = places.filter((p) => {
       if (selectedCategory !== 'all' && p.categorySlug !== selectedCategory) return false;
       if (selectedArea !== 'all') {
         const placeZone = findZoneForText(p.area) || findZoneForText(p.address);
@@ -863,13 +887,18 @@ export const SearchPage: React.FC = () => {
       ) {
         return false;
       }
-      if (!qNorm) return true;
-      return matchesArabicQuery(
-        `${p.name} ${p.specialty || ''} ${p.area} ${p.address} ${(p.tags || []).join(' ')}`,
-        query
-      );
+      return true;
     });
-  }, [places, selectedCategory, selectedArea, openNowOnly, qNorm, query]);
+    if (!qNorm) return structural;
+    return filterByArabicQueryOrFallback(
+      structural,
+      (p) =>
+        `${p.name} ${p.specialty || ''} ${p.area} ${p.address} ${p.description || ''} ${(
+          p.tags || []
+        ).join(' ')}`,
+      deferredQuery
+    );
+  }, [places, selectedCategory, selectedArea, openNowOnly, qNorm, deferredQuery]);
 
   const matchedPlaces = useMemo(() => {
     const list = selectedPromoId
@@ -888,18 +917,22 @@ export const SearchPage: React.FC = () => {
   const matchedProperties = useMemo(() => {
     if (selectedCategory !== 'all' && selectedCategory !== 'real-estate') return [];
     if (!qNorm) return properties.slice(0, 3);
-    return properties.filter((pr) =>
-      matchesArabicQuery(`${pr.title} ${pr.area} ${pr.address || ''} ${pr.description || ''}`, query)
+    return filterByArabicQueryOrFallback(
+      properties,
+      (pr) => `${pr.title} ${pr.area} ${pr.address || ''} ${pr.description || ''}`,
+      deferredQuery
     );
-  }, [properties, selectedCategory, qNorm, query]);
+  }, [properties, selectedCategory, qNorm, deferredQuery]);
 
   const matchedOffers = useMemo(() => {
     if (selectedCategory !== 'all') return [];
     if (!qNorm) return [];
-    return offers.filter(
-      (o) => o.active && matchesArabicQuery(`${o.title} ${o.placeName} ${o.subtitle || ''}`, query)
+    return filterByArabicQueryOrFallback(
+      offers.filter((o) => o.active),
+      (o) => `${o.title} ${o.placeName} ${o.subtitle || ''}`,
+      deferredQuery
     );
-  }, [offers, selectedCategory, qNorm, query]);
+  }, [offers, selectedCategory, qNorm, deferredQuery]);
 
   const totalResults = matchedPlaces.length + matchedProperties.length + matchedOffers.length;
 
@@ -928,6 +961,12 @@ export const SearchPage: React.FC = () => {
 
   return (
     <StackLayout title="البحث الموحد في أبوحمص" subtitle="بحث ذكي، الأقرب إليك، ومفتوح الآن" backTo="/home">
+      <ListingSeo
+        type="WebPage"
+        path="/search"
+        title={query.trim() ? `نتائج البحث عن «${query.trim()}» في دليل أبوحمص` : 'البحث الموحد في أبوحمص'}
+        description="بحث ذكي في دليل أبوحمص: ابحث عن أطباء، مطاعم، صيدليات، حرفيين، عقارات، وعروض التخفيض في مركز ومدينة أبوحمص."
+      />
       <div className="space-y-4">
         {/* Search Input */}
         <FadeInUp index={0} y={14}>
@@ -1139,7 +1178,7 @@ export const SearchPage: React.FC = () => {
 
             {matchedPlaces.length > 0 && (
               <AnimatedListContainer className="space-y-3">
-                {matchedPlaces.map((place, idx) => {
+                {matchedPlaces.slice(0, placesShown).map((place, idx) => {
                   const target =
                     place.categorySlug === 'medical'
                       ? `/medical/doctors/${place.id}`
@@ -1217,12 +1256,18 @@ export const SearchPage: React.FC = () => {
                 })}
               </AnimatedListContainer>
             )}
+            <InfiniteScrollSentinel
+              onLoadMore={() =>
+                setPlacesShown((v) => Math.min(v + SEARCH_PAGE_SIZE, matchedPlaces.length))
+              }
+              hasMore={placesShown < matchedPlaces.length}
+            />
 
             {matchedProperties.length > 0 && (
               <div className="space-y-2.5 pt-2">
                 <h3 className="text-sm font-bold text-[#003820]">نتائج العقارات</h3>
                 <AnimatedListContainer className="space-y-2.5">
-                  {matchedProperties.map((prop, idx) => (
+                  {matchedProperties.slice(0, propsShown).map((prop, idx) => (
                     <AnimatedListItem key={prop.id} index={idx}>
                       <Link
                         to={`/real-estate/${prop.id}`}
@@ -1239,6 +1284,12 @@ export const SearchPage: React.FC = () => {
                     </AnimatedListItem>
                   ))}
                 </AnimatedListContainer>
+                <InfiniteScrollSentinel
+                  onLoadMore={() =>
+                    setPropsShown((v) => Math.min(v + SEARCH_PAGE_SIZE, matchedProperties.length))
+                  }
+                  hasMore={propsShown < matchedProperties.length}
+                />
               </div>
             )}
 
@@ -1246,7 +1297,7 @@ export const SearchPage: React.FC = () => {
               <div className="space-y-2.5 pt-2">
                 <h3 className="text-sm font-bold text-[#003820]">التخفيضات المطابقة</h3>
                 <AnimatedListContainer className="space-y-2.5">
-                  {matchedOffers.map((offer, idx) => (
+                  {matchedOffers.slice(0, offersShown).map((offer, idx) => (
                     <AnimatedListItem key={offer.id} index={idx}>
                       <Link
                         to={`/offers/${offer.id}`}
@@ -1263,6 +1314,12 @@ export const SearchPage: React.FC = () => {
                     </AnimatedListItem>
                   ))}
                 </AnimatedListContainer>
+                <InfiniteScrollSentinel
+                  onLoadMore={() =>
+                    setOffersShown((v) => Math.min(v + SEARCH_PAGE_SIZE, matchedOffers.length))
+                  }
+                  hasMore={offersShown < matchedOffers.length}
+                />
               </div>
             )}
           </div>

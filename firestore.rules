@@ -19,12 +19,6 @@ service cloud.firestore {
       return resource.data;
     }
 
-    function isBootstrapOwner() {
-      return isSignedIn()
-        && request.auth.token.email == 'mk2373982@gmail.com'
-        && request.auth.token.email_verified == true;
-    }
-
     function hasAdminDoc() {
       return isSignedIn()
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
@@ -38,8 +32,12 @@ service cloud.firestore {
       return hasAdminDoc() && (!('active' in adminDoc()) || adminDoc().active == true);
     }
 
+    // Super admin is derived solely from the role document (admins/{uid}). The first
+    // super_admin doc must be seeded out-of-band via the Firebase Admin SDK / Console
+    // (see README "Bootstrapping the first admin"), since rules cannot bootstrap
+    // themselves without an existing super_admin.
     function isSuperAdmin() {
-      return isBootstrapOwner() || (isActiveAdminDoc() && adminDoc().role == 'super_admin');
+      return isActiveAdminDoc() && adminDoc().role == 'super_admin';
     }
 
     function isModerator() {
@@ -766,7 +764,10 @@ service cloud.firestore {
       allow update: if docId == 'main' && (
         (isAdminWriter() && isValidPublicSettings(incoming()))
         || (
-          incoming().diff(existing()).affectedKeys().hasOnly(['visitsCount'])
+          // Anonymous visitors must NOT be able to inflate the public visits counter.
+          // Only signed-in users may increment it, and only by exactly +1.
+          isSignedIn()
+          && incoming().diff(existing()).affectedKeys().hasOnly(['visitsCount'])
           && incoming().visitsCount is int
           && incoming().visitsCount == existing().visitsCount + 1
         )
@@ -786,8 +787,9 @@ service cloud.firestore {
           isAdminWriter()
           || isClinicPartnerFor(doctorId)
           || (
-            // Citizen atomic booking: clinic MUST be open, and ticket MUST be created in the same transaction
-            existing().status == 'open'
+            // Citizen atomic booking: MUST be signed in, clinic MUST be open, and ticket MUST be created in the same transaction
+            isSignedIn()
+            && existing().status == 'open'
             && incoming().status == existing().status
             && incoming().doctorName == existing().doctorName
             && incoming().lastTicketId is string
@@ -827,7 +829,7 @@ service cloud.firestore {
         || isStrongToken(ticketId);
       allow list: if isAdminPanelReader()
         || isClinicPartnerFor(existing().doctorId);
-      allow create: if isValidClinicTicket(incoming())
+      allow create: if isSignedIn() && isValidClinicTicket(incoming())
         && incoming().id == ticketId
         && isStrongToken(ticketId)
         && incoming().status == 'waiting'
@@ -858,7 +860,7 @@ service cloud.firestore {
       allow list: if isAdminPanelReader()
         || isRestaurantPartnerFor(existing().restaurantId)
         || (isCaptainPartner() && (existing().status == 'ready' || (('captainUid' in existing()) && existing().captainUid == request.auth.uid)));
-      allow create: if isValidRestaurantOrder(incoming())
+      allow create: if isSignedIn() && isValidRestaurantOrder(incoming())
         && incoming().id == orderId
         && isStrongToken(orderId)
         && incoming().status == 'new'
@@ -920,7 +922,7 @@ service cloud.firestore {
         || isStrongToken(rideId);
       allow list: if isAdminPanelReader()
         || (isCaptainPartner() && (existing().status == 'pending' || (('captainUid' in existing()) && existing().captainUid == request.auth.uid)));
-      allow create: if isValidDeliveryRide(incoming())
+      allow create: if isSignedIn() && isValidDeliveryRide(incoming())
         && incoming().id == rideId
         && isStrongToken(rideId)
         && incoming().status == 'pending'
@@ -963,7 +965,7 @@ service cloud.firestore {
     match /submissions/{token} {
       allow get: if isAdminPanelReader() || isStrongToken(token);
       allow list: if isAdminPanelReader();
-      allow create: if isValidSubmission(incoming())
+      allow create: if isSignedIn() && isValidSubmission(incoming())
         && incoming().id == token
         && incoming().trackingToken == token
         && isStrongToken(token)
@@ -989,7 +991,7 @@ service cloud.firestore {
     // 10. Private Analytics Events
     match /analytics_events/{id} {
       allow get, list: if isAdminPanelReader();
-      allow create: if isValidAnalyticsEvent(incoming());
+      allow create: if isSignedIn() && isValidAnalyticsEvent(incoming());
       allow update, delete: if isSuperAdmin();
     }
 

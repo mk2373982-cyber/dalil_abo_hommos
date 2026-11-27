@@ -24,7 +24,9 @@ import {
 } from 'lucide-react';
 import { db } from '../../firebase';
 import { useApp } from '../../context/AppContext';
+import { useClinicQueues } from '../../hooks/useClinicQueues';
 import { CivicImage, QRCodeCard, StackLayout } from '../../components/SharedUI';
+import { ListingSeo } from '../../components/ListingSeo';
 import {
   AnimatedEmptyState,
   AnimatedFilterChip,
@@ -45,7 +47,6 @@ import {
 import { matchesArabicQuery } from '../../lib/arabicSearch';
 import { evaluateOpenStatus, formatWeeklyScheduleSummary, getCairoDateString } from '../../lib/workingHours';
 import { readCitizenProfile } from '../../lib/citizenProfile';
-import { usePageSeo } from '../../lib/shareCard';
 import {
   playNotificationChime,
   requestBrowserNotificationPermission,
@@ -56,7 +57,8 @@ import { buildWhatsAppUrl, validateEgyptPhone } from '../../lib/formatters';
 import type { ClinicQueue, ClinicTicket } from '../../types';
 
 export const MedicalListPage: React.FC = () => {
-  const { categories, places, activePromoFilters, clinicQueues, logAnalyticsEvent } = useApp();
+  const { categories, places, activePromoFilters, logAnalyticsEvent } = useApp();
+  const clinicQueues = useClinicQueues();
   const [search, setSearch] = useState('');
   const [selectedFilterId, setSelectedFilterId] = useState<string | null>(null);
 
@@ -311,17 +313,20 @@ export const MedicalListPage: React.FC = () => {
 
 export const DoctorProfilePage: React.FC = () => {
   const { doctorId } = useParams();
-  const { places, clinicQueues, favorites, toggleFavorite, logAnalyticsEvent } = useApp();
+  const { places, favorites, toggleFavorite, logAnalyticsEvent } = useApp();
+  const clinicQueues = useClinicQueues();
 
   const doctor = places.find((p) => p.id === doctorId);
-  usePageSeo(
-    doctor?.name,
-    doctor ? `${doctor.specialty || 'عيادة طبية'} — ${doctor.address} — احجز دورك أونلاين عبر دليل أبوحمص.` : undefined
-  );
 
   if (!doctor) {
     return (
       <StackLayout title="ملف الطبيب" backTo="/medical">
+        <ListingSeo
+          type="WebPage"
+          path="/medical"
+          title="الطبيب غير متوفر"
+          description="السجل الطبي المعتمد لمركز ومدينة أبوحمص — أطباء وعيادات وحجز أدوار أونلاين."
+        />
         <div className="bg-white rounded-3xl p-8 text-center text-sm">لم يتم العثور على الطبيب المطلوب.</div>
       </StackLayout>
     );
@@ -360,6 +365,23 @@ export const DoctorProfilePage: React.FC = () => {
         </button>
       }
     >
+      <ListingSeo
+        type="MedicalClinic"
+        path={`/medical/doctors/${doctor.id}`}
+        title={doctor.name}
+        description={`${doctor.specialty || 'عيادة طبية'} — ${doctor.address} — احجز دورك أونلاين عبر دليل أبوحمص.`}
+        area={doctor.area}
+        address={doctor.address}
+        phone={doctor.phone}
+        imageUrl={doctor.imageUrl}
+        rating={doctor.rating}
+        reviewCount={doctor.reviewCount}
+        hours={doctor.hours}
+        workingSchedule={doctor.workingSchedule}
+        is24Hours={doctor.is24Hours}
+        lat={doctor.lat}
+        lng={doctor.lng}
+      />
       <div className="space-y-4 pb-20">
         {/* Main Hero Card */}
         <FadeInUp index={0}>
@@ -588,7 +610,8 @@ export const DoctorProfilePage: React.FC = () => {
 
 export const DoctorBookingPage: React.FC = () => {
   const { doctorId } = useParams();
-  const { places, clinicQueues, bookClinicTicket, showToast } = useApp();
+  const { places, bookClinicTicket, showToast } = useApp();
+  const clinicQueues = useClinicQueues();
   const navigate = useNavigate();
 
   const doctor = places.find((p) => p.id === doctorId);
@@ -855,7 +878,8 @@ export const BookingConfirmedPage: React.FC = () => {
 
 export const LiveQueuePage: React.FC = () => {
   const { ticketId } = useParams();
-  const { clinicQueues, showToast } = useApp();
+  const { showToast } = useApp();
+  const clinicQueues = useClinicQueues();
   const [ticket, setTicket] = useState<ClinicTicket | null>(null);
   const [liveQueue, setLiveQueue] = useState<ClinicQueue | null>(null);
   const [loading, setLoading] = useState(true);

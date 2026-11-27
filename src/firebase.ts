@@ -40,7 +40,9 @@ export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-export const BOOTSTRAPPED_ADMIN_EMAIL = 'mk2373982@gmail.com';
+// NOTE: There is no hardcoded bootstrap super-admin email. Authorization is derived
+// solely from an `admins/{uid}` role document. The first super_admin doc must be
+// seeded out-of-band (see README "Bootstrapping the first admin").
 
 export enum OperationType {
   CREATE = 'create',

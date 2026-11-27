@@ -418,7 +418,7 @@ export function parseHoursTextToSchedule(hours?: string): { schedule: WeeklySche
 
 export function evaluateOpenStatus(
   hours?: string,
-  _fallbackOpenNow?: boolean,
+  fallbackOpenNow?: boolean,
   now: Date = new Date(),
   workingSchedule?: WeeklySchedule,
   is24Hours?: boolean
@@ -473,6 +473,12 @@ export function evaluateOpenStatus(
       };
     }
     return { isOpen: false, state: 'closed', label: 'مغلق حالياً', isAuto: true };
+  }
+
+  // No parseable hours and no structured schedule: fall back to the stored
+  // `openNow` boolean so valid open places are not hidden behind "مواعيد غير مؤكدة".
+  if (fallbackOpenNow) {
+    return { isOpen: true, state: 'open', label: 'مفتوح الآن', isAuto: false };
   }
 
   return {

@@ -47,6 +47,7 @@ const ORDER_TAMPER_PRICE_ID = 'ORD-TAMPER-PRICE-00001';
 const ORDER_TAMPER_FEE_ID = 'ORD-TAMPER-FEE-0000001';
 const ORDER_NO_SNAPSHOT_ID = 'ORD-NO-SNAPSHOT-000001';
 const ORDER_BAD_LOC_ID = 'ORD-BAD-LOC-0000000001';
+const ORDER_ANON_ID = 'ORD-ANON-REJECT-00001';
 const ORDER_REST_A_ID = 'ORD-REST-A-00000000001';
 const ORDER_REST_B_ID = 'ORD-REST-B-00000000001';
 const ORDER_READY_CAP_ID = 'ORD-READY-CAP-00000001';
@@ -248,6 +249,13 @@ try {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+
+    // Public settings doc with an existing visits counter
+    await db.doc('public_settings/main').set({
+      uid: 'public-main',
+      visitsCount: 100,
+      updatedAt: new Date().toISOString(),
+    });
   });
 
   // =========================================================================
@@ -313,6 +321,8 @@ try {
   // 2. Trusted Order Pricing Validation & Location Sharing Invariant
   // =========================================================================
   const anonDb = testEnv.unauthenticatedContext().firestore();
+  // Signed-in citizen (no admin doc) — citizen writes now require authentication.
+  const citizenDb = testEnv.authenticatedContext('citizen-uid', { email: 'citizen@test.local' }).firestore();
   const validSnapshot = {
     currency: 'EGP',
     subtotal: 200,
@@ -324,7 +334,7 @@ try {
 
   // Valid catalog-matched order -> SUCCEEDS
   await assertSucceeds(
-    anonDb.doc(`restaurant_orders/${ORDER_VALID_ID}`).set({
+    citizenDb.doc(`restaurant_orders/${ORDER_VALID_ID}`).set({
       id: ORDER_VALID_ID,
       orderCode: ORDER_VALID_ID,
       restaurantId: 'rest-a',
@@ -346,9 +356,31 @@ try {
     })
   );
 
+  // Anonymous (unauthenticated) order creation -> FAILS (anti-abuse: create requires auth)
+  await assertFails(
+    anonDb.doc(`restaurant_orders/${ORDER_ANON_ID}`).set({
+      id: ORDER_ANON_ID,
+      orderCode: ORDER_ANON_ID,
+      restaurantId: 'rest-a',
+      restaurantName: 'مطعم أ',
+      customerName: 'أحمد علي',
+      customerPhone: '01012345678',
+      deliveryArea: 'شارع المحطة',
+      deliveryAddress: 'عمارة 5',
+      items: [{ menuItemId: 'm-1', name: 'كباب', price: 100, quantity: 2 }],
+      subtotal: 200,
+      deliveryFee: 15,
+      total: 215,
+      pricingSnapshot: validSnapshot,
+      status: 'new',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+  );
+
   // Tampered unit price (1 EGP instead of 100 EGP) -> FAILS
   await assertFails(
-    anonDb.doc(`restaurant_orders/${ORDER_TAMPER_PRICE_ID}`).set({
+    citizenDb.doc(`restaurant_orders/${ORDER_TAMPER_PRICE_ID}`).set({
       id: ORDER_TAMPER_PRICE_ID,
       orderCode: ORDER_TAMPER_PRICE_ID,
       restaurantId: 'rest-a',
@@ -369,7 +401,7 @@ try {
 
   // Tampered delivery fee (0 EGP instead of 15 EGP) -> FAILS
   await assertFails(
-    anonDb.doc(`restaurant_orders/${ORDER_TAMPER_FEE_ID}`).set({
+    citizenDb.doc(`restaurant_orders/${ORDER_TAMPER_FEE_ID}`).set({
       id: ORDER_TAMPER_FEE_ID,
       orderCode: ORDER_TAMPER_FEE_ID,
       restaurantId: 'rest-a',
@@ -390,7 +422,7 @@ try {
 
   // Missing pricingSnapshot -> FAILS
   await assertFails(
-    anonDb.doc(`restaurant_orders/${ORDER_NO_SNAPSHOT_ID}`).set({
+    citizenDb.doc(`restaurant_orders/${ORDER_NO_SNAPSHOT_ID}`).set({
       id: ORDER_NO_SNAPSHOT_ID,
       orderCode: ORDER_NO_SNAPSHOT_ID,
       restaurantId: 'rest-a',
@@ -410,7 +442,7 @@ try {
 
   // locationShared: true WITHOUT deliveryCoords -> FAILS
   await assertFails(
-    anonDb.doc(`restaurant_orders/${ORDER_BAD_LOC_ID}`).set({
+    citizenDb.doc(`restaurant_orders/${ORDER_BAD_LOC_ID}`).set({
       id: ORDER_BAD_LOC_ID,
       orderCode: ORDER_BAD_LOC_ID,
       restaurantId: 'rest-a',
@@ -435,8 +467,8 @@ try {
   // =========================================================================
   // Booking on closed clinic -> FAILS
   await assertFails(
-    anonDb.runTransaction(async (tx) => {
-      tx.set(anonDb.doc(`clinic_tickets/${TICKET_CLOSED_ID}`), {
+    citizenDb.runTransaction(async (tx) => {
+      tx.set(citizenDb.doc(`clinic_tickets/${TICKET_CLOSED_ID}`), {
         id: TICKET_CLOSED_ID,
         ticketCode: TICKET_CLOSED_ID,
         ticketNumber: 2,
@@ -447,7 +479,7 @@ try {
         patientPhone: '01012345678',
         status: 'waiting',
       });
-      tx.update(anonDb.doc('clinic_queues/doc-b'), {
+      tx.update(citizenDb.doc('clinic_queues/doc-b'), {
         lastTicketNumber: 2,
         lastTicketId: TICKET_CLOSED_ID,
         updatedAt: new Date().toISOString(),
@@ -457,8 +489,8 @@ try {
 
   // Future-date rollover poisoning ("2099-12-31") -> FAILS
   await assertFails(
-    anonDb.runTransaction(async (tx) => {
-      tx.set(anonDb.doc(`clinic_tickets/${TICKET_FUTURE_ID}`), {
+    citizenDb.runTransaction(async (tx) => {
+      tx.set(citizenDb.doc(`clinic_tickets/${TICKET_FUTURE_ID}`), {
         id: TICKET_FUTURE_ID,
         ticketCode: TICKET_FUTURE_ID,
         ticketNumber: 1,
@@ -469,7 +501,7 @@ try {
         patientPhone: '01012345678',
         status: 'waiting',
       });
-      tx.update(anonDb.doc('clinic_queues/doc-a'), {
+      tx.update(citizenDb.doc('clinic_queues/doc-a'), {
         sessionDate: '2099-12-31',
         currentNumber: 0,
         lastTicketNumber: 1,
@@ -481,7 +513,7 @@ try {
 
   // Direct ticket creation without atomic queue increment -> FAILS
   await assertFails(
-    anonDb.doc(`clinic_tickets/${TICKET_ORPHAN_ID}`).set({
+    citizenDb.doc(`clinic_tickets/${TICKET_ORPHAN_ID}`).set({
       id: TICKET_ORPHAN_ID,
       ticketCode: TICKET_ORPHAN_ID,
       ticketNumber: 99,
@@ -550,6 +582,70 @@ try {
       status: 'delivered',
       updatedAt: new Date().toISOString(),
     })
+  );
+
+  // =========================================================================
+  // 5. Anonymous (Unauthenticated) Write Denials & Visits Counter Inflation
+  // =========================================================================
+  // Anonymous analytics_events create -> FAILS (analytics spam prevention)
+  await assertFails(
+    anonDb.doc('analytics_events/ANON-ANALYTICS-000001').set({
+      eventType: 'visit',
+      createdAt: new Date().toISOString(),
+    })
+  );
+  // Anonymous analytics_events with a fully-shaped payload -> still FAILS (auth is the gate)
+  await assertFails(
+    anonDb.doc('analytics_events/ANON-ANALYTICS-000002').set({
+      eventType: 'search',
+      query: 'مطعم',
+      resultCount: 3,
+      categorySlug: 'restaurants',
+      createdAt: new Date().toISOString(),
+    })
+  );
+  // Signed-in citizen CAN create a valid analytics event -> SUCCEEDS
+  await assertSucceeds(
+    citizenDb.doc('analytics_events/CIT-ANALYTICS-00000001').set({
+      eventType: 'visit',
+      createdAt: new Date().toISOString(),
+    })
+  );
+
+  // Anonymous clinic_tickets create -> FAILS (ticket spam without an account)
+  await assertFails(
+    anonDb.doc('clinic_tickets/ANON-TICKET-0000000001').set({
+      id: 'ANON-TICKET-0000000001',
+      ticketCode: 'ANON-TICKET-0000000001',
+      ticketNumber: 3,
+      sessionDate: todayCairo,
+      doctorId: 'doc-a',
+      doctorName: 'د. أ',
+      patientName: 'مريض مجهول',
+      patientPhone: '01012345678',
+      status: 'waiting',
+    })
+  );
+
+  // Anonymous public_settings/main visitsCount inflation -> FAILS
+  await assertFails(
+    anonDb.doc('public_settings/main').update({ visitsCount: 101 })
+  );
+  // Anonymous attempt to rewrite visitsCount to an arbitrary value -> FAILS
+  await assertFails(
+    anonDb.doc('public_settings/main').update({ visitsCount: 99999 })
+  );
+  // Signed-in citizen +1 increment -> SUCCEEDS (the one legitimate anonymous-proxy path)
+  await assertSucceeds(
+    citizenDb.doc('public_settings/main').update({ visitsCount: 101 })
+  );
+  // Signed-in citizen skipping the counter (+5) -> FAILS (increment must be exactly +1)
+  await assertFails(
+    citizenDb.doc('public_settings/main').update({ visitsCount: 106 })
+  );
+  // Signed-in citizen cannot smuggle other fields through the visits path -> FAILS
+  await assertFails(
+    citizenDb.doc('public_settings/main').update({ visitsCount: 102, uid: 'hijacked' })
   );
 
   assert.ok(true);

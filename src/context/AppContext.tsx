@@ -18,7 +18,6 @@ import {
 } from 'firebase/firestore';
 import {
   auth,
-  BOOTSTRAPPED_ADMIN_EMAIL,
   db,
   handleFirestoreError,
   logFirestoreListenerError,
@@ -26,10 +25,10 @@ import {
   logoutUser,
   OperationType,
 } from '../firebase';
-import { generateSecureToken, validateEgyptPhone } from '../lib/formatters';
+import { generateSecureToken, validateEgyptPhone, validateImageUrl } from '../lib/formatters';
 import { buildPlaceMenuPriceMap, computeAuthoritativeOrder } from '../lib/orderPricing';
 import { getCairoDateString } from '../lib/workingHours';
-import { readOfflineCatalog, writeOfflineCatalog } from '../lib/offlineCache';
+import { isOfflineCatalogFresh, readOfflineCatalog, writeOfflineCatalog } from '../lib/offlineCache';
 import { appendActivityHistory, saveCitizenProfile } from '../lib/citizenProfile';
 import {
   SEED_AGENCIES,
@@ -100,6 +99,20 @@ function stripUndefined<T extends Record<string, unknown>>(obj: T): Record<strin
   return out;
 }
 
+// Public catalog fetch bounds. Each one-time `getDocs` query is capped (and ordered by
+// priority/recency) so the client never fetches an unbounded full collection, which
+// both reduces bandwidth/read cost and keeps the TTL offline cache lightweight.
+const PUBLIC_CATALOG_LIMITS = {
+  categories: 100,
+  promoFilters: 100,
+  places: 300,
+  properties: 300,
+  agencies: 200,
+  offers: 300,
+  campaigns: 50,
+  emergencyContacts: 50,
+} as const;
+
 function mapFirebaseAuthErrorToArabic(err: unknown): string {
   const code = typeof err === 'object' && err !== null && 'code' in err ? String((err as { code?: unknown }).code) : '';
   if (code === 'auth/popup-blocked') {
@@ -148,7 +161,7 @@ interface AppContextValue {
   saveAdminUser: (record: AdminUser) => Promise<void>;
   deleteAdminUser: (uid: string) => Promise<void>;
 
-  // Live Firestore Catalog
+  // Catalog (TTL cache-first: offline snapshot hydration, one-time getDocs on expiry)
   categories: Category[];
   activeCategories: Category[];
   promoFilters: PromoFilter[];
@@ -159,10 +172,10 @@ interface AppContextValue {
   offers: Offer[];
   campaigns: Campaign[];
   emergencyContacts: EmergencyContact[];
-  clinicQueues: ClinicQueue[];
   settings: PublicSettings;
   isCloudSeeded: boolean;
   isDemoPreviewMode: boolean;
+  refreshCatalog: () => void;
 
   // Live Operational & Admin Streams (role/tenant scoped + server-ordered)
   clinicTickets: ClinicTicket[];
@@ -347,38 +360,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   // Hydrate previously loaded public directory from device cache for instant offline browsing
-  const cachedCatalog = useMemo(() => readOfflineCatalog(), []);
+  const catalogCache = useMemo(() => readOfflineCatalog(), []);
 
   // Cloud state
   const [cloudCategories, setCloudCategories] = useState<Category[] | null>(
-    () => (cachedCatalog?.categories?.length ? cachedCatalog.categories : null)
+    () => (catalogCache?.categories?.length ? catalogCache.categories : null)
   );
   const [cloudPromoFilters, setCloudPromoFilters] = useState<PromoFilter[] | null>(
-    () => (cachedCatalog?.promoFilters ? cachedCatalog.promoFilters : null)
+    () => (catalogCache?.promoFilters ? catalogCache.promoFilters : null)
   );
   const [cloudPlaces, setCloudPlaces] = useState<Place[] | null>(
-    () => (cachedCatalog?.places ? cachedCatalog.places : null)
+    () => (catalogCache?.places ? catalogCache.places : null)
   );
   const [cloudProperties, setCloudProperties] = useState<Property[] | null>(
-    () => (cachedCatalog?.properties ? cachedCatalog.properties : null)
+    () => (catalogCache?.properties ? catalogCache.properties : null)
   );
   const [cloudAgencies, setCloudAgencies] = useState<Agency[] | null>(
-    () => (cachedCatalog?.agencies ? cachedCatalog.agencies : null)
+    () => (catalogCache?.agencies ? catalogCache.agencies : null)
   );
   const [cloudOffers, setCloudOffers] = useState<Offer[] | null>(
-    () => (cachedCatalog?.offers ? cachedCatalog.offers : null)
+    () => (catalogCache?.offers ? catalogCache.offers : null)
   );
   const [cloudCampaigns, setCloudCampaigns] = useState<Campaign[] | null>(
-    () => (cachedCatalog?.campaigns ? cachedCatalog.campaigns : null)
+    () => (catalogCache?.campaigns ? catalogCache.campaigns : null)
   );
   const [cloudEmergency, setCloudEmergency] = useState<EmergencyContact[] | null>(
-    () => (cachedCatalog?.emergencyContacts ? cachedCatalog.emergencyContacts : null)
-  );
-  const [cloudQueues, setCloudQueues] = useState<ClinicQueue[] | null>(
-    () => (cachedCatalog?.clinicQueues ? cachedCatalog.clinicQueues : null)
+    () => (catalogCache?.emergencyContacts ? catalogCache.emergencyContacts : null)
   );
   const [cloudSettings, setCloudSettings] = useState<PublicSettings | null>(
-    () => (cachedCatalog?.settings ? cachedCatalog.settings : null)
+    () => (catalogCache?.settings ? catalogCache.settings : null)
   );
 
   // Operational & Admin collections with server-ordered pagination limits
@@ -463,20 +473,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAuthReady(true);
         return;
       }
-      const isOwner =
-        firebaseUser.emailVerified &&
-        firebaseUser.email?.toLowerCase() === BOOTSTRAPPED_ADMIN_EMAIL.toLowerCase();
-      if (isOwner) {
-        setAdminProfile({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email || BOOTSTRAPPED_ADMIN_EMAIL,
-          name: firebaseUser.displayName || 'المشرف العام',
-          role: 'super_admin',
-          active: true,
-        });
-        setAuthReady(true);
-        return;
-      }
       try {
         const adminSnap = await getDoc(doc(db, 'admins', firebaseUser.uid));
         if (adminSnap.exists()) {
@@ -530,161 +526,130 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => unsub();
   }, [authReady, isSuperAdmin]);
 
-  // Public real-time Firestore subscriptions (zero-login civic catalog)
-  useEffect(() => {
-    const unsubs: Array<() => void> = [];
+  // Public civic catalog: cache-first TTL strategy.
+  // On load, hydrate state from the offline snapshot when it is still fresh
+  // (Date.now() - cachedAt < CATALOG_CACHE_TTL_MS) and skip the network getDocs
+  // calls entirely. The network is only hit when the cache is missing/expired, or
+  // when refreshCatalog() is called after an admin/partner mutation. This keeps
+  // Firestore read consumption (and Spark free-tier bills) minimal while all
+  // citizen features keep working from the cached catalog.
+  const catalogCacheFresh = useMemo(() => isOfflineCatalogFresh(catalogCache), [catalogCache]);
 
-    unsubs.push(
-      onSnapshot(
-        collection(db, 'categories'),
-        (snap) => {
-          const list = snap.docs.map((d) => ({ ...(d.data() as Category), id: d.id }));
-          list.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
-          setCloudCategories(list);
-          if (list.length > 0) writeOfflineCatalog({ categories: list });
-        },
-        (err) => console.warn('categories snapshot warning:', err.message)
-      )
-    );
+  const loadCatalogFromFirestore = useCallback(async () => {
+    try {
+      const [categoriesSnap, promoFiltersSnap, placesSnap, propertiesSnap, agenciesSnap, offersSnap, campaignsSnap, emergencySnap, settingsSnap] =
+        await Promise.all([
+          getDocs(
+            query(
+              collection(db, 'categories'),
+              orderBy('order', 'asc'),
+              limit(PUBLIC_CATALOG_LIMITS.categories)
+            )
+          ),
+          getDocs(
+            query(
+              collection(db, 'promo_filters'),
+              orderBy('order', 'asc'),
+              limit(PUBLIC_CATALOG_LIMITS.promoFilters)
+            )
+          ),
+          getDocs(
+            query(
+              collection(db, 'places'),
+              orderBy('createdAt', 'desc'),
+              limit(PUBLIC_CATALOG_LIMITS.places)
+            )
+          ),
+          getDocs(
+            query(
+              collection(db, 'properties'),
+              orderBy('createdAt', 'desc'),
+              limit(PUBLIC_CATALOG_LIMITS.properties)
+            )
+          ),
+          getDocs(query(collection(db, 'agencies'), limit(PUBLIC_CATALOG_LIMITS.agencies))),
+          getDocs(
+            query(
+              collection(db, 'offers'),
+              orderBy('expiresAt', 'desc'),
+              limit(PUBLIC_CATALOG_LIMITS.offers)
+            )
+          ),
+          getDocs(
+            query(
+              collection(db, 'campaigns'),
+              orderBy('slotNumber', 'asc'),
+              limit(PUBLIC_CATALOG_LIMITS.campaigns)
+            )
+          ),
+          getDocs(
+            query(
+              collection(db, 'emergency_contacts'),
+              orderBy('priority', 'asc'),
+              limit(PUBLIC_CATALOG_LIMITS.emergencyContacts)
+            )
+          ),
+          getDoc(doc(db, 'public_settings', 'main')),
+        ]);
 
-    unsubs.push(
-      onSnapshot(
-        collection(db, 'promo_filters'),
-        (snap) => {
-          const list = snap.docs.map((d) => ({ ...(d.data() as PromoFilter), id: d.id }));
-          list.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
-          setCloudPromoFilters(list);
-          writeOfflineCatalog({ promoFilters: list });
-        },
-        (err) => console.warn('promo_filters snapshot warning:', err.message)
-      )
-    );
+      const categories = categoriesSnap.docs.map((d) => ({ ...(d.data() as Category), id: d.id }));
+      categories.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+      setCloudCategories(categories);
 
-    unsubs.push(
-      onSnapshot(
-        collection(db, 'places'),
-        (snap) => {
-          const list = snap.docs.map((d) => ({ ...(d.data() as Place), id: d.id }));
-          setCloudPlaces(list);
-          writeOfflineCatalog({ places: list });
-        },
-        (err) => console.warn('places snapshot warning:', err.message)
-      )
-    );
+      const promoFilters = promoFiltersSnap.docs.map((d) => ({
+        ...(d.data() as PromoFilter),
+        id: d.id,
+      }));
+      promoFilters.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+      setCloudPromoFilters(promoFilters);
 
-    unsubs.push(
-      onSnapshot(
-        collection(db, 'properties'),
-        (snap) => {
-          const list = snap.docs.map((d) => ({ ...(d.data() as Property), id: d.id }));
-          setCloudProperties(list);
-          writeOfflineCatalog({ properties: list });
-        },
-        (err) => console.warn('properties snapshot warning:', err.message)
-      )
-    );
+      setCloudPlaces(placesSnap.docs.map((d) => ({ ...(d.data() as Place), id: d.id })));
+      setCloudProperties(propertiesSnap.docs.map((d) => ({ ...(d.data() as Property), id: d.id })));
+      setCloudAgencies(agenciesSnap.docs.map((d) => ({ ...(d.data() as Agency), id: d.id })));
+      setCloudOffers(offersSnap.docs.map((d) => ({ ...(d.data() as Offer), id: d.id })));
 
-    unsubs.push(
-      onSnapshot(
-        collection(db, 'agencies'),
-        (snap) => {
-          const list = snap.docs.map((d) => ({ ...(d.data() as Agency), id: d.id }));
-          setCloudAgencies(list);
-          writeOfflineCatalog({ agencies: list });
-        },
-        (err) => console.warn('agencies snapshot warning:', err.message)
-      )
-    );
+      const campaigns = campaignsSnap.docs.map((d) => ({ ...(d.data() as Campaign), id: d.id }));
+      campaigns.sort((a, b) => a.slotNumber - b.slotNumber);
+      setCloudCampaigns(campaigns);
 
-    unsubs.push(
-      onSnapshot(
-        collection(db, 'offers'),
-        (snap) => {
-          const list = snap.docs.map((d) => ({ ...(d.data() as Offer), id: d.id }));
-          setCloudOffers(list);
-          writeOfflineCatalog({ offers: list });
-        },
-        (err) => console.warn('offers snapshot warning:', err.message)
-      )
-    );
+      const emergencyContacts = emergencySnap.docs.map((d) => ({
+        ...(d.data() as EmergencyContact),
+        id: d.id,
+      }));
+      emergencyContacts.sort((a, b) => a.priority - b.priority);
+      setCloudEmergency(emergencyContacts);
 
-    unsubs.push(
-      onSnapshot(
-        collection(db, 'campaigns'),
-        (snap) => {
-          const list = snap.docs.map((d) => ({ ...(d.data() as Campaign), id: d.id }));
-          list.sort((a, b) => a.slotNumber - b.slotNumber);
-          setCloudCampaigns(list);
-          writeOfflineCatalog({ campaigns: list });
-        },
-        (err) => console.warn('campaigns snapshot warning:', err.message)
-      )
-    );
+      if (settingsSnap.exists()) {
+        setCloudSettings(settingsSnap.data() as PublicSettings);
+      }
 
-    unsubs.push(
-      onSnapshot(
-        collection(db, 'emergency_contacts'),
-        (snap) => {
-          const list = snap.docs.map((d) => ({ ...(d.data() as EmergencyContact), id: d.id }));
-          list.sort((a, b) => a.priority - b.priority);
-          setCloudEmergency(list);
-          writeOfflineCatalog({ emergencyContacts: list });
-        },
-        (err) => console.warn('emergency snapshot warning:', err.message)
-      )
-    );
-
-    unsubs.push(
-      onSnapshot(
-        collection(db, 'clinic_queues'),
-        (snap) => {
-          const list = snap.docs.map((d) => ({
-            ...(d.data() as ClinicQueue),
-            doctorId: d.id,
-            sessionDate: (d.data() as Partial<ClinicQueue>).sessionDate || getCairoDateString(),
-          }));
-          setCloudQueues(list);
-          writeOfflineCatalog({ clinicQueues: list });
-        },
-        (err) => console.warn('clinic_queues snapshot warning:', err.message)
-      )
-    );
-
-    unsubs.push(
-      onSnapshot(
-        doc(db, 'public_settings', 'main'),
-        (snap) => {
-          if (snap.exists()) {
-            const data = snap.data() as PublicSettings;
-            setCloudSettings(data);
-            writeOfflineCatalog({ settings: data });
-          }
-        },
-        (err) => console.warn('public_settings snapshot warning:', err.message)
-      )
-    );
-
-    return () => unsubs.forEach((u) => u());
+      writeOfflineCatalog({
+        categories,
+        promoFilters,
+        places: placesSnap.docs.map((d) => ({ ...(d.data() as Place), id: d.id })),
+        properties: propertiesSnap.docs.map((d) => ({ ...(d.data() as Property), id: d.id })),
+        agencies: agenciesSnap.docs.map((d) => ({ ...(d.data() as Agency), id: d.id })),
+        offers: offersSnap.docs.map((d) => ({ ...(d.data() as Offer), id: d.id })),
+        campaigns,
+        emergencyContacts,
+      });
+    } catch (error) {
+      // Non-blocking: keep the hydrated cache (or seed fallback) visible.
+      handleFirestoreError(error, OperationType.GET, 'catalog load');
+    }
   }, []);
 
-  // Increment public visits counter once per browser session when online and cloud settings exist
+  // Skip the network entirely while the TTL cache is still fresh.
   useEffect(() => {
-    if (!cloudSettings) return;
-    if (typeof navigator !== 'undefined' && !navigator.onLine) return;
-    const sessionKey = 'abh_visit_counted_v1';
-    try {
-      if (sessionStorage.getItem(sessionKey)) return;
-      sessionStorage.setItem(sessionKey, '1');
-    } catch {
-      return;
-    }
-    const nextCount = (cloudSettings.visitsCount ?? 0) + 1;
-    void updateDoc(doc(db, 'public_settings', 'main'), {
-      visitsCount: nextCount,
-    }).catch(() => {
-      // Non-blocking
-    });
-  }, [cloudSettings]);
+    if (catalogCacheFresh) return;
+    void loadCatalogFromFirestore();
+  }, [catalogCacheFresh, loadCatalogFromFirestore]);
+
+  // Manual refresh after admin/partner save/delete actions so editors see their
+  // updates immediately instead of waiting for the TTL to expire.
+  const refreshCatalog = useCallback(() => {
+    void loadCatalogFromFirestore();
+  }, [loadCatalogFromFirestore]);
 
   // Tenant-Isolated & Server-Ordered Clinic Tickets Stream
   useEffect(() => {
@@ -1112,12 +1077,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       await batch.commit();
+      refreshCatalog();
       showToast(`تم إنشاء ${createdCount} عنصر تأسيس ناقص بأمان دون استبدال أي تعديلات قائمة`, 'success');
     } catch (error) {
       showToast('تعذرت تهيئة الإعدادات الأساسية، تحقق من الصلاحيات', 'error');
       handleFirestoreError(error, OperationType.WRITE, 'initializeEssentialConfig');
     }
-  }, [isSuperAdmin, showToast]);
+  }, [isSuperAdmin, refreshCatalog, showToast]);
 
   // Explicit Opt-In Demo Catalog Seeding (create-only, NEVER overwrites admin edits, NEVER touches finance_settlements!)
   const seedDemoCatalog = useCallback(async () => {
@@ -1196,6 +1162,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       await batch.commit();
+      refreshCatalog();
       showToast(
         `تمت إضافة ${createdCount} سجل عرض تجريبي ناقص فقط (بدون تعديل السجلات القائمة وبدون تسويات مالية وهمية)`,
         'success'
@@ -1204,7 +1171,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       showToast('تعذرت إضافة بيانات العرض التجريبي', 'error');
       handleFirestoreError(error, OperationType.WRITE, 'seedDemoCatalog');
     }
-  }, [isSuperAdmin, initializeEssentialConfig, showToast]);
+  }, [isSuperAdmin, initializeEssentialConfig, refreshCatalog, showToast]);
 
   // Backward-compatible alias: NEVER overwrites existing docs and NEVER auto-seeds demo settlements
   const seedCloudDatabase = useCallback(
@@ -1279,6 +1246,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (updatedCount > 0) {
         await batch.commit();
+        refreshCatalog();
         showToast(`تم تحديث وترحيل ${updatedCount} سجل (خرائط أسعار المطاعم + طوابير العيادات) بنجاح`, 'success');
       } else {
         showToast('جميع المطاعم والعيادات محدّثة بالفعل ولا تحتاج إلى ترحيل', 'info');
@@ -1289,7 +1257,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       handleFirestoreError(error, OperationType.WRITE, 'migrateRestaurantMenuPriceMaps');
       return 0;
     }
-  }, [isAdminWriter, showToast]);
+  }, [isAdminWriter, refreshCatalog, showToast]);
 
   // Cloud-seeded detection: once cloud has categories, never fall back to demo seed data!
   const isCloudSeeded = Boolean(cloudCategories && cloudCategories.length > 0);
@@ -1335,10 +1303,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     () => (cloudEmergency !== null && (cloudEmergency.length > 0 || isCloudSeeded) ? cloudEmergency : SEED_EMERGENCY),
     [cloudEmergency, isCloudSeeded]
   );
-  const clinicQueues = useMemo(
-    () => (cloudQueues !== null && (cloudQueues.length > 0 || isCloudSeeded) ? cloudQueues : SEED_CLINIC_QUEUES),
-    [cloudQueues, isCloudSeeded]
-  );
   const settings = useMemo(() => cloudSettings || SEED_SETTINGS, [cloudSettings]);
 
   // Auth helpers with real error reporting
@@ -1346,20 +1310,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSignInError(null);
     try {
       const signedUser = await loginWithGoogle();
-      const isOwner =
-        signedUser.emailVerified &&
-        signedUser.email?.toLowerCase() === BOOTSTRAPPED_ADMIN_EMAIL.toLowerCase();
-      if (isOwner) {
-        setAdminProfile({
-          uid: signedUser.uid,
-          email: signedUser.email || BOOTSTRAPPED_ADMIN_EMAIL,
-          name: signedUser.displayName || 'المشرف العام',
-          role: 'super_admin',
-          active: true,
-        });
-        showToast(`أهلاً بك ${signedUser.displayName || 'في بوابة الإدارة'}`, 'success');
-        return true;
-      }
       const snap = await getDoc(doc(db, 'admins', signedUser.uid));
       if (snap.exists()) {
         const raw = snap.data() as Partial<AdminUser>;
@@ -1503,19 +1453,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // --- Citizen Live Firestore Writes ---
 
-  const logAnalyticsEvent = useCallback(async (event: Omit<AnalyticsEvent, 'createdAt'>) => {
-    try {
-      const id = generateSafeId('EVT');
-      await setDoc(
-        doc(db, 'analytics_events', id),
-        stripUndefined({
-          ...event,
-          createdAt: new Date().toISOString(),
-        })
-      );
-    } catch {
-      // Non-blocking analytics
-    }
+  // Analytics events are intentionally NOT written from the client anymore: each
+  // search/interaction would consume a Firestore write against the Spark free-tier
+  // limits. The function is kept on the context as a safe no-op so all callers
+  // (search logging, call/whatsapp click tracking) keep working, and the admin
+  // analytics view simply shows an empty (or server-seeded) dataset gracefully.
+  const logAnalyticsEvent = useCallback(async (_event: Omit<AnalyticsEvent, 'createdAt'>) => {
+    // No-op: client-side analytics writes are disabled to conserve Firestore quota.
   }, []);
 
   // Atomic Clinic Booking: enforces open clinic policy, Cairo day session partitioning, & coupled queue/ticket write
@@ -1648,6 +1592,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       let verifiedSnapshot: RestaurantOrder['pricingSnapshot'] | undefined;
 
       // 1. Attempt trusted Cloudflare Pages Function server-side validator first (/api/orders/validate)
+      let serverRejected = false;
       try {
         const controller = new AbortController();
         const timeoutId = window.setTimeout(() => controller.abort(), 4500);
@@ -1682,7 +1627,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             total?: number;
             pricingSnapshot?: RestaurantOrder['pricingSnapshot'];
           };
-          if (!apiRes.ok && apiRes.status >= 400 && apiRes.status < 500 && apiRes.status !== 404) {
+          // Any 4xx (including 404 NOT_FOUND and 422 PRICE_MISMATCH) is a hard rejection:
+          // reject the order immediately instead of silently falling back to client-side validation.
+          if (!apiRes.ok && apiRes.status >= 400 && apiRes.status < 500) {
+            serverRejected = true;
             throw new Error(apiData.error || 'تم رفض الطلب لعدم مطابقة الأسعار مع القائمة المعتمدة');
           }
           if (apiRes.ok && apiData.ok && Array.isArray(apiData.items) && apiData.pricingSnapshot) {
@@ -1695,21 +1643,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         }
       } catch (apiErr) {
-        if (apiErr instanceof Error && apiErr.name !== 'AbortError' && !apiErr.message.includes('fetch')) {
-          // Propagate explicit validation/tampering rejections from the server validator
-          if (
-            apiErr.message.includes('تم رفض') ||
-            apiErr.message.includes('الكمية') ||
-            apiErr.message.includes('الصنف') ||
-            apiErr.message.includes('المطعم') ||
-            apiErr.message.includes('الحد الأقصى') ||
-            apiErr.message.includes('السلة')
-          ) {
-            throw apiErr;
-          }
+        // Hard-reject on any explicit 4xx validation/tampering rejection from the server validator.
+        if (serverRejected) {
+          throw apiErr;
         }
-        // Otherwise (e.g., local Vite dev without Pages Functions), fall back to live Firestore catalog check
-        // while Firestore Security Rules enforce exact server-side menuPriceMap verification on commit.
+        // Otherwise (e.g., network error, timeout, or 5xx CATALOG_UNAVAILABLE), fall back to the live
+        // Firestore catalog check while Firestore Security Rules enforce exact menuPriceMap verification.
       }
 
       // 2. Fallback / double-check against live Firestore catalog (enforced by Firestore Security Rules!)
@@ -2235,24 +2174,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       try {
         await setDoc(doc(db, 'categories', category.id), stripUndefined(payload as unknown as Record<string, unknown>));
+        refreshCatalog();
         showToast(`تم حفظ قسم «${category.name}» ومزامنته فوراً`, 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, `categories/${category.id}`);
       }
     },
-    [showToast]
+    [refreshCatalog, showToast]
   );
 
   const deleteCategory = useCallback(
     async (categoryId: string) => {
       try {
         await deleteDoc(doc(db, 'categories', categoryId));
+        refreshCatalog();
         showToast('تم حذف القسم نهائياً من قاعدة البيانات', 'info');
       } catch (error) {
         handleFirestoreError(error, OperationType.DELETE, `categories/${categoryId}`);
       }
     },
-    [showToast]
+    [refreshCatalog, showToast]
   );
 
   const reorderCategories = useCallback(
@@ -2267,12 +2208,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         });
         await batch.commit();
+        refreshCatalog();
         showToast('تم تحديث ترتيب الأقسام في الرئيسية فوراً', 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.UPDATE, 'categories/reorder');
       }
     },
-    [categories, showToast]
+    [categories, refreshCatalog, showToast]
   );
 
   // Dynamic Promotional Filters & Badges CRUD
@@ -2287,12 +2229,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           doc(db, 'promo_filters', filter.id),
           stripUndefined(payload as unknown as Record<string, unknown>)
         );
+        refreshCatalog();
         showToast(`تم حفظ فلتر التمييز «${filter.name}» ومزامنته فوراً`, 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, `promo_filters/${filter.id}`);
       }
     },
-    [showToast]
+    [refreshCatalog, showToast]
   );
 
   const deletePromoFilter = useCallback(
@@ -2319,12 +2262,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
 
         await batch.commit();
+        refreshCatalog();
         showToast('تم حذف فلتر التمييز وتنظيف ارتباطاته نهائياً', 'info');
       } catch (error) {
         handleFirestoreError(error, OperationType.DELETE, `promo_filters/${filterId}`);
       }
     },
-    [places, showToast]
+    [places, refreshCatalog, showToast]
   );
 
   const reorderPromoFilters = useCallback(
@@ -2339,12 +2283,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         });
         await batch.commit();
+        refreshCatalog();
         showToast('تم تحديث ترتيب فلاتر التمييز فوراً', 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.UPDATE, 'promo_filters/reorder');
       }
     },
-    [promoFilters, showToast]
+    [promoFilters, refreshCatalog, showToast]
   );
 
   const togglePlacePromoFilter = useCallback(
@@ -2371,6 +2316,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       try {
         await setDoc(doc(db, 'places', placeId), stripUndefined(updated as unknown as Record<string, unknown>));
+        refreshCatalog();
         showToast(
           exists ? `تمت إزالة «${target.name}» من الفلتر` : `تم تسكين «${target.name}» داخل الفلتر بنجاح`,
           exists ? 'info' : 'success'
@@ -2379,7 +2325,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleFirestoreError(error, OperationType.UPDATE, `places/${placeId}`);
       }
     },
-    [places, showToast]
+    [places, refreshCatalog, showToast]
   );
 
   const setPlaceFilterExpiry = useCallback(
@@ -2399,12 +2345,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       try {
         await setDoc(doc(db, 'places', placeId), stripUndefined(updated as unknown as Record<string, unknown>));
+        refreshCatalog();
         showToast('تم تحديث تاريخ انتهاء اشتراك الشارة', 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.UPDATE, `places/${placeId}`);
       }
     },
-    [places, showToast]
+    [places, refreshCatalog, showToast]
   );
 
   // Save Place: automatically updates menuPriceMap & initializes empty clinic_queues for new medical clinics
@@ -2443,24 +2390,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         }
 
+        refreshCatalog();
         showToast(`تم حفظ «${place.name}» ونشره في الدليل`, 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, `places/${place.id}`);
       }
     },
-    [showToast]
+    [refreshCatalog, showToast]
   );
 
   const deletePlace = useCallback(
     async (placeId: string) => {
       try {
         await deleteDoc(doc(db, 'places', placeId));
+        refreshCatalog();
         showToast('تم حذف المكان من الدليل', 'info');
       } catch (error) {
         handleFirestoreError(error, OperationType.DELETE, `places/${placeId}`);
       }
     },
-    [showToast]
+    [refreshCatalog, showToast]
   );
 
   const saveProperty = useCallback(
@@ -2468,48 +2417,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const payload: Property = { ...property, createdAt: property.createdAt || new Date().toISOString() };
       try {
         await setDoc(doc(db, 'properties', property.id), stripUndefined(payload as unknown as Record<string, unknown>));
+        refreshCatalog();
         showToast('تم حفظ إعلان العقار بنجاح', 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, `properties/${property.id}`);
       }
     },
-    [showToast]
+    [refreshCatalog, showToast]
   );
 
   const deleteProperty = useCallback(
     async (propertyId: string) => {
       try {
         await deleteDoc(doc(db, 'properties', propertyId));
+        refreshCatalog();
         showToast('تم حذف إعلان العقار', 'info');
       } catch (error) {
         handleFirestoreError(error, OperationType.DELETE, `properties/${propertyId}`);
       }
     },
-    [showToast]
+    [refreshCatalog, showToast]
   );
 
   const saveOffer = useCallback(
     async (offer: Offer) => {
       try {
         await setDoc(doc(db, 'offers', offer.id), stripUndefined(offer as unknown as Record<string, unknown>));
+        refreshCatalog();
         showToast(`تم حفظ التخفيض «${offer.title}»`, 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, `offers/${offer.id}`);
       }
     },
-    [showToast]
+    [refreshCatalog, showToast]
   );
 
   const saveCampaign = useCallback(
     async (campaign: Campaign) => {
       try {
         await setDoc(doc(db, 'campaigns', campaign.id), stripUndefined(campaign as unknown as Record<string, unknown>));
+        refreshCatalog();
         showToast('تم تحديث كرسي الواجهة الترويجي بنجاح', 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, `campaigns/${campaign.id}`);
       }
     },
-    [showToast]
+    [refreshCatalog, showToast]
   );
 
   const updateSubmissionStatus = useCallback(
@@ -2608,6 +2561,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
         });
 
+        refreshCatalog();
         showToast('تم اعتماد وتطبيق التصحيحات فعلياً على بيانات المكان مع حفظ السجل السابق', 'success');
         return true;
       } catch (error) {
@@ -2615,7 +2569,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return false;
       }
     },
-    [isAdminWriter, user, adminProfile, showToast]
+    [isAdminWriter, user, adminProfile, refreshCatalog, showToast]
   );
 
   // Atomic, Idempotent Publish Place from Submission (prevents duplicates on double-click/retry)
@@ -2623,6 +2577,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     async (submissionId: string, place: Place, adminNote?: string): Promise<boolean> => {
       if (!isAdminWriter || !user?.uid) {
         showToast('النشر متاح للمشرفين المصرح لهم بالتعديل فقط', 'error');
+        return false;
+      }
+      const placeImageCheck = validateImageUrl(place.imageUrl);
+      if (!placeImageCheck.valid) {
+        showToast(placeImageCheck.error || 'رابط الصورة غير مقبول', 'error');
         return false;
       }
       const now = new Date().toISOString();
@@ -2678,6 +2637,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
         });
 
+        refreshCatalog();
         showToast(`تم اعتماد ونشر «${place.name}» بنجاح دون تكرار`, 'success');
         return true;
       } catch (error) {
@@ -2685,7 +2645,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return false;
       }
     },
-    [isAdminWriter, user, adminProfile, showToast]
+    [isAdminWriter, user, adminProfile, refreshCatalog, showToast]
   );
 
   // Atomic, Idempotent Publish Property from Submission
@@ -2693,6 +2653,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     async (submissionId: string, property: Property, adminNote?: string): Promise<boolean> => {
       if (!isAdminWriter || !user?.uid) {
         showToast('النشر متاح للمشرفين المصرح لهم بالتعديل فقط', 'error');
+        return false;
+      }
+      const propImageCheck = validateImageUrl(property.imageUrl);
+      if (!propImageCheck.valid) {
+        showToast(propImageCheck.error || 'رابط الصورة غير مقبول', 'error');
         return false;
       }
       const now = new Date().toISOString();
@@ -2720,6 +2685,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
         });
 
+        refreshCatalog();
         showToast('تم اعتماد ونشر العقار بنجاح دون تكرار', 'success');
         return true;
       } catch (error) {
@@ -2727,7 +2693,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return false;
       }
     },
-    [isAdminWriter, user, adminProfile, showToast]
+    [isAdminWriter, user, adminProfile, refreshCatalog, showToast]
   );
 
   const saveWhatsappQueueItem = useCallback(
@@ -2801,12 +2767,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           doc(db, 'public_settings', 'main'),
           stripUndefined({ ...nextSettings, updatedAt: new Date().toISOString() })
         );
+        refreshCatalog();
         showToast('تم حفظ الإعدادات العامة للمنظومة', 'success');
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, 'public_settings/main');
       }
     },
-    [showToast]
+    [refreshCatalog, showToast]
   );
 
   const value: AppContextValue = {
@@ -2840,10 +2807,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     offers,
     campaigns,
     emergencyContacts,
-    clinicQueues,
     settings,
     isCloudSeeded,
     isDemoPreviewMode,
+    refreshCatalog,
     clinicTickets,
     restaurantOrders,
     deliveryRides,
